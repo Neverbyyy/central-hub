@@ -1,0 +1,35 @@
+# Зависимости и сборка
+node_modules
+.nuxt
+.output
+.data
+.nitro
+.cache
+dist
+.vercel
+
+# Секреты: в репозиторий попадает только .env.example
+.env
+.env.*
+!.env.example
+
+# Выгрузка Mixpanel с ID пользователей (страница аудита читает её локально)
+**/public/data.json
+
+# Бэкапы страниц прототипа
+*.backup.*
+
+# Supabase CLI
+supabase/.temp
+supabase/.branches
+
+# Логи и мусор ОС
+logs
+*.log
+.DS_Store
+__MACOSX
+Thumbs.db
+
+# Редакторы
+.idea
+.fleet
