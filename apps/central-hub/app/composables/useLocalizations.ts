@@ -42,7 +42,7 @@ const SELECT = 'technical_key, translations, status, based_on, source_rev, stale
 const WEEK = 7 * 24 * 60 * 60 * 1000
 
 // Параметры адреса, которые описывают выборку; остальные (key, new) не трогаем
-const FILTER_PARAMS = ['q', 'tags', 'status', 'stale', 'missing', 'recent', 'prefix']
+const FILTER_PARAMS = ['q', 'tags', 'status', 'stale', 'missing', 'recent', 'prefix', 'deprecated']
 
 // % и _ в поиске — обычные символы, а не шаблоны LIKE
 const escapeLike = (value: string) => value.replace(/[\\%_]/g, char => `\\${char}`)
@@ -99,7 +99,9 @@ export function useLocalizations() {
     // Изменённые за неделю
     recent: false,
     // Раздел из дерева, например app.cars2.
-    prefix: ''
+    prefix: '',
+    // Вместо действующих ключей — помеченные устаревшими (их нет в выгрузках)
+    deprecated: false
   })
 
   const readQuery = () => {
@@ -113,6 +115,7 @@ export function useLocalizations() {
     filters.missing = /^[a-z]{2,3}(-[A-Za-z0-9]{2,4})?$/.test(missing) ? missing : ''
     filters.recent = query.recent === '1'
     filters.prefix = asString(query.prefix)
+    filters.deprecated = query.deprecated === '1'
   }
 
   const buildQuery = () => {
@@ -127,6 +130,7 @@ export function useLocalizations() {
     if (filters.missing) next.missing = filters.missing
     if (filters.recent) next.recent = '1'
     if (filters.prefix) next.prefix = filters.prefix
+    if (filters.deprecated) next.deprecated = '1'
     return next
   }
 
@@ -139,13 +143,13 @@ export function useLocalizations() {
   }
 
   const hasFilters = computed(() =>
-    !!(q.value.trim() || selectedTags.value.length || filters.status || filters.stale || filters.missing || filters.recent || filters.prefix)
+    !!(q.value.trim() || selectedTags.value.length || filters.status || filters.stale || filters.missing || filters.recent || filters.prefix || filters.deprecated)
   )
 
   const resetFilters = () => {
     q.value = ''
     selectedTags.value = []
-    Object.assign(filters, { status: '', stale: false, missing: '', recent: false, prefix: '' })
+    Object.assign(filters, { status: '', stale: false, missing: '', recent: false, prefix: '', deprecated: false })
   }
 
   // Каждый новый поиск/фильтр увеличивает поколение, ответы старых запросов выбрасываются
@@ -153,6 +157,7 @@ export function useLocalizations() {
 
   interface Filterable<T> {
     is: (column: string, value: null) => T
+    not: (column: string, operator: string, value: null) => T
     ilike: (column: string, pattern: string) => T
     like: (column: string, pattern: string) => T
     contains: (column: string, value: string[]) => T
@@ -161,7 +166,7 @@ export function useLocalizations() {
   }
 
   const applyFilters = <T extends Filterable<T>>(query: T): T => {
-    query = query.is('deprecated_at', null)
+    query = filters.deprecated ? query.not('deprecated_at', 'is', null) : query.is('deprecated_at', null)
     const term = q.value.trim().toLowerCase()
     if (term) {
       // search_text — ключ и переводы на всех языках, с trigram-индексом
@@ -414,7 +419,8 @@ export function useLocalizations() {
       .channel('localizations-grid')
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'localizations' }, (payload) => {
         const incoming = payload.new as Localization
-        if (incoming.deprecated_at) {
+        // Ключ пометили устаревшим или вернули — из текущей выборки (действующие / устаревшие) он уходит
+        if (!!incoming.deprecated_at !== filters.deprecated) {
           rows.value = rows.value.filter(r => r.technical_key !== incoming.technical_key)
           return
         }
@@ -464,6 +470,7 @@ export function useLocalizations() {
     undo,
     redo,
     deprecateKeys,
+    restoreKeys,
     fetchAll
   }
 }

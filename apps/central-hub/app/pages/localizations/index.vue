@@ -29,6 +29,7 @@ const {
   undo,
   redo,
   deprecateKeys,
+  restoreKeys,
   fetchAll
 } = useLocalizations()
 
@@ -149,6 +150,18 @@ const deprecateSelected = async () => {
   deprecating.value = false
 }
 
+// В выборке «Помеченные устаревшими» та же кнопка возвращает выделенные ключи
+const restoreSelected = async () => {
+  const keys = [...selectedKeys.value]
+  if (!keys.length) return
+
+  deprecating.value = true
+  await restoreKeys(keys)
+  selectedKeys.value = new Set()
+  treeVersion.value++
+  deprecating.value = false
+}
+
 // --- Экспорт ---
 const download = (blob: Blob, filename: string) => {
   const url = URL.createObjectURL(blob)
@@ -257,7 +270,17 @@ const exportFigma = async () => {
 
       <div class="flex shrink-0 items-center gap-3 whitespace-nowrap">
         <UButton
-          v-if="selectedKeys.size"
+          v-if="selectedKeys.size && filters.deprecated"
+          icon="i-lucide-archive-restore"
+          color="warning"
+          variant="soft"
+          :loading="deprecating"
+          @click="restoreSelected"
+        >
+          Вернуть ({{ selectedKeys.size }})
+        </UButton>
+        <UButton
+          v-else-if="selectedKeys.size"
           icon="i-lucide-archive"
           color="warning"
           variant="soft"
@@ -338,6 +361,7 @@ const exportFigma = async () => {
       v-model:missing="filters.missing"
       v-model:recent="filters.recent"
       v-model:prefix="filters.prefix"
+      v-model:deprecated="filters.deprecated"
       :languages="languageCodes"
       :has-filters="hasFilters"
       @reset="resetFilters"
@@ -359,6 +383,7 @@ const exportFigma = async () => {
         :loading="loading"
         :initial-loading="initialLoading"
         :has-more="hasMore"
+        :readonly="filters.deprecated"
         @load-more="load()"
         @save="setTranslation"
         @toggle="toggleRow"

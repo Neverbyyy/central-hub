@@ -14,6 +14,7 @@ const stale = defineModel<boolean>('stale', { required: true })
 const missing = defineModel<string>('missing', { required: true })
 const recent = defineModel<boolean>('recent', { required: true })
 const prefix = defineModel<string>('prefix', { required: true })
+const deprecated = defineModel<boolean>('deprecated', { required: true })
 
 // У пунктов выбора не бывает пустого значения — «все» обозначаем отдельно
 const ALL = 'all'
@@ -75,10 +76,10 @@ const copyLink = async () => {
       icon="i-lucide-history"
       :color="stale ? 'warning' : 'neutral'"
       :variant="stale ? 'soft' : 'outline'"
-      title="Перевод сделан до последней правки английского"
+      title="Английский поменяли после перевода — перевод нужно сверить"
       @click="stale = !stale"
     >
-      Устаревшие
+      Перевод устарел
     </UButton>
     <UButton
       size="sm"
@@ -111,6 +112,16 @@ const copyLink = async () => {
     </UBadge>
 
     <div class="ml-auto flex items-center gap-1">
+      <UButton
+        size="sm"
+        icon="i-lucide-archive"
+        :color="deprecated ? 'warning' : 'neutral'"
+        :variant="deprecated ? 'soft' : 'ghost'"
+        title="Ключи, выведенные из употребления: их нет в таблице и выгрузках, вернуть можно в любой момент"
+        @click="deprecated = !deprecated"
+      >
+        Помеченные устаревшими
+      </UButton>
       <UButton
         v-if="hasFilters"
         size="sm"

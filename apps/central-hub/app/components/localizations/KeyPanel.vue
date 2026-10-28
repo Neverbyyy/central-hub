@@ -334,7 +334,7 @@ const formatDate = (value?: string | null) => value
                   size="sm"
                   title="Английский поменяли после перевода"
                 >
-                  Устарел
+                  Перевод устарел
                 </UBadge>
                 <UBadge
                   v-if="item.tooLong"

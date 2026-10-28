@@ -38,7 +38,7 @@ const cellTitle = (lang: string) => {
   const notes = [text]
   const status = props.row.status?.[lang]
   if (status === 'ai' || status === 'draft') notes.push(STATUS_LABEL[status])
-  if (props.row.stale_langs?.includes(lang)) notes.push('Устарел: английский поменяли после перевода')
+  if (props.row.stale_langs?.includes(lang)) notes.push('Перевод устарел: английский поменяли после перевода')
   return notes.join('\n')
 }
 </script>
@@ -109,7 +109,7 @@ const cellTitle = (lang: string) => {
       <span
         v-if="row.stale_langs?.includes(lang)"
         class="absolute left-1 top-1 size-1.5 rounded-full bg-orange-500"
-        aria-label="устарел"
+        aria-label="перевод устарел"
       />
 
       <LocalizationsCellEditor

@@ -8,6 +8,8 @@ const props = defineProps<{
   loading: boolean
   initialLoading: boolean
   hasMore: boolean
+  // Ключи, помеченные устаревшими: смотреть можно, править — только после «Вернуть»
+  readonly?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -103,9 +105,16 @@ const setActive = (row: number, col: number) => {
   if (row > props.rows.length - 1 && props.hasMore) emit('loadMore')
 }
 
+const blockEdit = () => {
+  if (!props.readonly) return false
+  // Один тост с постоянным id — печать по ячейке не плодит их
+  toast.add({ id: 'grid-readonly', title: 'Ключ помечен устаревшим', description: 'Чтобы править, верните его: панель ключа → «Вернуть»', color: 'warning' })
+  return true
+}
+
 const startEdit = (initial?: string) => {
   const a = active.value
-  if (!a || a.col === 0) return
+  if (!a || a.col === 0 || blockEdit()) return
   const row = props.rows[a.row]
   if (!row) return
   ensureVisible(a.row, a.col)
@@ -205,7 +214,7 @@ const onKeydown = (e: KeyboardEvent) => {
     active.value = null
     emit('escape')
   } else if ((e.key === 'Backspace' || e.key === 'Delete') && col > 0 && rowKey) {
-    emit('save', rowKey, props.languages[col - 1]!, '', valueAt(row, col))
+    if (!blockEdit()) emit('save', rowKey, props.languages[col - 1]!, '', valueAt(row, col))
   } else if (mod && e.code === 'KeyZ' && e.shiftKey) {
     emit('redo')
   } else if (mod && e.code === 'KeyZ') {
@@ -240,6 +249,7 @@ useEventListener(document, 'paste', (e: ClipboardEvent) => {
   const text = e.clipboardData?.getData('text/plain')
   if (!row || text === undefined) return
   e.preventDefault()
+  if (blockEdit()) return
   // Google Sheets / Excel добавляют перевод строки в конце скопированной ячейки
   const { row: index, col } = active.value
   emit('save', row.technical_key, props.languages[col - 1]!, text.replace(/\r?\n$/, ''), valueAt(index, col))
