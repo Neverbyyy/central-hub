@@ -298,6 +298,24 @@ export async function translationQueue(
   return { total: items.length, items: items.slice(0, Math.min(Math.max(limit, 1), 200)) }
 }
 
+/** Размер очереди по каждому языку перевода — за один проход по ключам, для меню «Очередь перевода». */
+export async function queueCounts(db: SupabaseClient, { prefix }: { prefix?: string } = {}) {
+  const context = await loadKeyContext(db)
+  const langs = context.languages.filter(lang => lang !== 'en')
+  const counts = Object.fromEntries(langs.map(lang => [lang, { lang, missing: 0, stale: 0 }]))
+
+  const rows = await allKeys<KeyRow>(db, 'technical_key, translations, based_on, source_rev', prefix)
+  for (const row of rows) {
+    if (!row.translations.en) continue
+    const stale = staleLanguages(row)
+    for (const lang of langs) {
+      if (!row.translations[lang]) counts[lang]!.missing++
+      else if (stale.includes(lang)) counts[lang]!.stale++
+    }
+  }
+  return langs.map(lang => counts[lang]!)
+}
+
 /** Ключи без перевода на язык или с переводом, устаревшим после правки английского. */
 export async function listUntranslated(db: SupabaseClient, { lang, prefix, limit = 20 }: { lang: string, prefix?: string, limit?: number }) {
   const { items } = await translationQueue(db, { lang, prefix, limit: Math.min(Math.max(limit, 1), 100) })

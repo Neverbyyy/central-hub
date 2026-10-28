@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { DropdownMenuItem } from '@nuxt/ui'
 import JSZip from 'jszip'
 
 definePageMeta({ title: 'Локализации' })
@@ -6,6 +7,7 @@ definePageMeta({ title: 'Локализации' })
 const toast = useToast()
 
 const {
+  languages,
   languageCodes,
   registry,
   loadRegistry,
@@ -145,6 +147,34 @@ const download = (blob: Blob, filename: string) => {
   URL.revokeObjectURL(url)
 }
 
+// --- Очередь перевода: меню по языкам; сколько строк ждёт, считаем при открытии — с учётом раздела ---
+const queueCounts = ref<Record<string, number> | null>(null)
+
+const loadQueueCounts = async (open: boolean) => {
+  if (!open) return
+  queueCounts.value = null
+  try {
+    const counts = await $fetch<{ lang: string, missing: number, stale: number }[]>('/api/queue/counts', {
+      query: { prefix: filters.prefix || undefined }
+    })
+    queueCounts.value = Object.fromEntries(counts.map(c => [c.lang, c.missing + c.stale]))
+  } catch (error) {
+    console.error(error)
+    queueCounts.value = {}
+  }
+}
+
+const queueItems = computed<DropdownMenuItem[][]>(() => [
+  [{ type: 'label', label: filters.prefix ? `Раздел ${filters.prefix}` : 'Все ключи' }],
+  languages.value.filter(l => !l.is_source).map(l => ({
+    label: `${l.code.toUpperCase()} — ${l.name}`,
+    count: queueCounts.value ? (queueCounts.value[l.code] ?? 0) : undefined,
+    onSelect: () => {
+      navigateTo({ path: '/localizations/queue', query: { lang: l.code, ...(filters.prefix ? { prefix: filters.prefix } : {}) } })
+    }
+  }))
+])
+
 const exporting = ref<'zip' | 'figma' | null>(null)
 
 const exportZip = async () => {
@@ -190,7 +220,7 @@ const exportFigma = async () => {
 <template>
   <div class="flex h-[calc(100dvh-64px)] flex-col overflow-hidden bg-white text-gray-900">
     <div class="flex shrink-0 items-center justify-between gap-4 border-b border-gray-200 p-4">
-      <div class="flex w-full max-w-2xl items-center gap-3">
+      <div class="flex w-full min-w-0 max-w-2xl items-center gap-3">
         <UButton
           :icon="treeOpen ? 'i-lucide-panel-left-close' : 'i-lucide-panel-left-open'"
           color="neutral"
@@ -202,18 +232,18 @@ const exportFigma = async () => {
           v-model="q"
           icon="i-lucide-search"
           placeholder="Поиск по ключу или тексту…"
-          class="w-full max-w-sm"
+          class="w-full min-w-32 max-w-sm"
         />
         <USelectMenu
           v-model="selectedTags"
           :items="availableTags"
           multiple
           placeholder="Все теги"
-          class="w-64"
+          class="w-48 shrink-0"
         />
       </div>
 
-      <div class="flex items-center gap-3">
+      <div class="flex shrink-0 items-center gap-3 whitespace-nowrap">
         <UButton
           v-if="selectedKeys.size"
           icon="i-lucide-archive"
@@ -228,6 +258,28 @@ const exportFigma = async () => {
         <span class="whitespace-nowrap text-xs text-gray-400">
           {{ total === null ? '…' : `${total} ${plural(total, ['ключ', 'ключа', 'ключей'])}` }}
         </span>
+
+        <UDropdownMenu
+          :items="queueItems"
+          :content="{ align: 'end' }"
+          @update:open="loadQueueCounts"
+        >
+          <UButton
+            icon="i-lucide-list-todo"
+            color="neutral"
+            variant="soft"
+          >
+            Очередь перевода
+          </UButton>
+          <template #item-trailing="{ item }">
+            <span
+              v-if="item.type !== 'label'"
+              class="text-xs tabular-nums text-gray-400"
+            >
+              {{ item.count === undefined ? '…' : item.count || '✓' }}
+            </span>
+          </template>
+        </UDropdownMenu>
 
         <UButton
           icon="i-lucide-figma"

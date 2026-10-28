@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { queueCounts, translationQueue } from '../../apps/central-hub/server/lib/keys'
 import { ACTOR, ANCHOR, ensureAnchor, readAnchor, service } from './clients'
 
 const set = (lang: string, value: string, expected?: string) =>
@@ -69,5 +70,20 @@ describe('одновременная правка одной ячейки', () =
   it('если в ячейке уже ровно мой текст — не конфликт', async () => {
     const current = (await readAnchor()).translations.de
     expect((await set('de', current, 'устаревшее ожидание')).error).toBeNull()
+  })
+})
+
+describe('очередь перевода', () => {
+  it('счётчики по языкам совпадают с самой очередью', async () => {
+    await set('en', `Queue ${Date.now()}`)
+    await set('es', '')
+    const counts = await queueCounts(service, { prefix: 'common.selftest.anchor.' })
+    expect(counts.map(c => c.lang)).not.toContain('en')
+
+    for (const count of counts) {
+      const { total } = await translationQueue(service, { lang: count.lang, prefix: 'common.selftest.anchor.' })
+      expect(count.missing + count.stale).toBe(total)
+    }
+    expect(counts.find(c => c.lang === 'es')?.missing).toBe(1)
   })
 })
