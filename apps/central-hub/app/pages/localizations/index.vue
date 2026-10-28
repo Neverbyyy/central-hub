@@ -7,6 +7,8 @@ const toast = useToast()
 
 const {
   languageCodes,
+  registry,
+  loadRegistry,
   rows,
   total,
   loading,
@@ -44,6 +46,13 @@ watch([q, selectedTags], () => {
   grid.value?.reset()
   selectedKeys.value = new Set()
 }, { deep: true })
+
+// --- Новый ключ: после создания показываем его поиском ---
+const creating = ref(false)
+
+const onKeyCreated = (key: string) => {
+  q.value = key
+}
 
 // Без подтверждения: действие обратимо — в тосте есть «Вернуть»
 const deprecating = ref(false)
@@ -164,8 +173,23 @@ const exportFigma = async () => {
         >
           Export ZIP
         </UButton>
+
+        <UButton
+          icon="i-lucide-plus"
+          @click="creating = true"
+        >
+          Новый ключ
+        </UButton>
       </div>
     </div>
+
+    <LocalizationsCreateKey
+      v-model:open="creating"
+      :registry="registry"
+      :languages="languageCodes"
+      @created="onKeyCreated"
+      @registry-changed="loadRegistry"
+    />
 
     <LocalizationsGrid
       ref="grid"

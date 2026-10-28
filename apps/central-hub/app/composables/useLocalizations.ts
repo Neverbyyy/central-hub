@@ -1,4 +1,11 @@
 import type { RealtimeChannel } from '@supabase/supabase-js'
+import type { RegistryKind } from '@amaya/l10n-core'
+
+export interface RegistryEntry {
+  kind: RegistryKind
+  code: string
+  title: string
+}
 
 export interface Language {
   code: string
@@ -47,6 +54,8 @@ export function useLocalizations() {
 
   const languages = ref<Language[]>([])
   const languageCodes = computed(() => languages.value.map(l => l.code))
+  // Коды игр, сайтов, брендов, тестов — по ним проверяется имя нового ключа
+  const registry = ref<RegistryEntry[]>([])
 
   const rows = ref<Localization[]>([])
   const total = ref<number | null>(null)
@@ -91,6 +100,11 @@ export function useLocalizations() {
       return
     }
     languages.value = (data ?? []) as Language[]
+  }
+
+  const loadRegistry = async () => {
+    const { data, error } = await supabase.from('registry').select('kind, code, title').order('kind').order('code')
+    if (!error) registry.value = (data ?? []) as RegistryEntry[]
   }
 
   const load = async (reset = false) => {
@@ -260,6 +274,7 @@ export function useLocalizations() {
 
   onMounted(() => {
     loadLanguages()
+    loadRegistry()
     fetchTags()
     load(true)
 
@@ -296,6 +311,8 @@ export function useLocalizations() {
   return {
     languages,
     languageCodes,
+    registry,
+    loadRegistry,
     rows,
     total,
     loading,
