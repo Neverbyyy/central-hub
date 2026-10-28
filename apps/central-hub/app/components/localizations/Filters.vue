@@ -83,6 +83,16 @@ const copyLink = async () => {
     </UButton>
     <UButton
       size="sm"
+      icon="i-lucide-archive"
+      :color="deprecated ? 'warning' : 'neutral'"
+      :variant="deprecated ? 'soft' : 'outline'"
+      title="Ключи, помеченные устаревшими: их нет в таблице и выгрузках, вернуть можно в любой момент"
+      @click="deprecated = !deprecated"
+    >
+      Ключ устарел
+    </UButton>
+    <UButton
+      size="sm"
       icon="i-lucide-calendar-clock"
       :color="recent ? 'primary' : 'neutral'"
       :variant="recent ? 'soft' : 'outline'"
@@ -112,16 +122,6 @@ const copyLink = async () => {
     </UBadge>
 
     <div class="ml-auto flex items-center gap-1">
-      <UButton
-        size="sm"
-        icon="i-lucide-archive"
-        :color="deprecated ? 'warning' : 'neutral'"
-        :variant="deprecated ? 'soft' : 'ghost'"
-        title="Ключи, выведенные из употребления: их нет в таблице и выгрузках, вернуть можно в любой момент"
-        @click="deprecated = !deprecated"
-      >
-        Помеченные устаревшими
-      </UButton>
       <UButton
         v-if="hasFilters"
         size="sm"

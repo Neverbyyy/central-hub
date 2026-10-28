@@ -150,7 +150,7 @@ const deprecateSelected = async () => {
   deprecating.value = false
 }
 
-// В выборке «Помеченные устаревшими» та же кнопка возвращает выделенные ключи
+// В выборке «Ключ устарел» та же кнопка возвращает выделенные ключи
 const restoreSelected = async () => {
   const keys = [...selectedKeys.value]
   if (!keys.length) return
