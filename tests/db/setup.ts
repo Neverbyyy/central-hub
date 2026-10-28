@@ -1,8 +1,4 @@
-import { existsSync } from 'node:fs'
+import { inject } from 'vitest'
 
-// Локально ключи лежат в корневом .env, в CI приходят переменными окружения
-if (existsSync('.env')) process.loadEnvFile('.env')
-
-for (const name of ['NUXT_PUBLIC_SUPABASE_URL', 'NUXT_PUBLIC_SUPABASE_KEY', 'NUXT_SUPABASE_SECRET_KEY']) {
-  if (!process.env[name]) throw new Error(`Для тестов базы нужна переменная ${name}`)
-}
+// Адрес и ключи локального Supabase нашёл global-setup.ts; .env (основная база) здесь не читаем
+Object.assign(process.env, inject('supabaseEnv'))

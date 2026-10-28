@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      # Версия pnpm — из packageManager в package.json
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Unit-тесты
+        run: pnpm test
+
+      # Тесты базы идут на одноразовом локальном Supabase: миграции с нуля, строки InApp и Pages Hub из fixtures
+      - name: Локальный Supabase
+        run: pnpm db:start
+
+      - name: Тесты базы
+        run: pnpm test:db

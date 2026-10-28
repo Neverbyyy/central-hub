@@ -1,33 +1,11 @@
-import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { readLocaleFile } from '../../packages/l10n-core/src'
 import { exportSet, importSet } from '../../apps/central-hub/server/lib/sync'
 import { ACTOR, service } from './clients'
+import { IMPORTER, LANGS, readFixtures, SETS } from './fixtures'
 
-// Импорт копий — это и есть настоящий импорт строк InApp и Pages Hub в сервис:
-// первый прогон их заносит, следующие проверяют, что повторный импорт ничего не меняет.
-const IMPORTER = 'Импорт копий fixtures/legacy (автотест)'
-
-const LANGS = ['en', 'ru', 'de', 'es', 'it', 'pt', 'fr', 'sv', 'nl']
-
-const SETS = {
-  inapp: {
-    dir: 'fixtures/legacy/inapp/src/locales',
-    path: (lang: string) => `src/locales/${lang}.json`,
-    commit: '021d14d258e729ccdaf633624c60a49c38115fc8',
-    keys: 2696
-  },
-  pages_hub: {
-    dir: 'fixtures/legacy/pages-hub/i18n/locales',
-    path: (lang: string) => `i18n/locales/${lang}.json`,
-    commit: '99c58185c70e631f2d8f7e9ba1d197c6899ad95f',
-    keys: 25
-  }
-}
-
-const readFixtures = (dir: string) =>
-  Object.fromEntries(LANGS.map(lang => [lang, readFileSync(`${dir}/${lang}.json`, 'utf8')]))
-
+// Строки уже занёс global-setup.ts; здесь проверяем, что повторный импорт ничего не меняет
+// и что выгрузка возвращает исходные файлы. База тестовая — правки людей тут не пострадают.
 describe.each(Object.entries(SETS))('набор %s', (name, set) => {
   const files = readFixtures(set.dir)
 

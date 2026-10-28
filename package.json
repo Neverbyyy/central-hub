@@ -13,6 +13,9 @@
     "typecheck": "pnpm --filter central-hub typecheck",
     "test": "vitest run --project unit",
     "test:db": "vitest run --project db",
+    "test:stand": "vitest run --project stand",
+    "db:start": "supabase start -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,supavisor,storage-api,postgres-meta",
+    "db:stop": "supabase stop --no-backup",
     "db:push": "supabase db push --linked",
     "db:new": "supabase migration new"
   },
