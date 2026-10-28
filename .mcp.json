@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "amaya-hub": {
+      "type": "http",
+      "url": "https://central-hub-sigma.vercel.app/mcp",
+      "headers": {
+        "Authorization": "Bearer ${AMAYA_HUB_TOKEN}"
+      }
+    }
+  }
+}

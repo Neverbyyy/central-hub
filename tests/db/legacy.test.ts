@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
+import { readLocaleFile } from '../../packages/l10n-core/src'
 import { exportSet, importSet } from '../../apps/central-hub/server/lib/sync'
 import { ACTOR, service } from './clients'
 
@@ -38,10 +39,24 @@ describe.each(Object.entries(SETS))('набор %s', (name, set) => {
     expect(second).toEqual({ total: set.keys, added: 0, changed: 0, restored: 0, unchanged: set.keys, deprecated: 0 })
   }, 120_000)
 
-  it('выгрузка из базы совпадает с исходными файлами байт в байт', async () => {
-    const result = await exportSet(service, name)
+  it('строки проекта выгружаются байт в байт как в исходных файлах', async () => {
+    const result = await exportSet(service, name, { legacyOnly: true })
     expect(result.files.map(f => f.path)).toEqual(LANGS.map(set.path))
     for (const file of result.files) expect(file.content).toBe(files[file.lang])
+  }, 60_000)
+
+  it('новые ключи только добавляются: старые строки на месте и не изменились', async () => {
+    const result = await exportSet(service, name)
+    for (const file of result.files) {
+      const exported = new Map(readLocaleFile(file.content).map(e => [JSON.stringify(e.path), e.value]))
+      const original = readLocaleFile(files[file.lang]!)
+      for (const { path, value } of original) expect(exported.get(JSON.stringify(path))).toBe(value)
+      // Всё лишнее — новые ключи под разрешёнными префиксами
+      const known = new Set(original.map(e => JSON.stringify(e.path)))
+      const added = [...exported.keys()].filter(p => !known.has(p)).map(p => (JSON.parse(p) as string[]).join('.'))
+      expect(added.every(key => /^(common|app|web|brand|ds|test)\./.test(key))).toBe(true)
+      expect(added.some(key => key.startsWith('common.selftest.'))).toBe(false)
+    }
   }, 60_000)
 })
 

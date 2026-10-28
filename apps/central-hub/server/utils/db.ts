@@ -1,7 +1,7 @@
 import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js'
 import type { H3Event } from 'h3'
 import { serverSupabaseServiceRole } from '#supabase/server'
-import { SyncError } from '../lib/sync'
+import { HubError } from '../lib/errors'
 
 // Клиент с секретным ключом: обходит RLS, поэтому существует только на сервере.
 // Типы схемы пока не генерируются, отсюда клиент без схемы.
@@ -19,10 +19,10 @@ export function throwDbError(error: PostgrestError): never {
   throw createError({ statusCode: 500, statusMessage: 'Database Error', message: 'Ошибка базы данных' })
 }
 
-/** Ошибки импорта и выгрузки: SyncError — человеку как есть, ошибки базы — как в throwDbError. */
-export function throwSyncError(error: unknown): never {
-  if (error instanceof SyncError) {
-    throw createError({ statusCode: error.status, statusMessage: 'Sync Error', message: error.message })
+/** HubError — человеку как есть, ошибки базы — как в throwDbError, остальное — дальше. */
+export function throwHubError(error: unknown): never {
+  if (error instanceof HubError) {
+    throw createError({ statusCode: error.status, statusMessage: 'Request Failed', message: error.message })
   }
   if (error && typeof error === 'object' && 'code' in error && 'message' in error) {
     throwDbError(error as PostgrestError)

@@ -13,11 +13,12 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
-  // Только сервер: NUXT_HUB_PASSWORD, NUXT_SESSION_PASSWORD и NUXT_CLI_TOKEN
+  // Только сервер: NUXT_HUB_PASSWORD, NUXT_SESSION_PASSWORD, NUXT_CLI_TOKEN и NUXT_MCP_TOKEN
   runtimeConfig: {
     hubPassword: '',
     sessionPassword: '',
-    cliToken: ''
+    cliToken: '',
+    mcpToken: ''
   },
 
   // l10n-core — TypeScript-исходники из workspace без сборки: их нужно встроить в бандл,
@@ -40,10 +41,12 @@ export default defineNuxtConfig({
     }
   },
 
-  // CJS-зависимости собираем заранее, иначе dev-сервер перезагружает страницу при первом открытии грида
+  // CJS-зависимости собираем заранее, иначе dev-сервер перезагружает страницу при первом открытии грида.
+  // cookie — по пути @supabase/ssr: модуль Supabase просит «@nuxtjs/supabase > cookie», а с MCP SDK
+  // в проекте две версии cookie, и общая копия (0.7 от express) — не та, что импортирует @supabase/ssr (1.x)
   vite: {
     optimizeDeps: {
-      include: ['jszip', '@rive-app/webgl2']
+      include: ['jszip', '@rive-app/webgl2', '@nuxtjs/supabase > @supabase/ssr > cookie']
     }
   },
 

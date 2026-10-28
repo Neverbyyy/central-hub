@@ -22,14 +22,17 @@ export function useHubSession(event: H3Event) {
   })
 }
 
-/** Имя автора правки. 401 — нет входа, 409 — человек не представился. */
+/** Имя автора правки. 401 — нет входа, 403 «Name Required» — человек не представился. */
 export async function requireHubUser(event: H3Event): Promise<string> {
   const { data } = await useHubSession(event)
   if (!data.authed) {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized', message: 'Нужен вход' })
   }
   if (!data.name) {
-    throw createError({ statusCode: 409, statusMessage: 'Name Required', message: 'Представьтесь — имя подписывает правки в истории' })
+    throw createError({ statusCode: 403, statusMessage: NAME_REQUIRED, message: 'Представьтесь — имя подписывает правки в истории' })
   }
   return data.name
 }
+
+// Отличает «не представился» от остальных 403 — интерфейс по нему отправляет ввести имя
+export const NAME_REQUIRED = 'Name Required'

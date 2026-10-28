@@ -2,7 +2,7 @@ import { importSet } from '../../../lib/sync'
 
 // `amaya-l10n import`: файлы проекта как есть → строки legacy.<проект>. и шаблоны выгрузки
 export default defineEventHandler(async (event) => {
-  requireCliToken(event)
+  requireToken(event, 'cli')
 
   const body = await readBody<{ files?: unknown, sourceRef?: unknown, actor?: unknown }>(event)
   const files = body?.files
@@ -18,6 +18,6 @@ export default defineEventHandler(async (event) => {
       sourceRef
     })
   } catch (error) {
-    throwSyncError(error)
+    throwHubError(error)
   }
 })
