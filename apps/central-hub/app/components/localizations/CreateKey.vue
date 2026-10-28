@@ -12,6 +12,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   created: [key: string]
   registryChanged: []
+  // Открыть существующий ключ, с которым конфликтует новое имя
+  open: [key: string]
 }>()
 
 const open = defineModel<boolean>('open', { required: true })
@@ -31,7 +33,62 @@ const context = computed<KeyContext>(() => {
 })
 
 const key = computed(() => form.key.trim())
-const keyMessage = computed(() => (key.value ? newKeyError(key.value, context.value) : null))
+
+// --- Имя уже занято: проверяем сразу при вводе, а не после «Создать ключ» ---
+// same — такой ключ есть; parent — начало нового ключа уже строка; inside — новый ключ стал бы началом существующего
+interface Taken { for: string, key: string, kind: 'same' | 'parent' | 'inside', deprecated: boolean }
+const taken = ref<Taken | null>(null)
+const supabase = useSupabaseClient()
+const escapeLike = (value: string) => value.replace(/[\\%_]/g, char => `\\${char}`)
+
+// Начала ключа, которые сами могут быть ключами (от трёх частей): app.cars2.paywall для app.cars2.paywall.title
+const parentKeys = (value: string) => {
+  const segments = value.split('.')
+  return segments.slice(3).map((_, i) => segments.slice(0, i + 3).join('.'))
+}
+
+const nameError = computed(() => (key.value ? newKeyError(key.value, context.value) : null))
+
+watchDebounced(key, async (value) => {
+  if (!value || nameError.value) return
+  const columns = 'technical_key, deprecated_at'
+  const [same, inside] = await Promise.all([
+    supabase.from('localizations').select(columns).in('technical_key', [value, ...parentKeys(value)]),
+    supabase.from('localizations').select(columns).like('technical_key', `${escapeLike(value)}.%`).limit(1)
+  ])
+  if (value !== key.value) return
+  type Row = { technical_key: string, deprecated_at: string | null }
+  const rows = (same.data ?? []) as Row[]
+  const exact = rows.find(row => row.technical_key === value)
+  const parent = rows.find(row => row.technical_key !== value)
+  const row = exact ?? parent ?? (inside.data as Row[] | null)?.[0]
+  taken.value = row
+    ? { for: value, key: row.technical_key, kind: exact ? 'same' : parent ? 'parent' : 'inside', deprecated: !!row.deprecated_at }
+    : null
+}, { debounce: 250 })
+
+// Ответ про прежнее имя не показываем — пока человек печатает, проверка догоняет
+const takenNow = computed(() => (taken.value?.for === key.value ? taken.value : null))
+
+const takenMessage = computed(() => {
+  const t = takenNow.value
+  if (!t) return null
+  if (t.kind === 'same') {
+    return t.deprecated
+      ? `Ключ «${t.key}» уже есть, он помечен устаревшим — верните его вместо нового`
+      : `Ключ «${t.key}» уже есть`
+  }
+  if (t.kind === 'parent') return `«${t.key}» — уже строка, а не раздел: внутри неё ключ не создать`
+  return `Уже есть ключ «${t.key}»: «${key.value}» — раздел, а не строка`
+})
+
+const keyMessage = computed(() => nameError.value ?? takenMessage.value)
+
+const openTaken = () => {
+  if (!takenNow.value) return
+  emit('open', takenNow.value.key)
+  open.value = false
+}
 // Пока поле пустое, не ругаемся — об этом скажет подсказка у кнопки
 const descriptionMessage = computed(() => (form.description.trim() ? descriptionError(form.description) : null))
 
@@ -129,7 +186,8 @@ const copyKey = async (value: string) => {
 const blockers = computed(() => {
   const list: string[] = []
   if (!key.value) list.push('ключ')
-  else if (keyMessage.value) list.push('исправить ключ')
+  else if (nameError.value) list.push('исправить ключ')
+  else if (takenMessage.value) list.push('другое имя ключа')
   if (descriptionError(form.description)) list.push(`описание от ${MIN_DESCRIPTION_LENGTH} символов`)
   if (!form.en.trim()) list.push('текст на английском')
   else if (hasTextErrors.value) list.push('исправить текст')
@@ -137,6 +195,11 @@ const blockers = computed(() => {
 })
 
 const canSubmit = computed(() => !blockers.value.length && !pending.value)
+
+// Ответ сервера относится к отправленной форме — после правки он уже неверен
+watch(() => [form.key, form.description, form.en], () => {
+  serverError.value = ''
+})
 
 const submit = async () => {
   if (!canSubmit.value) return
@@ -192,6 +255,17 @@ const onKeydown = (event: KeyboardEvent) => {
             placeholder="app.cars2.paywall.title"
             autofocus
           />
+          <template #error="{ error }">
+            {{ error }}
+            <button
+              v-if="takenNow && !nameError"
+              type="button"
+              class="ml-1 font-medium underline underline-offset-2"
+              @click="openTaken"
+            >
+              Открыть «{{ takenNow.key }}»
+            </button>
+          </template>
         </UFormField>
 
         <div
@@ -327,21 +401,21 @@ const onKeydown = (event: KeyboardEvent) => {
             </li>
           </ul>
         </section>
-
-        <p
-          v-if="serverError"
-          class="text-sm text-red-600"
-          role="alert"
-        >
-          {{ serverError }}
-        </p>
       </form>
     </template>
 
     <template #footer>
+      <!-- Нижняя строка видна всегда, без прокрутки: ошибка сервера, чего не хватает или подсказка -->
       <div class="flex w-full items-center justify-between gap-3">
         <span
-          v-if="blockers.length"
+          v-if="serverError"
+          class="text-xs text-red-600"
+          role="alert"
+        >
+          {{ serverError }}
+        </span>
+        <span
+          v-else-if="blockers.length"
           class="text-xs text-amber-700"
           role="status"
         >

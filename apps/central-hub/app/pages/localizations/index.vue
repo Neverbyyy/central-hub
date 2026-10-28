@@ -24,6 +24,7 @@ const {
   hasFilters,
   resetFilters,
   load,
+  reload,
   setTranslation,
   undo,
   redo,
@@ -104,6 +105,12 @@ const onKeyCreated = (key: string) => {
   openPanel(key)
 }
 
+// Имя нового ключа уже занято — показываем существующий
+const showExisting = (key: string) => {
+  q.value = key
+  openPanel(key)
+}
+
 // Адрес поменяли снаружи (⌘K, ссылка): ?new=1 открывает форму ключа, ?key= — панель
 watch(() => [route.query.new, route.query.key], ([isNew, key]) => {
   if (isNew === '1') {
@@ -114,6 +121,11 @@ watch(() => [route.query.new, route.query.key], ([isNew, key]) => {
   }
   if (typeof key === 'string' && key && key !== panelKey.value) panelKey.value = key
 }, { immediate: true })
+
+const onRestored = () => {
+  reload()
+  treeVersion.value++
+}
 
 const deprecateFromPanel = async (key: string) => {
   if (await deprecateKeys([key])) {
@@ -316,6 +328,7 @@ const exportFigma = async () => {
       :registry="registry"
       :languages="languageCodes"
       @created="onKeyCreated"
+      @open="showExisting"
       @registry-changed="loadRegistry"
     />
 
@@ -364,6 +377,7 @@ const exportFigma = async () => {
         :row="panelRow"
         @close="closePanel"
         @deprecate="deprecateFromPanel"
+        @restored="onRestored"
       />
     </div>
 

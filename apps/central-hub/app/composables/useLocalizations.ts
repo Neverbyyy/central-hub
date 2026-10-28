@@ -240,9 +240,11 @@ export function useLocalizations() {
     syncUrl()
     reload()
   }, { debounce: 300 })
-  // Адрес поменяли снаружи — ⌘K, «назад», ссылка от коллеги
-  watch(() => route.query, (query) => {
-    if (!sameQuery(query, buildQuery())) readQuery()
+  // Адрес поменяли снаружи — ⌘K, «назад», ссылка от коллеги. Смотрим только на параметры выборки:
+  // смена ?key= не должна перечитывать поиск, который ещё не успел попасть в адрес (он с паузой)
+  const filterPart = (query: Record<string, unknown>) => JSON.stringify(FILTER_PARAMS.map(name => query[name] ?? null))
+  watch(() => filterPart(route.query), (part) => {
+    if (part !== filterPart(buildQuery())) readQuery()
   })
 
   const fetchTags = async () => {

@@ -12,6 +12,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   close: []
   deprecate: [key: string]
+  // Ключ вернули из устаревших — таблице и дереву пора перечитаться
+  restored: [key: string]
 }>()
 
 interface KeyDetails extends Localization {
@@ -123,6 +125,24 @@ const approve = async (langs: string[]) => {
     }
   } finally {
     approving.value = null
+  }
+}
+
+const restoring = ref(false)
+
+const restore = async () => {
+  restoring.value = true
+  try {
+    await $fetch('/api/keys/restore', { method: 'POST', body: { keys: [props.technicalKey] } })
+    toast.add({ title: 'Ключ возвращён', description: props.technicalKey, color: 'success', duration: 2000 })
+    await load()
+    emit('restored', props.technicalKey)
+  } catch (error) {
+    if (!(await authRedirect(error))) {
+      toast.add({ title: 'Не удалось вернуть', description: errorMessage(error), color: 'error' })
+    }
+  } finally {
+    restoring.value = false
   }
 }
 
@@ -404,7 +424,23 @@ const formatDate = (value?: string | null) => value
     </div>
 
     <div
-      v-if="details && !details.deprecated_at"
+      v-if="details?.deprecated_at"
+      class="flex items-center gap-2 border-t border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-900"
+    >
+      <span class="flex-1">Помечен устаревшим: его нет в таблице и выгрузках</span>
+      <UButton
+        size="xs"
+        color="warning"
+        variant="soft"
+        icon="i-lucide-archive-restore"
+        :loading="restoring"
+        @click="restore"
+      >
+        Вернуть
+      </UButton>
+    </div>
+    <div
+      v-else-if="details"
       class="border-t border-gray-200 px-4 py-2"
     >
       <UButton
