@@ -19,6 +19,7 @@ const {
   q,
   selectedTags,
   availableTags,
+  fetchTags,
   filters,
   filtersKey,
   hasFilters,
@@ -162,16 +163,6 @@ const restoreSelected = async () => {
   deprecating.value = false
 }
 
-// --- Экспорт ---
-const download = (blob: Blob, filename: string) => {
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
-}
-
 // --- Очередь перевода: меню по языкам; сколько строк ждёт, считаем при открытии — с учётом раздела ---
 const queueCounts = ref<Record<string, number> | null>(null)
 
@@ -200,10 +191,12 @@ const queueItems = computed<DropdownMenuItem[][]>(() => [
   }))
 ])
 
-const exporting = ref<'zip' | 'figma' | null>(null)
+// --- Экспорт: ZIP — всё под текущими фильтрами, Figma — выборка разделов в отдельном окне ---
+const figmaOpen = ref(false)
+const exporting = ref(false)
 
 const exportZip = async () => {
-  exporting.value = 'zip'
+  exporting.value = true
   try {
     const all = await fetchAll()
     const zip = new JSZip()
@@ -212,32 +205,12 @@ const exportZip = async () => {
       for (const row of all) file[row.technical_key] = row.translations?.[lang] ?? ''
       zip.file(`${lang}.json`, JSON.stringify(file, null, 2))
     }
-    download(await zip.generateAsync({ type: 'blob' }), 'localizations.zip')
+    downloadBlob(await zip.generateAsync({ type: 'blob' }), 'localizations.zip')
     toast.add({ title: 'Экспорт ZIP завершён', color: 'success' })
   } catch (error) {
     toast.add({ title: 'Ошибка экспорта', description: (error as Error).message, color: 'error' })
   } finally {
-    exporting.value = null
-  }
-}
-
-const exportFigma = async () => {
-  exporting.value = 'figma'
-  try {
-    const all = await fetchAll()
-    const variables: Record<string, { $type: 'string', $value: Record<string, string> }> = {}
-    for (const row of all) {
-      variables[row.technical_key] = {
-        $type: 'string',
-        $value: Object.fromEntries(languageCodes.value.map(lang => [lang, row.translations?.[lang] ?? '']))
-      }
-    }
-    download(new Blob([JSON.stringify({ Localizations: variables }, null, 2)], { type: 'application/json' }), 'figma-variables.json')
-    toast.add({ title: 'Экспорт для Figma завершён', color: 'success' })
-  } catch (error) {
-    toast.add({ title: 'Ошибка экспорта', description: (error as Error).message, color: 'error' })
-  } finally {
-    exporting.value = null
+    exporting.value = false
   }
 }
 </script>
@@ -320,9 +293,7 @@ const exportFigma = async () => {
           icon="i-lucide-figma"
           color="neutral"
           variant="soft"
-          :loading="exporting === 'figma'"
-          :disabled="!!exporting"
-          @click="exportFigma"
+          @click="figmaOpen = true"
         >
           Export Figma
         </UButton>
@@ -330,8 +301,8 @@ const exportFigma = async () => {
         <UButton
           icon="i-lucide-download"
           color="neutral"
-          :loading="exporting === 'zip'"
-          :disabled="!!exporting"
+          :loading="exporting"
+          :disabled="exporting"
           @click="exportZip"
         >
           Export ZIP
@@ -345,6 +316,12 @@ const exportFigma = async () => {
         </UButton>
       </div>
     </div>
+
+    <LocalizationsFigmaExport
+      v-model:open="figmaOpen"
+      :prefix="filters.prefix"
+      :languages="languageCodes"
+    />
 
     <LocalizationsCreateKey
       v-model:open="creating"
@@ -403,6 +380,7 @@ const exportFigma = async () => {
         @close="closePanel"
         @deprecate="deprecateFromPanel"
         @restored="onRestored"
+        @changed="fetchTags"
       />
     </div>
 
