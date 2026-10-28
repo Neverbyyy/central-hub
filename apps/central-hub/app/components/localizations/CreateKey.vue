@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { checkText, keyError, type KeyContext, type RegistryKind } from '@amaya/l10n-core'
+import { checkText, descriptionError, MIN_DESCRIPTION_LENGTH, newKeyError, type KeyContext, type RegistryKind } from '@amaya/l10n-core'
 import type { RegistryEntry } from '~/composables/useLocalizations'
 
 // Новый ключ: имя проверяется на лету теми же правилами, что и в базе (packages/l10n-core),
@@ -31,7 +31,9 @@ const context = computed<KeyContext>(() => {
 })
 
 const key = computed(() => form.key.trim())
-const keyMessage = computed(() => (key.value ? keyError(key.value, context.value) : null))
+const keyMessage = computed(() => (key.value ? newKeyError(key.value, context.value) : null))
+// Пока поле пустое, не ругаемся — об этом скажет подсказка у кнопки
+const descriptionMessage = computed(() => (form.description.trim() ? descriptionError(form.description) : null))
 
 // Код из справочника, которого ещё нет: app.<игра>, web.<сайт>, brand.<бренд>, test.<тест>
 const KIND_BY_ROOT: Record<string, RegistryKind> = { app: 'game', web: 'site', brand: 'brand', test: 'test' }
@@ -92,9 +94,18 @@ const copyKey = async (value: string) => {
   }
 }
 
-const canSubmit = computed(() =>
-  !!key.value && !keyMessage.value && form.description.trim().length >= 10 && !!form.en.trim() && !hasTextErrors.value && !pending.value
-)
+// Что мешает создать ключ — показывается рядом с кнопкой, чтобы она не была выключена молча
+const blockers = computed(() => {
+  const list: string[] = []
+  if (!key.value) list.push('ключ')
+  else if (keyMessage.value) list.push('исправить ключ')
+  if (descriptionError(form.description)) list.push(`описание от ${MIN_DESCRIPTION_LENGTH} символов`)
+  if (!form.en.trim()) list.push('текст на английском')
+  else if (hasTextErrors.value) list.push('исправить текст')
+  return list
+})
+
+const canSubmit = computed(() => !blockers.value.length && !pending.value)
 
 const submit = async () => {
   if (!canSubmit.value) return
@@ -180,6 +191,7 @@ const onKeydown = (event: KeyboardEvent) => {
         <UFormField
           label="Описание"
           required
+          :error="descriptionMessage ?? undefined"
           help="Где показывается строка и какие у неё ограничения"
         >
           <UTextarea
@@ -279,10 +291,21 @@ const onKeydown = (event: KeyboardEvent) => {
 
     <template #footer>
       <div class="flex w-full items-center justify-between gap-3">
-        <span class="text-xs text-gray-400">
+        <span
+          v-if="blockers.length"
+          class="text-xs text-amber-700"
+          role="status"
+        >
+          Чтобы создать, нужно: {{ blockers.join(', ') }}
+        </span>
+        <span
+          v-else
+          class="text-xs text-gray-400"
+        >
           <UKbd>Ctrl</UKbd> + <UKbd>Enter</UKbd> создать · <UKbd>Esc</UKbd> закрыть
         </span>
         <UButton
+          class="shrink-0"
           :loading="pending"
           :disabled="!canSubmit"
           @click="submit"

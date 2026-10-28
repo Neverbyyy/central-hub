@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isPrefixConflict, keyError, type KeyContext } from '../src'
+import { descriptionError, isPrefixConflict, keyError, newKeyError, type KeyContext } from '../src'
 
 const ctx: KeyContext = {
   registry: {
@@ -60,6 +60,26 @@ describe('keyError', () => {
     [`common.${'x'.repeat(200)}.y`, 'длиннее']
   ])('отклоняет «%s»', (key, message) => {
     expect(keyError(key, ctx)).toContain(message)
+  })
+})
+
+describe('newKeyError', () => {
+  it('legacy.* создать нельзя, хотя такое имя проходит keyError', () => {
+    const key = 'legacy.pages_hub.a.gift_card.common.gift_card'
+    expect(keyError(key, ctx)).toBeNull()
+    expect(newKeyError(key, ctx)).toContain('только импортом')
+  })
+
+  it('обычный ключ — без ошибки, ошибки keyError сохраняются', () => {
+    expect(newKeyError('common.button.continue.default', ctx)).toBeNull()
+    expect(newKeyError('App.title.x', ctx)).toBe(keyError('App.title.x', ctx))
+  })
+})
+
+describe('descriptionError', () => {
+  it('описание короче 10 символов — ошибка с текущей длиной', () => {
+    expect(descriptionError('  asd ')).toContain('сейчас 3')
+    expect(descriptionError('Кнопка на пейволле')).toBeNull()
   })
 })
 

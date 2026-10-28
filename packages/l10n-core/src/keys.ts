@@ -77,6 +77,29 @@ export function keyError(key: string, ctx: KeyContext): string | null {
   return null
 }
 
+// У нового ключа описание обязательно: где показывается строка и какие у неё ограничения
+export const MIN_DESCRIPTION_LENGTH = 10
+
+/**
+ * Ошибка имени для нового ключа (форма в интерфейсе, MCP) или null. Строже keyError:
+ * legacy.* — строки из файлов проектов, их приносит только импорт.
+ */
+export function newKeyError(key: string, ctx: KeyContext): string | null {
+  const error = keyError(key, ctx)
+  if (error) return error
+  if (key.startsWith('legacy.')) {
+    return 'legacy.* — строки из файлов проектов, они приходят только импортом. Новый ключ — по новой схеме: common., app.<игра>., web.<сайт>. … Или возьмите существующую строку из похожих'
+  }
+  return null
+}
+
+/** Ошибка описания нового ключа или null. */
+export function descriptionError(description: string): string | null {
+  const length = description.trim().length
+  if (length >= MIN_DESCRIPTION_LENGTH) return null
+  return `Опишите, где показывается строка и какие у неё ограничения — от ${MIN_DESCRIPTION_LENGTH} символов (сейчас ${length})`
+}
+
 /**
  * Один ключ не может быть началом другого: в JSON `continue` не может быть
  * одновременно строкой и папкой (`common.button.continue` и `common.button.continue.trial`).

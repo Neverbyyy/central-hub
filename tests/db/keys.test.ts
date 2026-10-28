@@ -45,7 +45,7 @@ describe('создание ключа из интерфейса', () => {
   })
 
   it('без описания не создаётся', async () => {
-    await expect(create('common.selftest.no_description_ui', { description: 'коротко' })).rejects.toThrow('Нужно описание')
+    await expect(create('common.selftest.no_description_ui', { description: 'коротко' })).rejects.toThrow('от 10 символов')
   })
 })
 

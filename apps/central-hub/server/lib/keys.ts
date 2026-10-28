@@ -2,7 +2,7 @@
 // Без Nuxt-глобалов: общий для маршрутов интерфейса, MCP и тестов базы.
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { checkText, keyError, MAX_VALUE_LENGTH, type KeyContext, type RegistryKind, type TextIssue } from '@amaya/l10n-core'
+import { checkText, descriptionError, MAX_VALUE_LENGTH, newKeyError, type KeyContext, type RegistryKind, type TextIssue } from '@amaya/l10n-core'
 import { HubError } from './errors'
 
 export type KeyStatus = 'draft' | 'ai' | 'approved'
@@ -77,14 +77,13 @@ export async function createKey(
 ) {
   const key = input.key.trim()
   const context = await loadKeyContext(db)
-  const nameError = keyError(key, context)
+  // Те же правила проверяет форма в интерфейсе — packages/l10n-core
+  const nameError = newKeyError(key, context)
   if (nameError) throw new HubError(nameError)
-  if (key.startsWith('legacy.')) throw new HubError('Ключи legacy.* приходят только импортом файлов проекта')
 
   const description = input.description?.trim() ?? ''
-  if (description.length < 10) {
-    throw new HubError('Нужно описание: где показывается строка и какие у неё ограничения (от 10 символов)')
-  }
+  const descriptionMessage = descriptionError(description)
+  if (descriptionMessage) throw new HubError(descriptionMessage)
 
   const translations: Record<string, string> = {}
   for (const [lang, value] of Object.entries(input.translations ?? {})) {
