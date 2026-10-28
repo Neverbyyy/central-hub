@@ -37,14 +37,45 @@ const descriptionMessage = computed(() => (form.description.trim() ? description
 
 // Код из справочника, которого ещё нет: app.<игра>, web.<сайт>, brand.<бренд>, test.<тест>
 const KIND_BY_ROOT: Record<string, RegistryKind> = { app: 'game', web: 'site', brand: 'brand', test: 'test' }
-const KIND_LABEL: Record<RegistryKind, string> = { game: 'игру', site: 'сайт', brand: 'бренд', test: 'тест', project: 'проект' }
+const KIND_NEW: Record<RegistryKind, string> = { game: 'новую игру', site: 'новый сайт', brand: 'новый бренд', test: 'новый тест', project: 'новый проект' }
 
+// Предлагаем добавить код, только когда он дописан — после него уже есть точка.
+// Иначе на полпути к app.cars2 форма предложит завести игру «car».
 const missingCode = computed(() => {
-  const [root, code] = key.value.split('.')
+  const [root, code, ...rest] = key.value.split('.')
   const kind = KIND_BY_ROOT[root ?? '']
-  if (!kind || !code || !/^[a-z0-9_]+$/.test(code) || context.value.registry[kind]?.includes(code)) return null
+  if (!kind || !code || !rest.length || !/^[a-z0-9_]+$/.test(code) || context.value.registry[kind]?.includes(code)) return null
   return { kind, code }
 })
+
+// Расстояние Левенштейна — сколько букв поправить, чтобы из одного кода получить другой
+const editDistance = (a: string, b: string) => {
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j)
+  for (let i = 1; i <= a.length; i++) {
+    const row = [i]
+    for (let j = 1; j <= b.length; j++) {
+      row[j] = Math.min(prev[j]! + 1, row[j - 1]! + 1, prev[j - 1]! + (a[i - 1] === b[j - 1] ? 0 : 1))
+    }
+    prev = row
+  }
+  return prev[b.length]!
+}
+
+// Существующие коды, похожие на набранный: опечатка или недописанный код (car → cars2)
+const similarCodes = computed(() => {
+  const missing = missingCode.value
+  if (!missing) return []
+  // У коротких кодов допуск в одну букву, иначе car похож на farm
+  const tolerance = (code: string) => Math.min(code.length, missing.code.length) >= 5 ? 2 : 1
+  return props.registry.filter(entry => entry.kind === missing.kind && (
+    entry.code.startsWith(missing.code) || missing.code.startsWith(entry.code) || editDistance(entry.code, missing.code) <= tolerance(entry.code)
+  ))
+})
+
+const useCode = (code: string) => {
+  const [root, , ...rest] = key.value.split('.')
+  form.key = [root, code, ...rest].join('.')
+}
 
 const codeTitle = ref('')
 const addingCode = ref(false)
@@ -167,7 +198,25 @@ const onKeydown = (event: KeyboardEvent) => {
           v-if="missingCode"
           class="flex flex-col gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900"
         >
-          <span>Кода «{{ missingCode.code }}» нет в справочнике. Добавить как {{ KIND_LABEL[missingCode.kind] }}?</span>
+          <span>Кода «{{ missingCode.code }}» нет в справочнике.</span>
+          <div
+            v-if="similarCodes.length"
+            class="flex flex-wrap items-center gap-1"
+          >
+            <span>Возможно, вы имели в виду:</span>
+            <UButton
+              v-for="entry in similarCodes"
+              :key="entry.code"
+              size="xs"
+              color="neutral"
+              variant="outline"
+              class="font-mono"
+              @click="useCode(entry.code)"
+            >
+              {{ entry.code }} — {{ entry.title }}
+            </UButton>
+          </div>
+          <span>{{ similarCodes.length ? 'Или добавить' : 'Добавить' }} в справочник как {{ KIND_NEW[missingCode.kind] }}:</span>
           <div class="flex gap-2">
             <UInput
               v-model="codeTitle"
