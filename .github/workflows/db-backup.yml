@@ -20,14 +20,22 @@ jobs:
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
-          if [ -z "$SUPABASE_DB_URL" ]; then
-            echo "::error::Нет секрета SUPABASE_DB_URL — см. README, раздел «Бэкапы»"
-            exit 1
-          fi
+          # Вставленный секрет мог захватить перевод строки, пробелы или кавычки по краям — убираем их
+          url="$(printf '%s' "$SUPABASE_DB_URL" | tr -d '\r\n')"
+          url="${url#"${url%%[![:space:]]*}"}"; url="${url%"${url##*[![:space:]]}"}"
+          url="${url#[\"\']}"; url="${url%[\"\']}"
+
+          # Сам адрес в лог не выводится — только что с ним не так
+          fail() { echo "::error::Секрет SUPABASE_DB_URL: $1. Нужна строка Session pooler — см. README, раздел «CI и бэкапы»"; exit 1; }
+          [ -n "$url" ] || fail "его нет"
+          case "$url" in postgresql://*|postgres://*) ;; *) fail "должен начинаться с postgresql://" ;; esac
+          case "$url" in *[[:space:]\<\>\"\']*) fail "внутри пробелы, кавычки или угловые скобки — похоже, вставлен шаблон вместо готовой строки" ;; esac
+          case "$url" in *@*pooler.supabase.com:5432/*) ;; *) fail "нужен адрес Session pooler (…pooler.supabase.com:5432), прямой адрес базы раннерам недоступен" ;; esac
+
           mkdir backup
-          supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/roles.sql --role-only
-          supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/schema.sql
-          supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/data.sql --use-copy --data-only
+          supabase db dump --db-url "$url" -f backup/roles.sql --role-only
+          supabase db dump --db-url "$url" -f backup/schema.sql
+          supabase db dump --db-url "$url" -f backup/data.sql --use-copy --data-only
           gzip backup/*.sql
           ls -l backup
           echo "DUMP_DATE=$(date -u +%F)" >> "$GITHUB_ENV"
