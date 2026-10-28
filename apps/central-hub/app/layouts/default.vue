@@ -37,6 +37,8 @@ const breadcrumbs = computed(() => {
         <slot />
       </main>
     </div>
+
+    <CommandPalette />
   </div>
 </template>
 
