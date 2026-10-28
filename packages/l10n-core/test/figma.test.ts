@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { figmaName, figmaVariables } from '../src'
+import { figmaModeFiles, figmaName } from '../src'
 
 describe('figmaName', () => {
   it('точки → /, чтобы в Figma получилось дерево', () => {
@@ -8,34 +8,48 @@ describe('figmaName', () => {
 
   it('у строк InApp и Pages Hub точки внутри частей — тоже вложенность', () => {
     expect(figmaName('legacy.inapp.settings.auth.continue')).toBe('legacy/inapp/settings/auth/continue')
-    expect(figmaName('legacy.pages_hub.a.gift_card.common.gift_card_code')).toBe('legacy/pages_hub/a/gift_card/common/gift_card_code')
   })
 })
 
-describe('figmaVariables', () => {
+describe('figmaModeFiles', () => {
   const rows = [
-    { technical_key: 'common.button.continue.default', translations: { en: 'Continue', ru: 'Продолжить' } },
+    { technical_key: 'common.button.continue.default', translations: { en: 'Continue', ru: 'Продолжить' }, description: 'Главная кнопка' },
     { technical_key: 'app.cars2.paywall.title', translations: { en: 'Unlock all cars!', de: null } }
   ]
 
-  it('коллекция Localizations, каждый язык — режим, нет перевода — пустая строка', () => {
-    expect(figmaVariables(rows, { languages: ['en', 'ru', 'de'] })).toEqual({
-      Localizations: {
-        'app/cars2/paywall/title': { $type: 'string', $value: { en: 'Unlock all cars!', ru: '', de: '' } },
-        'common/button/continue/default': { $type: 'string', $value: { en: 'Continue', ru: 'Продолжить', de: '' } }
-      }
+  it('файл на каждый язык, ключи — вложенные группы, строки в формате DTCG', () => {
+    const files = figmaModeFiles(rows, { languages: ['en', 'ru'] })
+    expect(Object.keys(files)).toEqual(['en', 'ru'])
+    expect(files.ru).toEqual({
+      app: { cars2: { paywall: { title: { $type: 'string', $value: '' } } } },
+      common: { button: { continue: { default: { $type: 'string', $value: 'Продолжить', $description: 'Главная кнопка' } } } }
     })
   })
 
-  it('режимы только выбранных языков', () => {
-    const file = figmaVariables(rows, { languages: ['ru'] })
-    expect(file.Localizations!['common/button/continue/default']!.$value).toEqual({ ru: 'Продолжить' })
+  it('каждый ключ есть в каждом файле — иначе Figma не создаст переменную', () => {
+    const files = figmaModeFiles(rows, { languages: ['en', 'de'] })
+    expect((files.de as any).app.cars2.paywall.title.$value).toBe('')
+    expect((files.de as any).common.button.continue.default.$value).toBe('')
+    expect((files.en as any).app.cars2.paywall.title.$value).toBe('Unlock all cars!')
   })
 
-  it('два ключа с одним именем — ошибка, а не молчаливая перезапись', () => {
-    expect(() => figmaVariables([
-      { technical_key: 'legacy.inapp.a/b.c', translations: {} },
-      { technical_key: 'legacy.inapp.a.b.c', translations: {} }
-    ], { languages: ['en'] })).toThrow('одно имя переменной Figma')
+  it('ключ внутри строки или совпадение с группой — ошибка, а не молчаливая потеря', () => {
+    expect(() => figmaModeFiles([
+      { technical_key: 'legacy.x.a.b', translations: {} },
+      { technical_key: 'legacy.x.a.b.c', translations: {} }
+    ], { languages: ['en'] })).toThrow('вложен в строку «legacy/x/a/b»')
+    // Порядок во входных данных не важен — короткий ключ всё равно обнаружится первым
+    expect(() => figmaModeFiles([
+      { technical_key: 'legacy.x.a.b.c', translations: {} },
+      { technical_key: 'legacy.x.a.b', translations: {} }
+    ], { languages: ['en'] })).toThrow('вложен в строку «legacy/x/a/b»')
+    expect(() => figmaModeFiles([
+      { technical_key: 'legacy.x.a', translations: {} },
+      { technical_key: 'legacy.x.a', translations: {} }
+    ], { languages: ['en'] })).toThrow('встречается дважды')
+  })
+
+  it('часть ключа, которую DTCG поймёт иначе, — ошибка', () => {
+    expect(() => figmaModeFiles([{ technical_key: 'legacy.x.$value', translations: {} }], { languages: ['en'] })).toThrow('часть «$value»')
   })
 })

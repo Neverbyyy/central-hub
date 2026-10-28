@@ -1,8 +1,9 @@
-// Выгрузка в Figma: выборка разделов (например, Cars 2 вместе с общими) в переменные Figma.
+// Выгрузка в Figma: выборка разделов (например, Cars 2 вместе с общими) — файл на каждый язык
+// для встроенного импорта переменных Figma, каждый файл становится режимом.
 // Без Nuxt-глобалов: общий для маршрута и тестов базы.
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { figmaVariables, type FigmaSourceRow } from '@amaya/l10n-core'
+import { figmaModeFiles, type FigmaSourceRow } from '@amaya/l10n-core'
 import { HubError } from './errors'
 import { allKeys } from './keys'
 
@@ -24,11 +25,11 @@ export async function figmaExport(db: SupabaseClient, { prefixes, languages }: {
   const roots = sections.filter(s => !sections.some(other => other !== s && s.startsWith(other)))
   const rows = new Map<string, FigmaSourceRow>()
   for (const prefix of roots) {
-    for (const row of await allKeys<FigmaSourceRow>(db, 'technical_key, translations', prefix)) rows.set(row.technical_key, row)
+    for (const row of await allKeys<FigmaSourceRow>(db, 'technical_key, translations, description', prefix)) rows.set(row.technical_key, row)
   }
 
   try {
-    return { keys: rows.size, languages: modes, file: figmaVariables([...rows.values()], { languages: modes }) }
+    return { keys: rows.size, languages: modes, files: figmaModeFiles([...rows.values()], { languages: modes }) }
   } catch (error) {
     throw new HubError((error as Error).message)
   }

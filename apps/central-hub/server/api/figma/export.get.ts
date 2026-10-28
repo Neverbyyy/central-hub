@@ -1,6 +1,6 @@
 import { figmaExport } from '../../lib/figma'
 
-// Выборка для Figma: ?prefixes=common.,app.cars2.&langs=en,ru — каждый язык станет режимом.
+// Выборка для Figma: ?prefixes=common.,app.cars2.&langs=en,ru → { files: { en: …, ru: … } }, файл на язык = режим.
 // Пока за общим паролем; токен для плагина — когда станет известно, каким плагином импортирует Антон.
 export default defineEventHandler(async (event) => {
   const { prefixes, langs } = getQuery(event)

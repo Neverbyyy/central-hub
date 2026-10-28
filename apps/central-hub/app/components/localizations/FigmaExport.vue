@@ -1,6 +1,9 @@
 <script setup lang="ts">
+import JSZip from 'jszip'
+
 // Выгрузка в Figma: не всё подряд, а выборка разделов — например, Cars 2 вместе с общими.
-// Каждый язык — режим коллекции, имена через / — в Figma получается дерево групп.
+// В архиве файл на каждый язык для встроенного импорта Figma: файл становится режимом коллекции,
+// вложенные группы — именами через /, поэтому в Figma получается дерево.
 interface TreeNode {
   path: string
   label: string
@@ -90,10 +93,13 @@ const exportFile = async () => {
   exporting.value = true
   const prefixes = chosen.value.map(row => row.path)
   try {
-    const result = await $fetch<{ keys: number, file: unknown }>('/api/figma/export', {
+    const result = await $fetch<{ keys: number, files: Record<string, unknown> }>('/api/figma/export', {
       query: { prefixes: prefixes.map(p => `${p}.`).join(','), langs: chosenLanguages.value.join(',') }
     })
-    downloadBlob(new Blob([JSON.stringify(result.file, null, 2)], { type: 'application/json' }), `figma-${prefixes.join('+')}.json`)
+    // Имя файла станет именем режима в Figma: en, ru, de…
+    const zip = new JSZip()
+    for (const [lang, tree] of Object.entries(result.files)) zip.file(`${lang}.json`, JSON.stringify(tree, null, 2))
+    downloadBlob(await zip.generateAsync({ type: 'blob' }), `figma-${prefixes.join('+')}.zip`)
     toast.add({ title: `Для Figma выгружено: ${result.keys} ${plural(result.keys, ['ключ', 'ключа', 'ключей'])}`, color: 'success' })
     open.value = false
   } catch (error) {
@@ -115,7 +121,7 @@ const onKeydown = (event: KeyboardEvent) => {
   <UModal
     v-model:open="open"
     title="Выгрузка в Figma"
-    description="Каждый язык — режим коллекции Localizations, имена через / — в Figma получится дерево."
+    description="В архиве файл на каждый язык. Перетащите все файлы в окно Variables в Figma: каждый станет режимом, имена через / — деревом групп."
   >
     <template #body>
       <div
@@ -190,7 +196,7 @@ const onKeydown = (event: KeyboardEvent) => {
           :disabled="!canExport"
           @click="exportFile"
         >
-          Скачать JSON
+          Скачать ZIP
         </UButton>
       </div>
     </template>
