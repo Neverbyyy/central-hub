@@ -13,10 +13,11 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
-  // Только сервер: NUXT_HUB_PASSWORD и NUXT_SESSION_PASSWORD
+  // Только сервер: NUXT_HUB_PASSWORD, NUXT_SESSION_PASSWORD и NUXT_CLI_TOKEN
   runtimeConfig: {
     hubPassword: '',
-    sessionPassword: ''
+    sessionPassword: '',
+    cliToken: ''
   },
 
   // l10n-core — TypeScript-исходники из workspace без сборки: их нужно встроить в бандл,

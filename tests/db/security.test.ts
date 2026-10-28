@@ -29,7 +29,9 @@ describe('публичный ключ ничего не может записа�
     localizations: { technical_key: 'common.selftest.anon_insert', description: 'Не должен появиться', translations: { en: 'x' } },
     languages: { code: 'xx', name: 'Test' },
     registry: { kind: 'game', code: 'selftest', title: 'Test' },
-    history: { technical_key: ANCHOR, field: 'translation', actor: 'anon', source: 'anon' }
+    history: { technical_key: ANCHOR, field: 'translation', actor: 'anon', source: 'anon' },
+    export_sets: { name: 'selftest', project: 'inapp', format: 'flat', languages: ['en'], path_template: '{lang}.json' },
+    export_templates: { set_name: 'inapp', lang: 'en', content: '{}' }
   } as const
 
   // Фильтр обязателен: без него запрос отклонили бы по другой причине и тест прошёл бы впустую
@@ -37,7 +39,9 @@ describe('публичный ключ ничего не может записа�
     localizations: ['technical_key', ANCHOR],
     languages: ['code', 'en'],
     registry: ['code', 'cars2'],
-    history: ['technical_key', ANCHOR]
+    history: ['technical_key', ANCHOR],
+    export_sets: ['name', 'inapp'],
+    export_templates: ['set_name', 'inapp']
   } as const
 
   it.each(Object.keys(rows) as (keyof typeof rows)[])('%s: insert, upsert, update и delete отклоняются', async (table) => {
@@ -62,14 +66,15 @@ describe('публичный ключ ничего не может записа�
     ['deprecate_keys', { p_keys: [ANCHOR], p_actor: 'anon', p_source: 'anon' }],
     ['restore_keys', { p_keys: [ANCHOR], p_actor: 'anon', p_source: 'anon' }],
     ['security_audit', {}],
-    ['l10n_key_error', { p_key: ANCHOR }]
+    ['l10n_key_error', { p_key: ANCHOR }],
+    ['import_legacy', { p_set: 'inapp', p_rows: [], p_templates: {}, p_source_ref: null, p_actor: 'anon', p_source: 'anon' }]
   ])('функцию %s вызвать нельзя', async (fn, args) => {
     const { error } = await anon.rpc(fn, args)
     expect(error?.code).toBe(PERMISSION_DENIED)
   })
 
-  it('историю прочитать нельзя', async () => {
-    const { error } = await anon.from('history').select('*').limit(1)
+  it.each(['history', 'export_sets', 'export_templates'])('%s прочитать нельзя', async (table) => {
+    const { error } = await anon.from(table).select('*').limit(1)
     expect(error?.code).toBe(PERMISSION_DENIED)
   })
 })
