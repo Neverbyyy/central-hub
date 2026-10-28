@@ -148,7 +148,8 @@ const SOURCE_LABEL: Record<string, string> = {
   ui: 'интерфейс',
   mcp: 'ИИ через MCP',
   import: 'импорт',
-  sql: 'база'
+  sql: 'база',
+  test: 'автотест'
 }
 
 const STATUS_WORD: Record<string, string> = { approved: 'утверждён', draft: 'черновик', ai: 'от ИИ' }
@@ -351,28 +352,51 @@ const formatDate = (value?: string | null) => value
         >
           Пока пусто
         </p>
+        <!-- Каждая правка — отдельная карточка: что и когда, было / стало, кто и откуда -->
         <ol class="space-y-2">
           <li
             v-for="entry in history"
             :key="entry.id"
-            class="border-l-2 border-gray-100 pl-2"
+            class="overflow-hidden rounded-lg border border-gray-200"
           >
-            <div class="text-[10px] text-gray-400">
-              {{ formatDate(entry.created_at) }} · {{ entry.actor || 'без имени' }} · {{ SOURCE_LABEL[entry.source] ?? entry.source }}
-            </div>
-            <div class="text-gray-700">
-              <span class="font-medium">{{ entryTitle(entry) }}</span>
+            <div class="flex items-center gap-2 border-b border-gray-100 bg-gray-50 px-3 py-1.5">
               <span
                 v-if="entry.lang"
-                class="ml-1 font-mono text-[10px] uppercase text-gray-400"
+                class="rounded bg-white px-1 font-mono text-[10px] font-semibold uppercase text-gray-500 ring-1 ring-gray-200"
               >{{ entry.lang }}</span>
+              <span class="font-medium text-gray-800">{{ entryTitle(entry) }}</span>
+              <span class="ml-auto shrink-0 text-[10px] tabular-nums text-gray-400">{{ formatDate(entry.created_at) }}</span>
             </div>
-            <div
-              v-if="hasDiff(entry)"
-              class="break-words text-gray-500"
-            >
-              <span class="text-gray-400 line-through">{{ valueText(entry, entry.old_value) }}</span>
-              → {{ valueText(entry, entry.new_value) }}
+            <div class="space-y-1 px-3 py-2">
+              <p
+                v-if="entry.field === 'status'"
+                class="text-gray-600"
+              >
+                {{ valueText(entry, entry.old_value) }} → <span class="font-medium text-gray-800">{{ valueText(entry, entry.new_value) }}</span>
+              </p>
+              <template v-else-if="hasDiff(entry)">
+                <p
+                  v-if="entry.old_value"
+                  class="whitespace-pre-line break-words rounded bg-red-50 px-2 py-1 text-red-800 line-through decoration-red-300"
+                >
+                  {{ entry.old_value }}
+                </p>
+                <p
+                  v-if="entry.new_value"
+                  class="whitespace-pre-line break-words rounded bg-green-50 px-2 py-1 text-green-900"
+                >
+                  {{ entry.new_value }}
+                </p>
+                <p
+                  v-else
+                  class="italic text-gray-400"
+                >
+                  Очищено
+                </p>
+              </template>
+              <p class="text-[10px] text-gray-400">
+                {{ entry.actor || 'без имени' }} · {{ SOURCE_LABEL[entry.source] ?? entry.source }}
+              </p>
             </div>
           </li>
         </ol>
