@@ -1,0 +1,11 @@
+{
+  "name": "@amaya/l10n-cli",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "amaya-l10n": "./amaya-l10n.mjs"
+  },
+  "engines": {
+    "node": ">=18.3"
+  }
+}
