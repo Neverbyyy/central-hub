@@ -57,10 +57,39 @@ pnpm db:new <name>                                     # создать мигр
 Справочники (языки, коды игр и сайтов) — тоже в миграциях, seed не используется:
 строки приходят импортом из InApp и Pages Hub.
 
+## Создание ключей
+
+Кнопка «Новый ключ» над гридом. Имя проверяется на лету по правилам «Как называть ключи»
+(`packages/l10n-core/src/keys.ts`, те же правила держит база), описание обязательно, текст проверяется
+на подстановки, экранирование `@ { } | $`, HTML и капс (`text-checks.ts`). Рядом — похожие строки
+(`pg_trgm`): сначала стоит взять существующий ключ. Неизвестный код игры, сайта, бренда или теста
+добавляется в справочник прямо из формы. Тексты из интерфейса — черновики (`draft`).
+
+## MCP для нейросетей
+
+`POST /mcp` — MCP-сервер (Streamable HTTP без сессий), токен `NUXT_MCP_TOKEN`. Инструменты:
+`search_strings`, `get_string`, `find_similar`, `get_key_tree`, `list_registry`, `create_key`,
+`write_draft_translation`, `list_untranslated`, `check_text`.
+
+- `create_key` требует описание и не создаёт ключ, если есть похожая строка (≥ 60 %), пока в
+  `not_duplicate_reason` не объяснено, чем новая отличается.
+- Тексты нейросети сохраняются со статусом «от ИИ» (`ai`). Утверждать, удалять и переименовывать нечем,
+  а перезаписать текст человека не даёт сама база (`set_ai_translation`).
+
+Подключение в Claude Code — `.mcp.json` в корне проекта (как в этом репозитории) и переменная `AMAYA_HUB_TOKEN`:
+
+```json
+{ "mcpServers": { "amaya-hub": { "type": "http", "url": "https://central-hub-sigma.vercel.app/mcp",
+  "headers": { "Authorization": "Bearer ${AMAYA_HUB_TOKEN}" } } } }
+```
+
 ## Выгрузка в проекты — CLI `amaya-l10n`
 
 Набор выгрузки (`export_sets`) описывает, какие ключи и языки кладутся в какие файлы проекта.
 Сейчас два набора: `inapp` → `src/locales/{lang}.json` и `pages_hub` → `i18n/locales/{lang}.json`, 9 языков.
+В них идут старые строки проекта (`legacy.inapp.` / `legacy.pages_hub.`) и новые ключи:
+у InApp — `common. app. brand. ds. test.`, у Pages Hub — `common. web. brand. ds. test.`.
+Служебные ключи автотестов (`common.selftest.`) не выгружаются никогда.
 Остальные файлы проектов (у InApp — `ja`, `zh`, `src/locales/new/*`) CLI не читает и не трогает.
 
 В корне проекта — `amaya-l10n.json`, токен — переменная `AMAYA_L10N_TOKEN` (на сервере это `NUXT_CLI_TOKEN`):
