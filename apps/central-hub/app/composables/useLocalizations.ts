@@ -460,6 +460,7 @@ export function useLocalizations() {
     q,
     selectedTags,
     availableTags,
+    fetchTags,
     filters,
     filtersKey,
     hasFilters,

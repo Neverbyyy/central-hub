@@ -71,7 +71,8 @@ describe('публичный ключ ничего не может записа�
     ['create_key', { p_key: 'common.selftest.anon', p_description: 'взлом', p_translations: {}, p_tags: [], p_max_length: null, p_status: 'approved', p_actor: 'anon', p_source: 'anon' }],
     ['set_ai_translation', { p_key: ANCHOR, p_lang: 'en', p_value: 'взлом', p_actor: 'anon' }],
     ['find_similar', { p_text: 'Continue', p_key: '', p_limit: 5 }],
-    ['approve_translations', { p_key: ANCHOR, p_langs: ['en'], p_actor: 'anon' }]
+    ['approve_translations', { p_key: ANCHOR, p_langs: ['en'], p_actor: 'anon' }],
+    ['update_key_meta', { p_key: ANCHOR, p_description: 'взлом описания', p_tags: [], p_max_length: null, p_figma_url: null, p_actor: 'anon' }]
   ])('функцию %s вызвать нельзя', async (fn, args) => {
     const { error } = await anon.rpc(fn, args)
     expect(error?.code).toBe(PERMISSION_DENIED)

@@ -2,7 +2,7 @@
 // Без Nuxt-глобалов: общий для маршрутов интерфейса, MCP и тестов базы.
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { checkText, descriptionError, MAX_VALUE_LENGTH, newKeyError, type KeyContext, type RegistryKind, type TextIssue } from '@amaya/l10n-core'
+import { checkText, descriptionError, figmaUrlError, MAX_VALUE_LENGTH, newKeyError, type KeyContext, type RegistryKind, type TextIssue } from '@amaya/l10n-core'
 import { HubError } from './errors'
 
 export type KeyStatus = 'draft' | 'ai' | 'approved'
@@ -70,6 +70,14 @@ function normalizeTags(tags: unknown): string[] {
   return clean
 }
 
+function parseMaxLength(value: unknown): number | null {
+  if (value === undefined || value === null || value === '') return null
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 1 || value > 10_000) {
+    throw new HubError('Лимит длины — целое число от 1 до 10 000')
+  }
+  return value
+}
+
 export async function createKey(
   db: SupabaseClient,
   input: CreateKeyInput,
@@ -93,10 +101,7 @@ export async function createKey(
     if (value) translations[lang] = value
   }
 
-  const maxLength = input.maxLength ?? null
-  if (maxLength !== null && (!Number.isInteger(maxLength) || maxLength < 1 || maxLength > 10_000)) {
-    throw new HubError('Лимит длины — целое число от 1 до 10 000')
-  }
+  const maxLength = parseMaxLength(input.maxLength)
 
   const { data, error } = await db.rpc('create_key', {
     p_key: key,
@@ -111,6 +116,48 @@ export async function createKey(
   if (error?.code === '23505') throw new HubError(`Ключ «${key}» уже есть`, 409)
   if (error) throw error
   return { key, created_at: data as string }
+}
+
+export interface KeyMetaInput {
+  key: string
+  description?: unknown
+  tags?: unknown
+  maxLength?: unknown
+  figmaUrl?: unknown
+}
+
+/** Свойства существующего ключа: описание, теги, лимит, ссылка на Figma. Тексты не трогает. */
+export async function updateKeyMeta(db: SupabaseClient, input: KeyMetaInput, { actor }: { actor: string }) {
+  const key = input.key.trim()
+  if (!key) throw new HubError('Нужен ключ')
+
+  if (input.description !== undefined && input.description !== null && typeof input.description !== 'string') {
+    throw new HubError('Описание — строка')
+  }
+  const description = (input.description as string | null | undefined)?.trim() ?? ''
+  // У строк InApp и Pages Hub описания с импорта нет — их можно оставить без него, у остальных оно обязательно
+  if (!key.startsWith('legacy.')) {
+    const message = descriptionError(description)
+    if (message) throw new HubError(message)
+  }
+
+  if (input.figmaUrl !== undefined && input.figmaUrl !== null && typeof input.figmaUrl !== 'string') {
+    throw new HubError('Ссылка на Figma — строка')
+  }
+  const figmaUrl = (input.figmaUrl as string | null | undefined)?.trim() ?? ''
+  const figmaMessage = figmaUrlError(figmaUrl)
+  if (figmaMessage) throw new HubError(figmaMessage)
+
+  const { data, error } = await db.rpc('update_key_meta', {
+    p_key: key,
+    p_description: description,
+    p_tags: normalizeTags(input.tags),
+    p_max_length: parseMaxLength(input.maxLength),
+    p_figma_url: figmaUrl,
+    p_actor: actor
+  })
+  if (error) throw error
+  return { updated_at: data as string }
 }
 
 export async function findSimilar(db: SupabaseClient, { text, key, limit = 8 }: { text?: string, key?: string, limit?: number }) {
@@ -177,7 +224,8 @@ export async function getString(db: SupabaseClient, key: string) {
   }
 }
 
-async function allKeys<T>(db: SupabaseClient, columns: string, prefix?: string): Promise<T[]> {
+/** Все действующие ключи (или ключи раздела) постранично — PostgREST отдаёт не больше 1000 строк за раз. */
+export async function allKeys<T>(db: SupabaseClient, columns: string, prefix?: string): Promise<T[]> {
   const rows: T[] = []
   for (let from = 0; ; from += PAGE) {
     let request = db.from('localizations').select(columns).is('deprecated_at', null).order('technical_key').range(from, from + PAGE - 1)

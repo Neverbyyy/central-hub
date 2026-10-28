@@ -14,12 +14,15 @@ const emit = defineEmits<{
   deprecate: [key: string]
   // Ключ вернули из устаревших — таблице и дереву пора перечитаться
   restored: [key: string]
+  // Поменялись свойства ключа — у страницы мог поменяться список тегов
+  changed: [key: string]
 }>()
 
 interface KeyDetails extends Localization {
   description: string | null
   tags: string[]
   max_length: number | null
+  figma_url: string | null
   legacy_path: string[] | null
   created_by: string | null
   updated_by: string | null
@@ -55,7 +58,7 @@ const load = async () => {
   const [row, log] = await Promise.all([
     supabase
       .from('localizations')
-      .select('technical_key, translations, status, based_on, source_rev, stale_langs, deprecated_at, created_at, updated_at, description, tags, max_length, legacy_path, created_by, updated_by')
+      .select('technical_key, translations, status, based_on, source_rev, stale_langs, deprecated_at, created_at, updated_at, description, tags, max_length, figma_url, legacy_path, created_by, updated_by')
       .eq('technical_key', key)
       .maybeSingle(),
     $fetch<HistoryEntry[]>('/api/keys/history', { query: { key } }).catch(() => [] as HistoryEntry[])
@@ -71,6 +74,19 @@ const load = async () => {
 }
 
 watch(() => props.technicalKey, load, { immediate: true })
+
+// --- Правка свойств: описание, теги, лимит, ссылка на Figma ---
+const editingMeta = ref(false)
+// Панель перешла к другому ключу — незаконченная правка прошлого не переезжает за ней
+watch(() => props.technicalKey, () => {
+  editingMeta.value = false
+})
+
+const onMetaSaved = async () => {
+  editingMeta.value = false
+  await load()
+  emit('changed', props.technicalKey)
+}
 // Ключ поменяли (здесь, у коллеги или через MCP) — перечитываем статусы и историю
 watch(() => props.row?.updated_at, (value, old) => {
   if (value && old && value !== old) load()
@@ -245,19 +261,45 @@ const formatDate = (value?: string | null) => value
       class="flex-1 space-y-5 overflow-y-auto px-4 py-3 text-xs transition-opacity"
       :class="{ 'opacity-40': details.technical_key !== technicalKey }"
     >
-      <section class="space-y-1.5">
-        <p
-          v-if="details.description"
-          class="whitespace-pre-line text-gray-700"
-        >
-          {{ details.description }}
-        </p>
-        <p
-          v-else
-          class="text-gray-400"
-        >
-          Без описания
-        </p>
+      <LocalizationsKeyMetaForm
+        v-if="editingMeta"
+        :technical-key="technicalKey"
+        :description="details.description"
+        :tags="details.tags"
+        :max-length="details.max_length"
+        :figma-url="details.figma_url"
+        @saved="onMetaSaved"
+        @cancel="editingMeta = false"
+      />
+      <section
+        v-else
+        class="space-y-1.5"
+      >
+        <div class="flex items-start gap-2">
+          <p
+            v-if="details.description"
+            class="flex-1 whitespace-pre-line text-gray-700"
+          >
+            {{ details.description }}
+          </p>
+          <p
+            v-else
+            class="flex-1 text-gray-400"
+          >
+            Без описания
+          </p>
+          <UButton
+            v-if="!details.deprecated_at"
+            size="xs"
+            color="neutral"
+            variant="ghost"
+            icon="i-lucide-pencil"
+            class="-mt-1 shrink-0"
+            @click="editingMeta = true"
+          >
+            Изменить
+          </UButton>
+        </div>
         <div class="flex flex-wrap items-center gap-1 text-gray-500">
           <UBadge
             v-for="tag in details.tags"
@@ -270,6 +312,19 @@ const formatDate = (value?: string | null) => value
           </UBadge>
           <span v-if="details.max_length">До {{ details.max_length }} символов</span>
         </div>
+        <a
+          v-if="details.figma_url"
+          :href="details.figma_url"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-1 text-blue-600 hover:underline"
+        >
+          <UIcon
+            name="i-lucide-figma"
+            class="size-3.5"
+          />
+          Открыть в Figma
+        </a>
         <p
           v-if="details.legacy_path"
           class="text-gray-400"

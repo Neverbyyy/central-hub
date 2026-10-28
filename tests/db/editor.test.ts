@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { queueCounts, translationQueue } from '../../apps/central-hub/server/lib/keys'
+import { type KeyMetaInput, queueCounts, translationQueue, updateKeyMeta } from '../../apps/central-hub/server/lib/keys'
 import { ACTOR, ANCHOR, ensureAnchor, readAnchor, service } from './clients'
 
 const set = (lang: string, value: string, expected?: string) =>
@@ -85,5 +85,55 @@ describe('очередь перевода', () => {
       expect(count.missing + count.stale).toBe(total)
     }
     expect(counts.find(c => c.lang === 'es')?.missing).toBe(1)
+  })
+})
+
+describe('свойства ключа', () => {
+  const DESCRIPTION = 'Служебный ключ автотестов базы, в продуктах не используется'
+  const LEGACY = 'legacy.pages_hub.a.gift_card.common.gift_card_code'
+  const meta = (input: Omit<Partial<KeyMetaInput>, 'key'>, key = ANCHOR) =>
+    updateKeyMeta(service, { key, description: DESCRIPTION, tags: [], maxLength: null, figmaUrl: null, ...input }, { actor: ACTOR })
+
+  it('меняет описание, теги, лимит и ссылку и пишет историю', async () => {
+    const description = `${DESCRIPTION}, правка ${Date.now()}`
+    await meta({ description, tags: [' meta-test ', 'meta-test', 'panel'], maxLength: 40, figmaUrl: 'https://www.figma.com/design/abc/Selftest?node-id=1-2' })
+    const row = await readAnchor()
+    expect(row).toMatchObject({ description, tags: ['meta-test', 'panel'], max_length: 40, figma_url: 'https://www.figma.com/design/abc/Selftest?node-id=1-2' })
+
+    const { data } = await service.from('history').select('field, actor, source')
+      .eq('technical_key', ANCHOR).in('field', ['description', 'tags', 'max_length', 'figma_url'])
+      .order('id', { ascending: false }).limit(4)
+    expect(new Set(data!.map(h => h.field))).toEqual(new Set(['description', 'tags', 'max_length', 'figma_url']))
+    expect(data!.every(h => h.actor === ACTOR && h.source === 'ui')).toBe(true)
+
+    // Обратно — служебный ключ не должен приносить теги в фильтр грида
+    await meta({})
+  })
+
+  it('без изменений ничего не пишет и не трогает updated_at', async () => {
+    await meta({})
+    const before = await readAnchor()
+    await meta({})
+    expect((await readAnchor()).updated_at).toBe(before.updated_at)
+  })
+
+  it('короткое описание, чужая ссылка и неверный лимит отклоняются', async () => {
+    await expect(meta({ description: 'коротко' })).rejects.toThrow('от 10 символов')
+    await expect(meta({ figmaUrl: 'https://example.com/design' })).rejects.toThrow('figma.com')
+    await expect(meta({ maxLength: 0 })).rejects.toThrow('Лимит длины')
+    await expect(meta({ maxLength: 1.5 })).rejects.toThrow('Лимит длины')
+  })
+
+  it('у строки InApp или Pages Hub описание можно оставить пустым', async () => {
+    await meta({ description: '', tags: ['gift-card'] }, LEGACY)
+    const { data } = await service.from('localizations').select('description, tags').eq('technical_key', LEGACY).single()
+    expect(data).toEqual({ description: null, tags: ['gift-card'] })
+    await meta({ description: '', tags: [] }, LEGACY)
+  })
+
+  it('ключ, помеченный устаревшим, не правится', async () => {
+    await service.rpc('deprecate_keys', { p_keys: [ANCHOR], p_actor: ACTOR, p_source: 'test' })
+    await expect(meta({ maxLength: 10 })).rejects.toMatchObject({ message: expect.stringContaining('помечен устаревшим') })
+    await service.rpc('restore_keys', { p_keys: [ANCHOR], p_actor: ACTOR, p_source: 'test' })
   })
 })

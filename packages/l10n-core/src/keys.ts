@@ -100,6 +100,16 @@ export function descriptionError(description: string): string | null {
   return `Опишите, где показывается строка и какие у неё ограничения — от ${MIN_DESCRIPTION_LENGTH} символов (сейчас ${length})`
 }
 
+// Ссылка на макет — только figma.com: в панели ключа она открывается в новой вкладке
+const FIGMA_URL = /^https:\/\/(www\.)?figma\.com\/\S+$/
+
+/** Ошибка ссылки на Figma или null; пустая ссылка допустима. */
+export function figmaUrlError(url: string): string | null {
+  const value = url.trim()
+  if (!value || (value.length <= 2000 && FIGMA_URL.test(value))) return null
+  return 'Ссылка на Figma начинается с https://www.figma.com/'
+}
+
 /**
  * Один ключ не может быть началом другого: в JSON `continue` не может быть
  * одновременно строкой и папкой (`common.button.continue` и `common.button.continue.trial`).

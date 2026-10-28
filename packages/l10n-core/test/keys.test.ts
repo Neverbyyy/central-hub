@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { descriptionError, isPrefixConflict, keyError, newKeyError, type KeyContext } from '../src'
+import { descriptionError, figmaUrlError, isPrefixConflict, keyError, newKeyError, type KeyContext } from '../src'
 
 const ctx: KeyContext = {
   registry: {
@@ -80,6 +80,19 @@ describe('descriptionError', () => {
   it('описание короче 10 символов — ошибка с текущей длиной', () => {
     expect(descriptionError('  asd ')).toContain('сейчас 3')
     expect(descriptionError('Кнопка на пейволле')).toBeNull()
+  })
+})
+
+describe('figmaUrlError', () => {
+  it('пустая ссылка и ссылка на figma.com — без ошибки', () => {
+    expect(figmaUrlError('')).toBeNull()
+    expect(figmaUrlError(' https://www.figma.com/design/abc/Cars?node-id=1-2 ')).toBeNull()
+    expect(figmaUrlError('https://figma.com/file/abc')).toBeNull()
+  })
+
+  it('чужой адрес или http — ошибка', () => {
+    expect(figmaUrlError('https://example.com/figma.com/x')).toContain('figma.com')
+    expect(figmaUrlError('http://www.figma.com/design/abc')).toContain('figma.com')
   })
 })
 
