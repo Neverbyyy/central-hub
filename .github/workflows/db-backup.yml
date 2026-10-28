@@ -15,22 +15,33 @@ jobs:
         with:
           version: 2.122.0
 
-      # SUPABASE_DB_URL — строка Session pooler: прямой адрес базы только IPv6, а раннеры GitHub его не умеют
+      # Подключение через Session pooler: прямой адрес базы только IPv6, а раннеры GitHub его не умеют.
+      # Секрет — пароль базы (SUPABASE_DB_PASSWORD из .env); адрес не секретный и собирается здесь.
+      # Готовая строка подключения в секрете тоже подойдёт.
       - name: Дамп ролей, схемы и данных
         env:
-          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SECRET_VALUE: ${{ secrets.SUPABASE_DB_PASSWORD || secrets.SUPABASE_DB_URL }}
+          PROJECT_REF: phjceqfrbfmptwvlqpde
+          POOLER_HOST: aws-0-eu-west-1.pooler.supabase.com
         run: |
-          # Вставленный секрет мог захватить перевод строки, пробелы или кавычки по краям — убираем их
-          url="$(printf '%s' "$SUPABASE_DB_URL" | tr -d '\r\n')"
-          url="${url#"${url%%[![:space:]]*}"}"; url="${url%"${url##*[![:space:]]}"}"
-          url="${url#[\"\']}"; url="${url%[\"\']}"
+          # Вставленный секрет мог захватить перевод строки, пробелы, кавычки или всю строку из .env — убираем
+          value="$(printf '%s' "$SECRET_VALUE" | tr -d '\r\n')"
+          value="${value#"${value%%[![:space:]]*}"}"; value="${value%"${value##*[![:space:]]}"}"
+          value="${value#SUPABASE_DB_PASSWORD=}"; value="${value#SUPABASE_DB_URL=}"
+          value="${value#[\"\']}"; value="${value%[\"\']}"
 
-          # Сам адрес в лог не выводится — только что с ним не так
-          fail() { echo "::error::Секрет SUPABASE_DB_URL: $1. Нужна строка Session pooler — см. README, раздел «CI и бэкапы»"; exit 1; }
-          [ -n "$url" ] || fail "его нет"
-          case "$url" in postgresql://*|postgres://*) ;; *) fail "должен начинаться с postgresql://" ;; esac
-          case "$url" in *[[:space:]\<\>\"\']*) fail "внутри пробелы, кавычки или угловые скобки — похоже, вставлен шаблон вместо готовой строки" ;; esac
-          case "$url" in *@*pooler.supabase.com:5432/*) ;; *) fail "нужен адрес Session pooler (…pooler.supabase.com:5432), прямой адрес базы раннерам недоступен" ;; esac
+          # Ни пароль, ни адрес в лог не выводятся — только что с ними не так
+          fail() { echo "::error::Секрет SUPABASE_DB_PASSWORD: $1. См. README, раздел «CI и бэкапы»"; exit 1; }
+          [ -n "$value" ] || fail "его нет — вставьте пароль базы из .env"
+          case "$value" in
+            postgresql://*|postgres://*) url="$value" ;;
+            *)
+              case "$value" in *[[:space:]]*) fail "в пароле пробел — похоже, вставлен не пароль" ;; esac
+              password="$(P="$value" node -e 'process.stdout.write(encodeURIComponent(process.env.P))')"
+              url="postgresql://postgres.${PROJECT_REF}:${password}@${POOLER_HOST}:5432/postgres"
+              ;;
+          esac
+          case "$url" in *@*pooler.supabase.com:5432/*) ;; *) fail "в строке подключения нужен адрес Session pooler (…pooler.supabase.com:5432)" ;; esac
 
           mkdir backup
           supabase db dump --db-url "$url" -f backup/roles.sql --role-only

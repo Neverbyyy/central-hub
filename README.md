@@ -56,8 +56,10 @@ pnpm db:stop      # остановить локальный Supabase и стер
   локальном Supabase. Секреты не нужны.
 - `.github/workflows/db-backup.yml` — дамп основной базы раз в сутки (05:00 МСК) и по кнопке
   Run workflow: роли, схема и данные, артефакт `db-backup-<дата>` хранится 30 дней.
-  Нужен секрет `SUPABASE_DB_URL` — строка **Session pooler** из Supabase (Connect → Session pooler):
-  прямой адрес базы доступен только по IPv6, а раннеры GitHub его не умеют.
+  Нужен секрет `SUPABASE_DB_PASSWORD` — пароль базы, тот же, что в `.env` (Settings → Secrets and
+  variables → Actions). Адрес **Session pooler** workflow собирает сам: прямой адрес базы доступен
+  только по IPv6, а раннеры GitHub его не умеют. Вместо пароля можно положить готовую строку
+  подключения Session pooler — в `SUPABASE_DB_PASSWORD` или `SUPABASE_DB_URL`.
 
 Восстановление в новый проект Supabase (из скачанного и распакованного артефакта):
 
