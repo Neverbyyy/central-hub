@@ -12,11 +12,17 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   loadMore: []
-  save: [key: string, lang: string, value: string]
+  // expected — что было в ячейке до правки: сервер сверит, не изменил ли её кто-то ещё
+  save: [key: string, lang: string, value: string, expected: string]
   toggle: [key: string, value: boolean]
   toggleAll: [value: boolean]
   undo: []
   redo: []
+  // Открыть панель ключа (клик или Enter по колонке ключа)
+  open: [key: string]
+  // Активная строка сменилась — открытая панель следует за ней
+  focusRow: [key: string]
+  escape: []
 }>()
 
 const toast = useToast()
@@ -58,7 +64,12 @@ const allSelected = computed(() => props.rows.length > 0 && selectedCount.value 
 // --- Активная ячейка и редактирование ---
 // col: 0 — ключ (только чтение), 1..N — языки
 const active = ref<{ row: number, col: number } | null>(null)
-const editing = ref<{ key: string, col: number, initial: string } | null>(null)
+// previous — значение ячейки на момент начала правки (initial может быть первым напечатанным символом)
+const editing = ref<{ key: string, col: number, initial: string, previous: string } | null>(null)
+
+watch(() => props.rows[active.value?.row ?? -1]?.technical_key, (key) => {
+  if (key) emit('focusRow', key)
+})
 const maxCol = computed(() => props.languages.length)
 
 const valueAt = (row: number, col: number) => {
@@ -101,7 +112,8 @@ const startEdit = (initial?: string) => {
   editing.value = {
     key: row.technical_key,
     col: a.col,
-    initial: initial ?? valueAt(a.row, a.col)
+    initial: initial ?? valueAt(a.row, a.col),
+    previous: valueAt(a.row, a.col)
   }
 }
 
@@ -109,7 +121,7 @@ const onCommit = (value: string, move: CommitMove) => {
   const e = editing.value
   if (!e) return
   editing.value = null
-  emit('save', e.key, props.languages[e.col - 1]!, value)
+  emit('save', e.key, props.languages[e.col - 1]!, value, e.previous)
 
   if (move === 'blur') return
   const a = active.value
@@ -143,6 +155,8 @@ const copy = async (text: string) => {
 const onCellDown = (row: number, col: number) => {
   active.value = { row, col }
   focusGrid()
+  const key = props.rows[row]?.technical_key
+  if (col === 0 && key) emit('open', key)
 }
 
 const onCellDblclick = (row: number, col: number) => {
@@ -183,12 +197,15 @@ const onKeydown = (e: KeyboardEvent) => {
 
   if (target) {
     setActive(...target)
+  } else if ((e.key === 'Enter' || e.key === 'F2') && col === 0 && rowKey) {
+    emit('open', rowKey)
   } else if (e.key === 'Enter' || e.key === 'F2') {
     startEdit()
   } else if (e.key === 'Escape') {
     active.value = null
+    emit('escape')
   } else if ((e.key === 'Backspace' || e.key === 'Delete') && col > 0 && rowKey) {
-    emit('save', rowKey, props.languages[col - 1]!, '')
+    emit('save', rowKey, props.languages[col - 1]!, '', valueAt(row, col))
   } else if (mod && e.code === 'KeyZ' && e.shiftKey) {
     emit('redo')
   } else if (mod && e.code === 'KeyZ') {
@@ -224,7 +241,8 @@ useEventListener(document, 'paste', (e: ClipboardEvent) => {
   if (!row || text === undefined) return
   e.preventDefault()
   // Google Sheets / Excel добавляют перевод строки в конце скопированной ячейки
-  emit('save', row.technical_key, props.languages[active.value.col - 1]!, text.replace(/\r?\n$/, ''))
+  const { row: index, col } = active.value
+  emit('save', row.technical_key, props.languages[col - 1]!, text.replace(/\r?\n$/, ''), valueAt(index, col))
 })
 
 const reset = () => {

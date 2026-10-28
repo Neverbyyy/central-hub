@@ -28,6 +28,19 @@ const isNew = computed(() => !!props.row.created_at && Date.now() - new Date(pro
 const formatDate = (value?: string) => value
   ? new Date(value).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })
   : '—'
+
+// Утверждённые без отметки — их большинство, отметки только у того, что требует внимания
+const STATUS_LABEL = { ai: 'Черновой перевод нейросети', draft: 'Черновик — ещё не утверждён' } as const
+
+const cellTitle = (lang: string) => {
+  const text = props.row.translations?.[lang]
+  if (!text) return undefined
+  const notes = [text]
+  const status = props.row.status?.[lang]
+  if (status === 'ai' || status === 'draft') notes.push(STATUS_LABEL[status])
+  if (props.row.stale_langs?.includes(lang)) notes.push('Устарел: английский поменяли после перевода')
+  return notes.join('\n')
+}
 </script>
 
 <template>
@@ -70,15 +83,33 @@ const formatDate = (value?: string) => value
       <span
         v-if="row.translations?.[lang]"
         class="truncate"
-        :title="row.translations[lang]"
+        :title="cellTitle(lang)"
       >{{ row.translations[lang] }}</span>
       <span
         v-else
         class="text-gray-300"
       >—</span>
+
       <span
         v-if="row._saving?.[lang]"
         class="absolute right-1.5 top-1.5 size-1.5 animate-pulse rounded-full bg-blue-500"
+      />
+      <template v-else-if="row.translations?.[lang]">
+        <span
+          v-if="row.status?.[lang] === 'ai'"
+          class="absolute right-1 top-0.5 text-[9px] leading-none text-violet-500"
+          aria-label="от ИИ"
+        >✦</span>
+        <span
+          v-else-if="row.status?.[lang] === 'draft'"
+          class="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-gray-400"
+          aria-label="черновик"
+        />
+      </template>
+      <span
+        v-if="row.stale_langs?.includes(lang)"
+        class="absolute left-1 top-1 size-1.5 rounded-full bg-orange-500"
+        aria-label="устарел"
       />
 
       <LocalizationsCellEditor

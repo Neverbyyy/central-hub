@@ -23,6 +23,8 @@ export interface Localization {
   // Версия исходного текста, с которой сделан перевод; меньше source_rev — перевод устарел
   based_on: Record<string, number>
   source_rev: number
+  // Языки с переводом, устаревшим после правки английского (считает база)
+  stale_langs: string[]
   deprecated_at: string | null
   created_at: string
   updated_at: string
@@ -33,11 +35,19 @@ export interface Localization {
 // Куда сдвинуть курсор после сохранения ячейки; 'blur' — фокус ушёл наружу
 export type CommitMove = 'down' | 'right' | 'left' | 'stay' | 'blur'
 
+export type StatusFilter = '' | TranslationStatus
+
 const PAGE_SIZE = 100
-const SELECT = 'technical_key, translations, status, based_on, source_rev, deprecated_at, created_at, updated_at'
+const SELECT = 'technical_key, translations, status, based_on, source_rev, stale_langs, deprecated_at, created_at, updated_at'
+const WEEK = 7 * 24 * 60 * 60 * 1000
+
+// Параметры адреса, которые описывают выборку; остальные (key, new) не трогаем
+const FILTER_PARAMS = ['q', 'tags', 'status', 'stale', 'missing', 'recent', 'prefix']
 
 // % и _ в поиске — обычные символы, а не шаблоны LIKE
 const escapeLike = (value: string) => value.replace(/[\\%_]/g, char => `\\${char}`)
+
+const asString = (value: unknown) => (typeof value === 'string' ? value : '')
 
 interface Edit {
   key: string
@@ -46,11 +56,24 @@ interface Edit {
   next: string
 }
 
+interface Conflict {
+  current: string | null
+  actor?: string
+}
+
+// Ответ 409 от PUT /api/translations: ячейку изменили, пока человек её правил
+const conflictOf = (error: unknown): Conflict | null => {
+  const { statusCode, data } = (error ?? {}) as { statusCode?: number, data?: { data?: Conflict } }
+  return statusCode === 409 && data?.data && 'current' in data.data ? data.data : null
+}
+
 export function useLocalizations() {
   // Браузер только читает — публичному ключу запись закрыта; изменения идут через /api
   const supabase = useSupabaseClient()
   const toast = useToast()
   const authRedirect = useAuthRedirect()
+  const route = useRoute()
+  const router = useRouter()
 
   const languages = ref<Language[]>([])
   const languageCodes = computed(() => languages.value.map(l => l.code))
@@ -63,9 +86,67 @@ export function useLocalizations() {
   const initialLoading = ref(true)
   const hasMore = ref(true)
 
+  // --- Выборка: поиск, теги и фильтры; всё лежит в адресе, ссылкой можно поделиться ---
   const q = ref('')
   const selectedTags = ref<string[]>([])
   const availableTags = ref<string[]>([])
+  const filters = reactive({
+    status: '' as StatusFilter,
+    // Только с переводами, устаревшими после правки английского
+    stale: false,
+    // Код языка: нет перевода на него
+    missing: '',
+    // Изменённые за неделю
+    recent: false,
+    // Раздел из дерева, например app.cars2.
+    prefix: ''
+  })
+
+  const readQuery = () => {
+    const query = route.query
+    q.value = asString(query.q)
+    selectedTags.value = asString(query.tags).split(',').filter(Boolean)
+    const status = asString(query.status)
+    filters.status = (['ai', 'draft', 'approved'].includes(status) ? status : '') as StatusFilter
+    filters.stale = query.stale === '1'
+    const missing = asString(query.missing)
+    filters.missing = /^[a-z]{2,3}(-[A-Za-z0-9]{2,4})?$/.test(missing) ? missing : ''
+    filters.recent = query.recent === '1'
+    filters.prefix = asString(query.prefix)
+  }
+
+  const buildQuery = () => {
+    const next: Record<string, string> = {}
+    for (const [name, value] of Object.entries(route.query)) {
+      if (!FILTER_PARAMS.includes(name) && typeof value === 'string') next[name] = value
+    }
+    if (q.value.trim()) next.q = q.value.trim()
+    if (selectedTags.value.length) next.tags = selectedTags.value.join(',')
+    if (filters.status) next.status = filters.status
+    if (filters.stale) next.stale = '1'
+    if (filters.missing) next.missing = filters.missing
+    if (filters.recent) next.recent = '1'
+    if (filters.prefix) next.prefix = filters.prefix
+    return next
+  }
+
+  const sameQuery = (a: Record<string, unknown>, b: Record<string, unknown>) =>
+    JSON.stringify(Object.entries(a).sort()) === JSON.stringify(Object.entries(b).sort())
+
+  const syncUrl = () => {
+    const next = buildQuery()
+    if (!sameQuery(route.query, next)) router.replace({ query: next })
+  }
+
+  const hasFilters = computed(() =>
+    !!(q.value.trim() || selectedTags.value.length || filters.status || filters.stale || filters.missing || filters.recent || filters.prefix)
+  )
+
+  const resetFilters = () => {
+    q.value = ''
+    selectedTags.value = []
+    Object.assign(filters, { status: '', stale: false, missing: '', recent: false, prefix: '' })
+  }
 
   // Каждый новый поиск/фильтр увеличивает поколение, ответы старых запросов выбрасываются
   let generation = 0
@@ -73,7 +154,10 @@ export function useLocalizations() {
   interface Filterable<T> {
     is: (column: string, value: null) => T
     ilike: (column: string, pattern: string) => T
+    like: (column: string, pattern: string) => T
     contains: (column: string, value: string[]) => T
+    neq: (column: string, value: string) => T
+    gte: (column: string, value: string) => T
   }
 
   const applyFilters = <T extends Filterable<T>>(query: T): T => {
@@ -83,9 +167,12 @@ export function useLocalizations() {
       // search_text — ключ и переводы на всех языках, с trigram-индексом
       query = query.ilike('search_text', `%${escapeLike(term)}%`)
     }
-    if (selectedTags.value.length) {
-      query = query.contains('tags', selectedTags.value)
-    }
+    if (selectedTags.value.length) query = query.contains('tags', selectedTags.value)
+    if (filters.status) query = query.contains('status_values', [filters.status])
+    if (filters.stale) query = query.neq('stale_langs', '{}')
+    if (filters.missing) query = query.is(`translations->>${filters.missing}`, null)
+    if (filters.recent) query = query.gte('updated_at', new Date(Date.now() - WEEK).toISOString())
+    if (filters.prefix) query = query.like('technical_key', `${escapeLike(filters.prefix)}%`)
     return query
   }
 
@@ -141,8 +228,22 @@ export function useLocalizations() {
 
   const reload = () => load(true)
 
-  watchDebounced(q, reload, { debounce: 300 })
-  watch(selectedTags, reload, { deep: true })
+  // Ключ выборки без поиска: меняется — адрес и данные обновляются сразу, поиск — с паузой
+  const filtersKey = computed(() => JSON.stringify([selectedTags.value, filters]))
+
+  readQuery()
+  watch(filtersKey, () => {
+    syncUrl()
+    reload()
+  })
+  watchDebounced(q, () => {
+    syncUrl()
+    reload()
+  }, { debounce: 300 })
+  // Адрес поменяли снаружи — ⌘K, «назад», ссылка от коллеги
+  watch(() => route.query, (query) => {
+    if (!sameQuery(query, buildQuery())) readQuery()
+  })
 
   const fetchTags = async () => {
     const { data, error } = await supabase.rpc('get_unique_tags')
@@ -157,17 +258,26 @@ export function useLocalizations() {
 
   const findRow = (key: string) => rows.value.find(r => r.technical_key === key)
 
-  const writeCell = async (key: string, lang: string, value: string) => {
+  const setCell = (row: Localization, lang: string, value: string | null) => {
+    const { [lang]: _, ...rest } = row.translations ?? {}
+    row.translations = value ? { ...rest, [lang]: value } : rest
+  }
+
+  /**
+   * expected — что было в ячейке, когда человек начал правку. Если её успели изменить,
+   * сервер отвечает 409: показываем текущий текст и даём выбрать, чей вариант оставить.
+   */
+  const writeCell = async (key: string, lang: string, value: string, expected: string): Promise<boolean> => {
     const row = findRow(key)
     if (!row) return false
 
     const prev = row.translations?.[lang] ?? ''
-    row.translations = { ...row.translations, [lang]: value }
+    setCell(row, lang, value)
     row._saving = { ...row._saving, [lang]: true }
 
     try {
       // Сервер меняет только этот язык — чужие правки соседних языков не затираются
-      const { updated_at } = await $fetch('/api/translations', { method: 'PUT', body: { key, lang, value } })
+      const { updated_at } = await $fetch('/api/translations', { method: 'PUT', body: { key, lang, value, expected } })
       const target = findRow(key) ?? row
       target._saving = { ...target._saving, [lang]: false }
       target.updated_at = updated_at
@@ -175,10 +285,29 @@ export function useLocalizations() {
     } catch (error) {
       const target = findRow(key) ?? row
       target._saving = { ...target._saving, [lang]: false }
-      // Откатываем, только если за это время ячейку не поменяли ещё раз
-      if ((target.translations?.[lang] ?? '') === value) {
-        target.translations = { ...target.translations, [lang]: prev }
+
+      const conflict = conflictOf(error)
+      if (conflict) {
+        setCell(target, lang, conflict.current)
+        toast.add({
+          title: conflict.actor ? `Ячейку уже изменил(а) ${conflict.actor}` : 'Ячейку уже изменили',
+          description: `${lang.toUpperCase()} сейчас: «${conflict.current ?? '—'}». Ваш вариант: «${value || '—'}».`,
+          color: 'warning',
+          duration: 15000,
+          actions: [{
+            label: 'Оставить мой',
+            color: 'neutral',
+            variant: 'outline',
+            onClick: () => {
+              setTranslation(key, lang, value, conflict.current ?? '')
+            }
+          }]
+        })
+        return false
       }
+
+      // Откатываем, только если за это время ячейку не поменяли ещё раз
+      if ((target.translations?.[lang] ?? '') === value) setCell(target, lang, prev)
       if (!(await authRedirect(error))) {
         toast.add({ title: 'Не сохранилось', description: errorMessage(error), color: 'error' })
       }
@@ -186,30 +315,31 @@ export function useLocalizations() {
     }
   }
 
-  const setTranslation = async (key: string, lang: string, value: string) => {
+  const setTranslation = async (key: string, lang: string, value: string, expected?: string) => {
     const row = findRow(key)
     if (!row) return
-    const prev = row.translations?.[lang] ?? ''
-    if (prev === value) return
+    const before = expected ?? row.translations?.[lang] ?? ''
+    if (before === value) return
 
-    if (await writeCell(key, lang, value)) {
-      undoStack.push({ key, lang, prev, next: value })
+    if (await writeCell(key, lang, value, before)) {
+      undoStack.push({ key, lang, prev: before, next: value })
       if (undoStack.length > 100) undoStack.shift()
       redoStack.length = 0
     }
   }
 
+  // Отмена ждёт в ячейке именно наш текст: если коллега успел его поменять — конфликт, а не перезапись
   const undo = async () => {
     const edit = undoStack.pop()
     if (!edit) return null
-    if (await writeCell(edit.key, edit.lang, edit.prev)) redoStack.push(edit)
+    if (await writeCell(edit.key, edit.lang, edit.prev, edit.next)) redoStack.push(edit)
     return edit
   }
 
   const redo = async () => {
     const edit = redoStack.pop()
     if (!edit) return null
-    if (await writeCell(edit.key, edit.lang, edit.next)) undoStack.push(edit)
+    if (await writeCell(edit.key, edit.lang, edit.next, edit.prev)) undoStack.push(edit)
     return edit
   }
 
@@ -299,6 +429,7 @@ export function useLocalizations() {
         row.status = incoming.status
         row.based_on = incoming.based_on
         row.source_rev = incoming.source_rev
+        row.stale_langs = incoming.stale_langs
         row.updated_at = incoming.updated_at
       })
       .subscribe()
@@ -321,6 +452,10 @@ export function useLocalizations() {
     q,
     selectedTags,
     availableTags,
+    filters,
+    filtersKey,
+    hasFilters,
+    resetFilters,
     load,
     reload,
     setTranslation,
