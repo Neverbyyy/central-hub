@@ -1,11 +1,12 @@
 import { MAX_VALUE_LENGTH } from '@amaya/l10n-core'
 
 // Сохраняет перевод одной ячейки. Существование ключа и языка проверяет set_translation в базе.
+// expected — значение, от которого человек начинал правку: если ячейку тем временем изменили, будет 409.
 export default defineEventHandler(async (event) => {
   const actor = await requireHubUser(event)
 
-  const body = await readBody<{ key?: unknown, lang?: unknown, value?: unknown }>(event)
-  const { key, lang, value } = body ?? {}
+  const body = await readBody<{ key?: unknown, lang?: unknown, value?: unknown, expected?: unknown }>(event)
+  const { key, lang, value, expected } = body ?? {}
   if (typeof key !== 'string' || !key || typeof lang !== 'string' || !lang || typeof value !== 'string') {
     throw badRequest('Нужны key, lang и value строками')
   }
@@ -18,7 +19,8 @@ export default defineEventHandler(async (event) => {
     p_lang: lang,
     p_value: value,
     p_actor: actor,
-    p_source: 'ui'
+    p_source: 'ui',
+    p_expected: typeof expected === 'string' ? expected : null
   })
   if (error) throwDbError(error)
   return { updated_at: data as string }

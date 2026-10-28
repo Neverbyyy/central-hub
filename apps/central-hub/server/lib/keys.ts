@@ -203,6 +203,45 @@ export async function keyTree(db: SupabaseClient, { prefix = '', depth = 1 }: { 
   return [...counts].map(([path, count]) => ({ path, keys: count }))
 }
 
+export interface TreeNode {
+  // Начало ключа, например app.cars2
+  path: string
+  label: string
+  keys: number
+  children: TreeNode[]
+}
+
+/** Разделы ключей для дерева в интерфейсе: только узлы, у которых есть строки внутри, до maxDepth уровней. */
+export async function keyTreeNested(db: SupabaseClient, { maxDepth = 4 } = {}): Promise<TreeNode[]> {
+  const keys = await allKeys<{ technical_key: string }>(db, 'technical_key')
+  const root: TreeNode = { path: '', label: '', keys: 0, children: [] }
+  const nodes = new Map<string, TreeNode>()
+
+  for (const { technical_key: key } of keys) {
+    const segments = key.split('.')
+    let parent = root
+    // Последний сегмент — сама строка; в дерево идут только разделы
+    for (let i = 0; i < Math.min(segments.length - 1, maxDepth); i++) {
+      const path = segments.slice(0, i + 1).join('.')
+      let node = nodes.get(path)
+      if (!node) {
+        node = { path, label: segments[i]!, keys: 0, children: [] }
+        nodes.set(path, node)
+        parent.children.push(node)
+      }
+      node.keys++
+      parent = node
+    }
+  }
+
+  const sort = (list: TreeNode[]) => {
+    list.sort((a, b) => a.label.localeCompare(b.label))
+    for (const node of list) sort(node.children)
+  }
+  sort(root.children)
+  return root.children
+}
+
 export async function listRegistry(db: SupabaseClient, kind?: string) {
   let request = db.from('registry').select('kind, code, title').order('kind').order('code')
   if (kind) request = request.eq('kind', kind)
@@ -222,20 +261,47 @@ export async function addRegistryCode(db: SupabaseClient, { kind, code, title }:
   return { kind, code, title: title.trim() }
 }
 
-/** Ключи без перевода на язык или с переводом, устаревшим после правки английского. */
-export async function listUntranslated(db: SupabaseClient, { lang, prefix, limit = 20 }: { lang: string, prefix?: string, limit?: number }) {
+export interface QueueItem {
+  key: string
+  en: string
+  // Текущий перевод — есть у устаревших
+  current: string | null
+  reason: 'missing' | 'stale'
+  description: string | null
+  max_length: number | null
+}
+
+/** Очередь перевода: строки с английским, но без перевода на язык или с устаревшим переводом. */
+export async function translationQueue(
+  db: SupabaseClient,
+  { lang, prefix, limit = 50 }: { lang: string, prefix?: string, limit?: number }
+): Promise<{ total: number, items: QueueItem[] }> {
   const context = await loadKeyContext(db)
   if (!context.languages.includes(lang)) throw new HubError(`Неизвестный язык «${lang}»`)
+  if (lang === 'en') throw new HubError('Английский — исходный язык, его не переводят')
+
   const rows = await allKeys<KeyRow>(db, 'technical_key, translations, based_on, source_rev, description, max_length', prefix)
-  const result = []
+  const items: QueueItem[] = []
   for (const row of rows) {
     if (!row.translations.en) continue
     const reason = !row.translations[lang] ? 'missing' : staleLanguages(row).includes(lang) ? 'stale' : null
     if (!reason) continue
-    result.push({ key: row.technical_key, en: row.translations.en, current: row.translations[lang] ?? null, reason, description: row.description, max_length: row.max_length })
-    if (result.length >= Math.min(Math.max(limit, 1), 100)) break
+    items.push({
+      key: row.technical_key,
+      en: row.translations.en,
+      current: row.translations[lang] ?? null,
+      reason,
+      description: row.description,
+      max_length: row.max_length
+    })
   }
-  return result
+  return { total: items.length, items: items.slice(0, Math.min(Math.max(limit, 1), 200)) }
+}
+
+/** Ключи без перевода на язык или с переводом, устаревшим после правки английского. */
+export async function listUntranslated(db: SupabaseClient, { lang, prefix, limit = 20 }: { lang: string, prefix?: string, limit?: number }) {
+  const { items } = await translationQueue(db, { lang, prefix, limit: Math.min(Math.max(limit, 1), 100) })
+  return items
 }
 
 /** Проверка текста строки или перевода по правилам ТЗ; source и лимит берутся из ключа. */

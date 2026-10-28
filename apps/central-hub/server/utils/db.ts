@@ -9,6 +9,16 @@ export const useDb = (event: H3Event) => serverSupabaseServiceRole(event) as unk
 
 /** Ошибки правил из базы (raise exception) показываем человеку как есть, остальное — в лог. */
 export function throwDbError(error: PostgrestError): never {
+  // set_translation: пока человек правил ячейку, её уже изменил кто-то другой
+  if (error.code === 'HB409') {
+    let data: Record<string, unknown> = {}
+    try {
+      data = JSON.parse(error.details)
+    } catch {
+      // detail без JSON — отдадим только сообщение
+    }
+    throw createError({ statusCode: 409, statusMessage: 'Conflict', message: error.message, data })
+  }
   if (error.code === 'P0002') {
     throw createError({ statusCode: 404, statusMessage: 'Not Found', message: error.message })
   }
