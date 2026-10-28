@@ -1,0 +1,40 @@
+name: Дамп базы
+
+# В бесплатном Supabase нет бэкапов — раз в сутки снимаем дамп и храним 30 дней в артефактах
+on:
+  schedule:
+    - cron: '0 2 * * *' # 05:00 по Москве
+  workflow_dispatch:
+
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.122.0
+
+      # SUPABASE_DB_URL — строка Session pooler: прямой адрес базы только IPv6, а раннеры GitHub его не умеют
+      - name: Дамп ролей, схемы и данных
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::error::Нет секрета SUPABASE_DB_URL — см. README, раздел «Бэкапы»"
+            exit 1
+          fi
+          mkdir backup
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/roles.sql --role-only
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/schema.sql
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/data.sql --use-copy --data-only
+          gzip backup/*.sql
+          ls -l backup
+          echo "DUMP_DATE=$(date -u +%F)" >> "$GITHUB_ENV"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ env.DUMP_DATE }}
+          path: backup/
+          retention-days: 30
+          if-no-files-found: error
