@@ -29,7 +29,7 @@ const emit = defineEmits<{
 
 const toast = useToast()
 
-// Размеры должны совпадать с --loc-cols в стилях ниже
+// Размеры должны совпадать с columns ниже
 const ROW_H = 36
 const HEADER_H = 36
 const STICKY_W = 40 + 260
@@ -73,6 +73,10 @@ watch(() => props.rows[active.value?.row ?? -1]?.technical_key, (key) => {
   if (key) emit('focusRow', key)
 })
 const maxCol = computed(() => props.languages.length)
+
+// Колонки: чекбокс, ключ, языки, даты. Собираем строкой, а не repeat(var(...)) в CSS:
+// пока языки не загрузились, repeat(0, …) — недопустимое значение, и шапка разваливается в столбик
+const columns = computed(() => ['40px', '260px', ...props.languages.map(() => '220px'), '110px', '110px'].join(' '))
 
 const valueAt = (row: number, col: number) => {
   const r = props.rows[row]
@@ -272,7 +276,7 @@ defineExpose({ reset })
     ref="scrollEl"
     tabindex="0"
     class="loc-grid relative flex-1 overflow-auto overscroll-none bg-white text-gray-900 outline-none"
-    :style="{ '--loc-langs': languages.length }"
+    :style="{ '--loc-cols': columns }"
     @scroll.passive="onScroll"
     @keydown="onKeydown"
   >
@@ -375,10 +379,6 @@ defineExpose({ reset })
 </template>
 
 <style>
-.loc-grid {
-  --loc-cols: 40px 260px repeat(var(--loc-langs), 220px) 110px 110px;
-}
-
 .loc-row {
   display: grid;
   grid-template-columns: var(--loc-cols);

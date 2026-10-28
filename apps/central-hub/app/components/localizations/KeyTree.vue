@@ -24,7 +24,17 @@ const props = defineProps<{
 
 const emit = defineEmits<{ select: [prefix: string] }>()
 
-const { data, refresh } = await useFetch<TreeNode[]>('/api/keys/tree', { server: false, lazy: true })
+const { data, status, refresh } = await useFetch<TreeNode[]>('/api/keys/tree', { server: false, lazy: true })
+
+// Заглушка на время загрузки: уровень вложенности и ширина подписи, как у common → button, legacy → inapp
+const SKELETON = [
+  { level: 0, width: 56 },
+  { level: 1, width: 44 },
+  { level: 0, width: 48 },
+  { level: 1, width: 40 },
+  { level: 1, width: 64 },
+  { level: 0, width: 36 }
+]
 watch(() => props.version, () => refresh())
 
 const toItems = (nodes: TreeNode[]): Item[] => nodes.map(node => ({
@@ -80,7 +90,43 @@ const onSelect = (item: Item | undefined) => {
       Все ключи
     </button>
     <div class="flex-1 overflow-auto px-1 pb-3">
+      <div
+        v-if="status === 'error' && !data"
+        class="px-2 py-1 text-xs text-gray-500"
+      >
+        Разделы не загрузились.
+        <button
+          type="button"
+          class="font-medium text-gray-700 underline underline-offset-2"
+          @click="refresh()"
+        >
+          Повторить
+        </button>
+      </div>
+      <!-- Скелетон по форме настоящего дерева, пока разделы грузятся -->
+      <div
+        v-else-if="!data"
+        class="px-2"
+        aria-busy="true"
+        aria-label="Загрузка разделов"
+      >
+        <div
+          v-for="(row, i) in SKELETON"
+          :key="i"
+          class="flex h-7 items-center gap-2"
+          :style="{ paddingLeft: `${row.level * 16}px` }"
+        >
+          <!-- Тон как у полосок скелетона в гриде, иначе на белом фоне их не видно -->
+          <USkeleton class="size-4 rounded bg-gray-200" />
+          <USkeleton
+            class="h-3 rounded bg-gray-200"
+            :style="{ width: `${row.width}px` }"
+          />
+          <USkeleton class="ml-auto h-2.5 w-6 rounded bg-gray-100" />
+        </div>
+      </div>
       <UTree
+        v-else
         v-model:expanded="expanded"
         :items="items"
         :model-value="selected"
