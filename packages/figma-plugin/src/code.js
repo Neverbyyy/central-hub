@@ -83,10 +83,11 @@ function exclusive(task) {
 }
 
 async function findCollection(settings, modes) {
-  if (settings.collectionId) {
-    var existing = await figma.variables.getVariableCollectionByIdAsync(settings.collectionId)
-    if (existing) return existing
-  }
+  // Ищем среди локальных коллекций, а не по id: удалённую коллекцию Figma по id ещё отдаёт,
+  // и переменные создавались бы в ней — невидимыми
+  var local = await figma.variables.getLocalVariableCollectionsAsync()
+  var existing = local.filter(function (collection) { return collection.id === settings.collectionId })[0]
+  if (existing) return existing
   var collection = figma.variables.createVariableCollection(COLLECTION_NAME)
   // В новой коллекции один режим «Mode 1» — он становится первым языком
   collection.renameMode(collection.modes[0].modeId, modes[0].name)

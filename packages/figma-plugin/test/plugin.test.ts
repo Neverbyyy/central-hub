@@ -39,7 +39,10 @@ class FakeVariable {
 
 class FakeCollection {
   modes = [{ modeId: `${this.id}/0`, name: 'Mode 1' }]
+  removed = false
   constructor(readonly id: string, public name: string, private maxModes: number) {}
+  // Как в Figma: удалённая коллекция пропадает из локальных, но по id всё ещё находится
+  remove() { this.removed = true }
   renameMode(modeId: string, name: string) { this.modes.find(m => m.modeId === modeId)!.name = name }
   addMode(name: string) {
     if (this.modes.length >= this.maxModes) throw new Error(`in addMode: Limited to ${this.maxModes} modes only`)
@@ -83,12 +86,14 @@ function setup({ command = 'open', token = 'secret', settings = null as object |
     closePlugin: (message?: string) => { env.closed = message ?? '' },
     variables: {
       getVariableCollectionByIdAsync: async (id: string) => collections.get(id) ?? null,
+      getLocalVariableCollectionsAsync: async () => [...collections.values()].filter(c => !c.removed),
       createVariableCollection: (name: string) => {
         const collection = new FakeCollection(`collection:${++ids}`, name, maxModes)
         collections.set(collection.id, collection)
         return collection
       },
-      getLocalVariablesAsync: async (type: string) => [...variables.values()].filter(v => v.resolvedType === type),
+      getLocalVariablesAsync: async (type: string) =>
+        [...variables.values()].filter(v => v.resolvedType === type && !collections.get(v.variableCollectionId)!.removed),
       createVariable: (name: string, collection: FakeCollection, type: string) => {
         if ([...variables.values()].some(v => v.variableCollectionId === collection.id && v.name === name)) throw new Error(`duplicate ${name}`)
         const created = new FakeVariable(`variable:${++ids}`, name, collection.id, type)
@@ -125,8 +130,8 @@ function setup({ command = 'open', token = 'secret', settings = null as object |
   })
   // Следующий запланированный и не отменённый опрос живого обновления
   const pendingTimer = () => timers.filter(t => !t.cleared).at(-1)
-  const collection = () => [...collections.values()][0]!
-  const byName = (name: string) => [...variables.values()].find(v => v.name === name)!
+  const collection = () => [...collections.values()].filter(c => !c.removed)[0]!
+  const byName = (name: string) => [...variables.values()].find(v => v.name === name && !collections.get(v.variableCollectionId)!.removed)!
   const valueOf = (name: string, mode: string) => {
     const modeId = collection().modes.find(m => m.name === mode)!.modeId
     return byName(name).valuesByMode[modeId]
@@ -205,6 +210,26 @@ describe('плагин Figma: загрузка выборки', () => {
     const result = await t.waitFor('result', 2)
     expect(result.stats.extra).toEqual(['common/a/two'])
     expect(t.byName('common/a/two')).toBeDefined()
+  })
+
+  it('коллекцию удалили в Figma — следующая загрузка создаёт новую, а не пишет в удалённую', async () => {
+    const t = setup()
+    t.env.respond = () => ({ status: 200, body: texts([variable('common.a.one', 'One')]) })
+    t.start()
+    await t.waitFor('sections')
+    t.ui({ type: 'load', prefixes: ['common'], langs: ['en', 'ru'] })
+    await t.waitFor('result')
+    const deleted = t.collection()
+    deleted.remove()
+
+    t.ui({ type: 'load', prefixes: ['common'], langs: ['en', 'ru'] })
+    const result = await t.waitFor('result', 2)
+    const fresh = t.collection()
+    expect(fresh.id).not.toBe(deleted.id)
+    expect(result.stats).toMatchObject({ created: 1, total: 1 })
+    expect(t.byName('common/a/one').variableCollectionId).toBe(fresh.id)
+    expect(fresh.modes.map(m => m.name)).toEqual(['English', 'Russian', 'German'])
+    expect(JSON.parse(t.root.get('settings')!).collectionId).toBe(fresh.id)
   })
 
   it('переменная, созданная раньше вручную с тем же именем, подхватывается, а не дублируется', async () => {
