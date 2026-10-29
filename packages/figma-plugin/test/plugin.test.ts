@@ -1,4 +1,4 @@
-// Плагин «Amaya Hub — тексты» на поддельном figma: src/code.js выполняется как есть в node:vm.
+// Плагин «Amaya Hub — локализация» на поддельном figma: src/code.js выполняется как есть в node:vm.
 import { readFileSync } from 'node:fs'
 import { createContext, runInContext } from 'node:vm'
 import { describe, expect, it, vi } from 'vitest'

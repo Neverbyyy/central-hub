@@ -1,4 +1,4 @@
-// Amaya Hub — тексты: переменные Figma из сервиса локализации.
+// Amaya Hub — локализация: переменные Figma из сервиса локализации.
 //
 //   Открыть          окно: токен, разделы и языки, «Загрузить», живое обновление
 //   Обновить тексты  без окна: та же выборка, что в прошлый раз, итог — во всплывающем сообщении
@@ -316,7 +316,7 @@ async function onMessage(message) {
 }
 
 async function openWindow() {
-  figma.showUI(__html__, { width: 340, height: 540, themeColors: true, title: 'Amaya Hub — тексты' })
+  figma.showUI(__html__, { width: 340, height: 540, themeColors: true, title: 'Amaya Hub — локализация' })
   figma.on('close', stopLive)
   figma.ui.onmessage = function (message) {
     onMessage(message).catch(report)

@@ -1,5 +1,5 @@
 // Переменные Figma из строк сервиса. Два вида выгрузки:
-// - плагин «Amaya Hub — тексты» (packages/figma-plugin) получает плоский список переменных — figmaVariables;
+// - плагин «Amaya Hub — локализация» (packages/figma-plugin) получает плоский список переменных — figmaVariables;
 // - встроенный импорт Figma (W3C Design Tokens, DTCG) — файл на каждый язык, каждый файл становится режимом.
 // Имя переменной — ключ с / вместо точек, поэтому в Figma получается дерево групп: app → cars2 → paywall.
 // Справка: https://help.figma.com/hc/en-us/articles/15343816063383-Modes-for-variables

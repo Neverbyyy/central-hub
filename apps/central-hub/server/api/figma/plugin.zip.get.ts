@@ -1,6 +1,6 @@
 import JSZip from 'jszip'
 
-// Плагин Figma «Amaya Hub — тексты» для установки: Plugins → Development → Import plugin from manifest.
+// Плагин Figma «Amaya Hub — локализация» для установки: Plugins → Development → Import plugin from manifest.
 // За общим паролем. Плагин ходит в тот сервис, с которого его скачали (стенд, превью, localhost):
 // адрес попадает в манифест и в код. Токена в архиве нет — дизайнер вставляет его в плагин сам.
 const FILES = ['manifest.json', 'code.js', 'ui.html']

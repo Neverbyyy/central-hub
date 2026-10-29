@@ -5,7 +5,7 @@ import type { H3CorsOptions, H3Event } from 'h3'
 const CORS: H3CorsOptions = { origin: '*', methods: ['GET'], allowHeaders: ['authorization'] }
 
 /**
- * Маршрут плагина «Amaya Hub — тексты»: preflight, токен NUXT_FIGMA_TOKEN, ошибки — JSON { error }.
+ * Маршрут плагина «Amaya Hub — локализация»: preflight, токен NUXT_FIGMA_TOKEN, ошибки — JSON { error }.
  * Файл маршрута — без метода в имени: иначе OPTIONS до него не дойдёт и уйдёт в рендер страниц.
  * Ошибку отдаём сами, а не страницей ошибки Nitro: плагин должен прочитать её текст, а не упасть на CORS.
  */

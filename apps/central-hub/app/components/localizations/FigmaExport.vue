@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import JSZip from 'jszip'
 
-// Тексты в Figma. Основной путь — плагин «Amaya Hub — тексты» (packages/figma-plugin), он скачивается отсюда.
+// Тексты в Figma. Основной путь — плагин «Amaya Hub — локализация» (packages/figma-plugin), он скачивается отсюда.
 // Без плагина — выборка разделов (например, Cars 2 вместе с общими) архивом для встроенного импорта Figma:
 // файл на каждый язык становится режимом коллекции, вложенные группы — именами через /.
 interface TreeNode {
@@ -157,10 +157,10 @@ const onKeydown = (event: KeyboardEvent) => {
           <div class="flex items-start justify-between gap-3">
             <div>
               <h3 class="font-semibold text-gray-900">
-                Плагин «Amaya Hub — тексты»
+                Amaya Hub — Локализация
               </h3>
               <p class="mt-0.5 text-xs text-gray-500">
-                Разделы и языки выбираются в плагине. Тексты правятся здесь, в сервисе: правка прямо в слое отвязывает его от переменной.
+                Разделы и языки выбираются в плагине. Тексты правятся здесь в сервисе.
               </p>
             </div>
             <UButton
