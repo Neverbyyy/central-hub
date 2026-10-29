@@ -16,3 +16,11 @@
   --color-green-900: #0A5331;
   --color-green-950: #052E16;
 }
+
+/* Tailwind 4 оставляет кнопкам курсор браузера, а Nuxt UI его не задаёт */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}

@@ -150,12 +150,42 @@ pnpm db:new <name>                                     # создать мигр
 - Тексты нейросети сохраняются со статусом «от ИИ» (`ai`). Утверждать, удалять и переименовывать нечем,
   а перезаписать текст человека не даёт сама база (`set_ai_translation`).
 
-Подключение в Claude Code — `.mcp.json` в корне проекта (как в этом репозитории) и переменная `AMAYA_HUB_TOKEN`:
+### Как подключить Claude Code
 
-```json
-{ "mcpServers": { "amaya-hub": { "type": "http", "url": "https://central-hub-sigma.vercel.app/mcp",
-  "headers": { "Authorization": "Bearer ${AMAYA_HUB_TOKEN}" } } } }
-```
+1. **Получить токен** у владельца сервиса — это значение `NUXT_MCP_TOKEN` из переменных Vercel.
+   В репозиторий и в `.mcp.json` токен не кладут.
+2. **Сохранить токен в переменную `AMAYA_HUB_TOKEN`:**
+
+   ```bash
+   setx AMAYA_HUB_TOKEN "<токен>"                         # Windows
+   echo 'export AMAYA_HUB_TOKEN="<токен>"' >> ~/.zshrc    # macOS
+   ```
+
+   Claude Code читает переменные при запуске: после этого перезапустить терминал или VS Code целиком.
+3. **Положить `.mcp.json` в корень проекта.** В этом репозитории он уже есть, в другой проект его
+   можно скопировать и закоммитить — токена в нём нет:
+
+   ```json
+   { "mcpServers": { "amaya-hub": { "type": "http", "url": "https://central-hub-sigma.vercel.app/mcp",
+     "headers": { "Authorization": "Bearer ${AMAYA_HUB_TOKEN}" } } } }
+   ```
+
+   При первом запуске Claude Code спросит, доверять ли серверу `amaya-hub` из `.mcp.json`, — разрешить.
+4. **Проверить:** команда `/mcp` в Claude Code — `amaya-hub` подключён, у него 9 инструментов.
+   Дальше можно просить словами: «найди в amaya-hub строки про Continue», «создай ключ для заголовка
+   пейволла Cars 2».
+
+Если не подключается:
+
+- `/mcp` показывает ошибку или просит авторизацию — Claude Code не видит переменную (не перезапущен после
+  `setx`) или токен неверный: сервер отвечает 401 «Неверный токен MCP».
+- Ответ 503 «NUXT_MCP_TOKEN не задан на сервере» — MCP выключен на стенде, нужен владелец сервиса.
+- Если при первом запуске отказали в доверии — `claude mcp reset-project-choices` и перезапуск.
+
+Подключить сервер сразу во всех своих проектах, без `.mcp.json` и переменной:
+`claude mcp add --transport http --scope user amaya-hub https://central-hub-sigma.vercel.app/mcp --header "Authorization: Bearer <токен>"`
+— токен сохранится в `~/.claude.json`. Другие клиенты MCP подключаются так же: Streamable HTTP, этот
+адрес и заголовок `Authorization: Bearer <токен>`.
 
 ## Выгрузка в проекты — CLI `amaya-l10n`
 
