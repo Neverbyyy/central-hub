@@ -36,9 +36,9 @@ async function resolveSelection(db: SupabaseClient, { prefixes, languages }: { p
   return { roots, modes }
 }
 
-/** Разделы двух верхних уровней и языки — для окна плагина. */
+/** Дерево разделов — то же, что слева в сервисе, — и языки: для окна плагина. */
 export async function figmaPluginSections(db: SupabaseClient) {
-  const [sections, languages] = await Promise.all([keyTreeNested(db, { maxDepth: 2 }), editorLanguages(db)])
+  const [sections, languages] = await Promise.all([keyTreeNested(db), editorLanguages(db)])
   return { sections, modes: languages.map(code => ({ code, name: figmaModeName(code) })) }
 }
 

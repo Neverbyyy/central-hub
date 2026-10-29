@@ -11,11 +11,12 @@ interface TreeNode {
   children: TreeNode[]
 }
 
-interface Section {
+interface Row {
   path: string
   label: string
   keys: number
   level: number
+  hasChildren: boolean
 }
 
 const props = defineProps<{
@@ -32,52 +33,76 @@ const authRedirect = useAuthRedirect()
 // Тот же запрос, что у дерева слева — Nuxt отдаст уже загруженные данные
 const { data: tree } = useFetch<TreeNode[]>('/api/keys/tree', { server: false, lazy: true })
 
-// Разделы двух верхних уровней: common, app → cars2, farm, legacy → inapp, pages_hub
-const sections = computed<Section[]>(() => (tree.value ?? []).flatMap(node => [
-  { path: node.path, label: node.label, keys: node.keys, level: 0 },
-  ...node.children.map(child => ({ path: child.path, label: child.label, keys: child.keys, level: 1 }))
-]))
+// Все разделы дерева по пути — и свёрнутые тоже
+const nodes = computed(() => {
+  const map = new Map<string, TreeNode>()
+  const walk = (list: TreeNode[]) => list.forEach((node) => {
+    map.set(node.path, node)
+    walk(node.children)
+  })
+  walk(tree.value ?? [])
+  return map
+})
 
 const selected = ref(new Set<string>())
+const expanded = ref(new Set<string>())
 const chosenLanguages = ref<string[]>([])
 
 const current = computed(() => props.prefix.replace(/\.$/, ''))
 
-// Каждое открытие — от раздела, выбранного в дереве, плюс общие строки
+// Разделы над этим: legacy.inapp.coloring1 → legacy, legacy.inapp
+const ancestors = (path: string) => path.split('.').slice(0, -1).map((_, i, parts) => parts.slice(0, i + 1).join('.'))
+
+// Каждое открытие — от раздела, выбранного в дереве, плюс общие строки; путь к нему раскрыт
 watch(open, (value) => {
   if (!value) return
   selected.value = new Set(['common', ...(current.value ? [current.value] : [])])
+  expanded.value = new Set(current.value ? ancestors(current.value) : [])
   chosenLanguages.value = [...props.languages]
 })
 
+// Видимые строки: у раскрытого раздела видны подразделы
+const rows = computed<Row[]>(() => {
+  const list: Row[] = []
+  const walk = (items: TreeNode[], level: number) => items.forEach((node) => {
+    list.push({ path: node.path, label: node.label, keys: node.keys, level, hasChildren: node.children.length > 0 })
+    if (expanded.value.has(node.path)) walk(node.children, level + 1)
+  })
+  walk(tree.value ?? [], 0)
+  return list
+})
+
+const toggleExpanded = (path: string) => {
+  const next = new Set(expanded.value)
+  if (!next.delete(path)) next.add(path)
+  expanded.value = next
+}
+
 // Раздел внутри уже выбранного выбирать незачем — он и так попадёт в файл
 const coveredBy = (path: string) => [...selected.value].find(other => other !== path && path.startsWith(`${other}.`))
+const hasSelectedInside = (path: string) => [...selected.value].some(other => other.startsWith(`${path}.`))
+
+// Свёрнутый раздел с выбранными подразделами — «частично»
+const checkState = (path: string) =>
+  selected.value.has(path) || coveredBy(path) ? true : hasSelectedInside(path) ? 'indeterminate' as const : false
 
 const toggle = (path: string, value: boolean) => {
   const next = new Set(selected.value)
-  if (value) next.add(path)
-  else next.delete(path)
+  if (value) {
+    // Выбранный раздел включает подразделы — отдельные отметки внутри больше не нужны
+    for (const other of next) if (other.startsWith(`${path}.`)) next.delete(other)
+    next.add(path)
+  } else {
+    next.delete(path)
+  }
   selected.value = next
 }
 
-const findNode = (nodes: TreeNode[], path: string): TreeNode | undefined => {
-  for (const node of nodes) {
-    if (node.path === path) return node
-    const found = findNode(node.children, path)
-    if (found) return found
-  }
-}
-
-// Раздел из дерева может быть глубже второго уровня (app.cars2.paywall) — показываем его отдельной строкой
-const rows = computed<Section[]>(() => {
-  const path = current.value
-  if (!path || sections.value.some(s => s.path === path)) return sections.value
-  return [{ path, label: path, keys: findNode(tree.value ?? [], path)?.keys ?? 0, level: 0 }, ...sections.value]
-})
-
-// В файл идут отмеченные разделы из списка; подраздел уже отмеченного не считается дважды
-const chosen = computed(() => rows.value.filter(row => selected.value.has(row.path) && !coveredBy(row.path)))
-const total = computed(() => chosen.value.reduce((sum, row) => sum + row.keys, 0))
+// В файл идут отмеченные разделы, в том числе свёрнутые; подраздел уже отмеченного не считается дважды
+const chosen = computed(() => [...selected.value]
+  .filter(path => nodes.value.has(path) && !coveredBy(path))
+  .map(path => nodes.value.get(path)!))
+const total = computed(() => chosen.value.reduce((sum, node) => sum + node.keys, 0))
 
 const toggleLanguage = (lang: string) => {
   chosenLanguages.value = chosenLanguages.value.includes(lang)
@@ -91,7 +116,7 @@ const canExport = computed(() => chosen.value.length > 0 && chosenLanguages.valu
 const exportFile = async () => {
   if (!canExport.value) return
   exporting.value = true
-  const prefixes = chosen.value.map(row => row.path)
+  const prefixes = chosen.value.map(node => node.path)
   try {
     const result = await $fetch<{ keys: number, files: Record<string, unknown> }>('/api/figma/export', {
       query: { prefixes: prefixes.map(p => `${p}.`).join(','), langs: chosenLanguages.value.join(',') }
@@ -174,17 +199,36 @@ const onKeydown = (event: KeyboardEvent) => {
           </div>
           <ul
             v-else
-            class="max-h-64 space-y-0.5 overflow-y-auto"
+            class="max-h-72 space-y-0.5 overflow-y-auto"
           >
             <li
               v-for="row in rows"
               :key="row.path"
-              :style="{ paddingLeft: `${row.level * 20}px` }"
+              class="flex items-center gap-1"
+              :style="{ paddingLeft: `${row.level * 16}px` }"
             >
+              <button
+                v-if="row.hasChildren"
+                type="button"
+                class="flex size-6 shrink-0 items-center justify-center rounded text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                :aria-expanded="expanded.has(row.path)"
+                :aria-label="`${expanded.has(row.path) ? 'Свернуть' : 'Развернуть'} ${row.label}`"
+                @click="toggleExpanded(row.path)"
+              >
+                <UIcon
+                  name="i-lucide-chevron-right"
+                  class="size-3.5 transition-transform"
+                  :class="{ 'rotate-90': expanded.has(row.path) }"
+                />
+              </button>
+              <span
+                v-else
+                class="size-6 shrink-0"
+              />
               <UCheckbox
-                :model-value="selected.has(row.path) || !!coveredBy(row.path)"
+                :model-value="checkState(row.path)"
                 :disabled="!!coveredBy(row.path)"
-                @update:model-value="toggle(row.path, !!$event)"
+                @update:model-value="toggle(row.path, $event === true)"
               >
                 <template #label>
                   <span class="font-mono text-xs">{{ row.label }}</span>

@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import type { FigmaGroup, FigmaToken } from '../../packages/l10n-core/src'
-import { figmaExport, figmaPluginTexts } from '../../apps/central-hub/server/lib/figma'
+import { figmaExport, figmaPluginSections, figmaPluginTexts } from '../../apps/central-hub/server/lib/figma'
 import { ACTOR, ANCHOR, ensureAnchor, service } from './clients'
 
 const restore = () => service.rpc('restore_keys', { p_keys: [ANCHOR], p_actor: ACTOR, p_source: 'test' })
@@ -55,6 +55,13 @@ describe('выгрузка в Figma', () => {
 })
 
 describe('тексты для плагина Figma', () => {
+  it('разделы — то же дерево, что слева в сервисе, глубже двух уровней', async () => {
+    const { sections, modes } = await figmaPluginSections(service)
+    const inapp = sections.find(s => s.path === 'legacy')!.children.find(s => s.path === 'legacy.inapp')!
+    expect(inapp.children.map(s => s.path)).toContain('legacy.inapp.basic')
+    expect(modes[0]).toEqual({ code: 'en', name: 'English' })
+  })
+
   it('вся выборка: режимы с английскими названиями, переменные с именами через /', async () => {
     const result = await figmaPluginTexts(service, { prefixes: ['legacy.pages_hub.'], languages: ['ru', 'en'] })
     expect(result.modes).toEqual([{ code: 'en', name: 'English' }, { code: 'ru', name: 'Russian' }])

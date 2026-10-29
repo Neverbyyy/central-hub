@@ -66,12 +66,18 @@
   .token-form { display: flex; flex-direction: column; gap: 8px; }
 
   .sections { flex: 1; min-height: 80px; overflow-y: auto; margin: 0 -4px; padding: 0; list-style: none; }
-  .row { display: flex; align-items: center; gap: 8px; min-height: 28px; padding: 0 4px; border-radius: 4px; cursor: pointer; }
+  .row { display: flex; align-items: center; gap: 2px; min-height: 28px; border-radius: 4px; }
   .row:hover { background: var(--bg-hover); }
-  .row.covered { cursor: default; opacity: .55; }
-  .row input { margin: 0; cursor: inherit; accent-color: var(--bg-brand); }
-  .row .label { flex: 1; overflow: hidden; font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
-  .row .count { color: var(--text-secondary); font-size: 10px; font-variant-numeric: tabular-nums; }
+  .row.covered { opacity: .55; }
+  .toggle { display: flex; flex: none; align-items: center; justify-content: center; width: 24px; height: 28px; padding: 0; border: 0; border-radius: 4px; background: none; color: var(--text-secondary); }
+  .toggle:hover { color: var(--text); }
+  .toggle svg { transition: transform .12s ease-out; }
+  .toggle[aria-expanded=true] svg { transform: rotate(90deg); }
+  .pick { display: flex; flex: 1; align-items: center; gap: 8px; min-width: 0; min-height: 28px; padding-right: 4px; cursor: pointer; }
+  .row.covered .pick { cursor: default; }
+  .pick input { margin: 0; cursor: inherit; accent-color: var(--bg-brand); }
+  .pick .label { flex: 1; overflow: hidden; font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+  .pick .count { color: var(--text-secondary); font-size: 10px; font-variant-numeric: tabular-nums; }
 
   /* Девять языков — в один ряд */
   .chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(28px, 1fr)); gap: 4px; }
@@ -139,7 +145,7 @@
   var $ = function (id) { return document.getElementById(id) }
   var send = function (message) { parent.postMessage({ pluginMessage: message }, '*') }
 
-  var state = { sections: [], modes: [], selected: new Set(['common']), langs: null, busy: false }
+  var state = { sections: [], nodes: new Map(), expanded: new Set(), modes: [], selected: new Set(['common']), langs: null, busy: false }
 
   var plural = function (n, forms) {
     var mod10 = n % 10, mod100 = n % 100
@@ -155,13 +161,30 @@
     if (view === 'token') $('token').focus()
   }
 
-  // Разделы двух уровней: common, app → cars2, farm…
+  // Разделы над этим: legacy.inapp.coloring1 → legacy, legacy.inapp
+  function ancestors(path) {
+    var parts = path.split('.')
+    return parts.slice(0, -1).map(function (_, i) { return parts.slice(0, i + 1).join('.') })
+  }
+
+  // Все разделы дерева по пути — и свёрнутые тоже
+  function indexNodes(list) {
+    list.forEach(function (node) {
+      state.nodes.set(node.path, node)
+      indexNodes(node.children)
+    })
+  }
+
+  // Видимые строки — то же дерево, что слева в сервисе: у раскрытого раздела видны подразделы
   function rows() {
     var list = []
-    state.sections.forEach(function (node) {
-      list.push({ path: node.path, label: node.label, keys: node.keys, level: 0 })
-      node.children.forEach(function (child) { list.push({ path: child.path, label: child.label, keys: child.keys, level: 1 }) })
-    })
+    var walk = function (nodes, level) {
+      nodes.forEach(function (node) {
+        list.push({ path: node.path, label: node.label, keys: node.keys, level: level, hasChildren: node.children.length > 0 })
+        if (state.expanded.has(node.path)) walk(node.children, level + 1)
+      })
+    }
+    walk(state.sections, 0)
     return list
   }
 
@@ -172,26 +195,68 @@
     return found
   }
 
+  function hasSelectedInside(path) {
+    var found = false
+    state.selected.forEach(function (other) { if (other.indexOf(path + '.') === 0) found = true })
+    return found
+  }
+
+  // Отмеченные разделы, в том числе свёрнутые
   function chosen() {
-    return rows().filter(function (row) { return state.selected.has(row.path) && !coveredBy(row.path) })
+    var list = []
+    state.selected.forEach(function (path) {
+      if (state.nodes.has(path) && !coveredBy(path)) list.push(state.nodes.get(path))
+    })
+    return list
+  }
+
+  function select(path, on) {
+    if (on) {
+      // Выбранный раздел включает подразделы — отдельные отметки внутри больше не нужны
+      Array.from(state.selected).forEach(function (other) { if (other.indexOf(path + '.') === 0) state.selected.delete(other) })
+      state.selected.add(path)
+    } else {
+      state.selected.delete(path)
+    }
   }
 
   function renderSections() {
     var list = $('sections')
+    var scroll = list.scrollTop
     list.textContent = ''
     rows().forEach(function (row) {
       var covered = !!coveredBy(row.path)
+      var open = state.expanded.has(row.path)
       var li = document.createElement('li')
+      li.className = 'row' + (covered ? ' covered' : '')
+      li.style.paddingLeft = (row.level * 16) + 'px'
+
+      var toggle = document.createElement('button')
+      toggle.type = 'button'
+      toggle.className = 'toggle'
+      if (row.hasChildren) {
+        toggle.innerHTML = '<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+        toggle.setAttribute('aria-expanded', String(open))
+        toggle.setAttribute('aria-label', (open ? 'Свернуть ' : 'Развернуть ') + row.label)
+        toggle.addEventListener('click', function () {
+          if (!state.expanded.delete(row.path)) state.expanded.add(row.path)
+          render()
+        })
+      } else {
+        toggle.disabled = true
+        toggle.style.visibility = 'hidden'
+      }
+
       var label = document.createElement('label')
-      label.className = 'row' + (covered ? ' covered' : '')
-      label.style.paddingLeft = (4 + row.level * 20) + 'px'
+      label.className = 'pick'
       var box = document.createElement('input')
       box.type = 'checkbox'
       box.checked = covered || state.selected.has(row.path)
+      // Свёрнутый раздел с выбранными подразделами — «частично»
+      box.indeterminate = !box.checked && hasSelectedInside(row.path)
       box.disabled = covered
       box.addEventListener('change', function () {
-        if (box.checked) state.selected.add(row.path)
-        else state.selected.delete(row.path)
+        select(row.path, box.checked)
         render()
       })
       var name = document.createElement('span')
@@ -201,9 +266,10 @@
       count.className = 'count'
       count.textContent = row.keys
       label.append(box, name, count)
-      li.append(label)
+      li.append(toggle, label)
       list.append(li)
     })
+    list.scrollTop = scroll
   }
 
   function renderLangs() {
@@ -293,12 +359,16 @@
       $('hub-line').textContent = $('hub-line-main').textContent = message.hub.replace(/^https?:\/\//, '')
       if (message.settings) {
         state.selected = new Set(message.settings.prefixes)
+        // Путь к сохранённым разделам раскрыт
+        message.settings.prefixes.forEach(function (path) { ancestors(path).forEach(function (p) { state.expanded.add(p) }) })
         state.langs = message.settings.langs
         $('live').checked = message.settings.live !== false
       }
       show(message.hasToken ? 'main' : 'token')
     } else if (message.type === 'sections') {
       state.sections = message.sections
+      state.nodes = new Map()
+      indexNodes(message.sections)
       state.modes = message.modes
       if (!state.langs) state.langs = message.modes.map(function (m) { return m.code })
       render()
