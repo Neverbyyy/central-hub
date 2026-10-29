@@ -60,58 +60,26 @@ const logout = async () => {
           Локализации
         </ULink>
 
-        <ULink
-          raw
-          to="/ab-tests"
-          class="flex px-4 py-2 rounded-lg text-sm text-gray-900 hover:bg-mist-100"
-          active-class="bg-mist-100 font-bold"
-          inactive-class=""
+        <!-- A/B-тестов в сервисе пока нет: пункт виден, но не ведёт на страницу прототипа -->
+        <span
+          class="flex items-center px-4 py-2 rounded-lg text-sm text-gray-400 cursor-not-allowed select-none"
+          aria-disabled="true"
+          title="A/B-тесты появятся позже"
         >
           <UIcon
             name="ri:earth-line"
             class="size-5 mr-2"
           />
           AB-Тесты
-        </ULink>
+          <span class="ml-auto text-[10px]">скоро</span>
+        </span>
       </div>
     </section>
 
     <footer>
-      <div class="rounded-xl overflow-hidden mb-4">
-        <RiveKeyboard />
-      </div>
-
-      <ULink
-        raw
-        to="/users"
-        class="flex px-4 py-2 mb-1 rounded-lg text-sm text-gray-900 hover:bg-mist-100"
-        active-class="bg-mist-100 font-bold"
-        inactive-class=""
-      >
-        <UIcon
-          name="ri:user-line"
-          class="size-5 mr-2"
-        />
-        Пользователи
-      </ULink>
-
-      <ULink
-        raw
-        to="/users"
-        class="flex px-4 py-2 rounded-lg text-sm text-gray-900 hover:bg-mist-100"
-        active-class="bg-mist-100 font-bold"
-        inactive-class=""
-      >
-        <UIcon
-          name="ri:settings-5-line"
-          class="size-5 mr-2"
-        />
-        Настройки
-      </ULink>
-
       <div
         v-if="user.name"
-        class="flex items-center gap-1 mt-2 pt-2 px-2 border-t border-gray-200"
+        class="flex items-center gap-1 pt-2 px-2 border-t border-gray-200"
       >
         <UIcon
           name="i-lucide-user-round"
