@@ -8,7 +8,6 @@
   "documentAccess": "dynamic-page",
   "networkAccess": {
     "allowedDomains": ["__HUB_ORIGIN__"],
-    "devAllowedDomains": ["http://localhost:3010"],
     "reasoning": "Плагин загружает тексты и переводы из сервиса локализации Amaya Hub"
   },
   "menu": [
