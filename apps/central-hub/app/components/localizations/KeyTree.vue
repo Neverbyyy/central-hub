@@ -74,8 +74,9 @@ const findItem = (list: Item[], value: string): Item | undefined => {
 
 const selected = computed(() => findItem(items.value, props.prefix.replace(/\.$/, '')))
 
+// Повторный клик по выбранному разделу снимает выбор — вместе с ним снимается и фильтр
 const onSelect = (item: Item | undefined) => {
-  if (item) emit('select', `${item.value}.`)
+  emit('select', item ? `${item.value}.` : '')
 }
 </script>
 

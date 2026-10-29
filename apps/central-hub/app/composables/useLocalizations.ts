@@ -252,10 +252,16 @@ export function useLocalizations() {
     if (part !== filterPart(buildQuery())) readQuery()
   })
 
+  // Пустой список тегов значит разное: ещё грузятся, не загрузились или их действительно нет
+  const tagsState = ref<'loading' | 'ready' | 'error'>('loading')
+
   const fetchTags = async () => {
     const { data, error } = await supabase.rpc('get_unique_tags')
     if (!error && data) {
       availableTags.value = (data as { tag: unknown }[]).map(item => String(item.tag)).filter(Boolean)
+      tagsState.value = 'ready'
+    } else if (tagsState.value !== 'ready') {
+      tagsState.value = 'error'
     }
   }
 
@@ -460,6 +466,7 @@ export function useLocalizations() {
     q,
     selectedTags,
     availableTags,
+    tagsState,
     fetchTags,
     filters,
     filtersKey,

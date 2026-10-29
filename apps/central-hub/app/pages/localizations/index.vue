@@ -19,6 +19,7 @@ const {
   q,
   selectedTags,
   availableTags,
+  tagsState,
   fetchTags,
   filters,
   filtersKey,
@@ -237,8 +238,26 @@ const exportZip = async () => {
           :items="availableTags"
           multiple
           placeholder="Все теги"
+          :search-input="{ placeholder: 'Найти тег…' }"
           class="w-48 shrink-0"
-        />
+        >
+          <template #empty="{ searchTerm }">
+            <p class="text-center text-sm text-gray-500">
+              <template v-if="searchTerm">
+                Тега «{{ searchTerm }}» нет
+              </template>
+              <template v-else-if="tagsState === 'loading'">
+                Загружаю теги…
+              </template>
+              <template v-else-if="tagsState === 'error'">
+                Теги не загрузились — обновите страницу
+              </template>
+              <template v-else>
+                Тегов нет
+              </template>
+            </p>
+          </template>
+        </USelectMenu>
       </div>
 
       <div class="flex shrink-0 items-center gap-3 whitespace-nowrap">
