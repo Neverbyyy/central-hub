@@ -23,6 +23,9 @@ importers:
 
   apps/central-hub:
     dependencies:
+      '@amaya/figma-plugin':
+        specifier: workspace:*
+        version: link:../../packages/figma-plugin
       '@amaya/l10n-core':
         specifier: workspace:*
         version: link:../../packages/l10n-core
@@ -78,6 +81,8 @@ importers:
       vue-tsc:
         specifier: ^3.2.7
         version: 3.2.7(typescript@6.0.3)
+
+  packages/figma-plugin: {}
 
   packages/l10n-cli: {}
 
