@@ -1,0 +1,331 @@
+<!doctype html>
+<meta charset="utf-8">
+<style>
+  :root {
+    --bg: var(--figma-color-bg, #fff);
+    --bg-secondary: var(--figma-color-bg-secondary, #f5f5f5);
+    --bg-hover: var(--figma-color-bg-hover, #f0f0f0);
+    --bg-brand: var(--figma-color-bg-brand, #0d99ff);
+    --bg-brand-hover: var(--figma-color-bg-brand-hover, #007be5);
+    --text: var(--figma-color-text, #1e1e1e);
+    --text-secondary: var(--figma-color-text-secondary, #757575);
+    --text-onbrand: var(--figma-color-text-onbrand, #fff);
+    --text-danger: var(--figma-color-text-danger, #dc3412);
+    --text-success: var(--figma-color-text-success, #14ae5c);
+    --border: var(--figma-color-border, #e6e6e6);
+    --border-selected: var(--figma-color-border-selected, #0d99ff);
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    color: var(--text);
+    font: 12px/16px Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  [hidden] { display: none !important; }
+  h2 { margin: 0 0 6px; color: var(--text-secondary); font-size: 11px; font-weight: 600; }
+  p { margin: 0; }
+  .muted { color: var(--text-secondary); }
+  .danger { color: var(--text-danger); }
+  .success { color: var(--text-success); }
+  .view { display: flex; flex: 1; flex-direction: column; min-height: 0; padding: 12px; gap: 12px; }
+
+  button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulation; }
+  button:disabled { cursor: not-allowed; opacity: .5; }
+  .primary {
+    min-height: 32px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 6px;
+    background: var(--bg-brand);
+    color: var(--text-onbrand);
+    font-weight: 600;
+  }
+  .primary:hover:not(:disabled) { background: var(--bg-brand-hover); }
+  .primary:active:not(:disabled) { transform: scale(.97); }
+  .link { align-self: flex-start; padding: 0; border: 0; background: none; color: var(--text-secondary); text-decoration: underline; text-underline-offset: 2px; }
+  .link:hover { color: var(--text); }
+
+  input[type=password] {
+    width: 100%;
+    height: 32px;
+    padding: 0 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  input[type=password]:focus { border-color: var(--border-selected); outline: none; }
+  .token-form { display: flex; flex-direction: column; gap: 8px; }
+
+  .sections { flex: 1; min-height: 80px; overflow-y: auto; margin: 0 -4px; padding: 0; list-style: none; }
+  .row { display: flex; align-items: center; gap: 8px; min-height: 28px; padding: 0 4px; border-radius: 4px; cursor: pointer; }
+  .row:hover { background: var(--bg-hover); }
+  .row.covered { cursor: default; opacity: .55; }
+  .row input { margin: 0; cursor: inherit; accent-color: var(--bg-brand); }
+  .row .label { flex: 1; overflow: hidden; font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+  .row .count { color: var(--text-secondary); font-size: 10px; font-variant-numeric: tabular-nums; }
+
+  /* Девять языков — в один ряд */
+  .chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(28px, 1fr)); gap: 4px; }
+  .chip {
+    min-height: 28px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+  }
+  .chip:hover { background: var(--bg-hover); }
+  .chip[aria-pressed=true] { border-color: var(--border-selected); background: var(--bg-secondary); font-weight: 600; }
+  .chip:active { transform: scale(.95); }
+
+  .actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .status { min-height: 16px; }
+  .live { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .live input { margin: 0; cursor: pointer; accent-color: var(--bg-brand); }
+  .extra summary { color: var(--text-secondary); cursor: pointer; }
+  .extra ul { max-height: 96px; overflow-y: auto; margin: 4px 0 0; padding-left: 16px; font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 10px; }
+  .foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+</style>
+
+<div id="token-view" class="view" hidden>
+  <form id="token-form" class="token-form">
+    <h2>Токен плагина</h2>
+    <p class="muted">Токен выдаёт владелец сервиса — это NUXT_FIGMA_TOKEN. Плагин запомнит его на этом компьютере.</p>
+    <input id="token" type="password" autocomplete="off" spellcheck="false" placeholder="Вставьте токен">
+    <p id="token-error" class="danger" role="alert"></p>
+    <button class="primary" type="submit">Сохранить</button>
+  </form>
+  <p class="muted" id="hub-line"></p>
+</div>
+
+<div id="main-view" class="view" hidden>
+  <h2>Разделы</h2>
+  <ul id="sections" class="sections" aria-label="Разделы">
+    <li class="muted">Загрузка разделов…</li>
+  </ul>
+  <section>
+    <h2>Языки — режимы</h2>
+    <div id="langs" class="chips"></div>
+  </section>
+  <div class="actions">
+    <span id="selection" class="muted"></span>
+    <button id="load" class="primary" type="button" title="Ctrl+Enter">Загрузить</button>
+  </div>
+  <p id="status" class="status" role="status"></p>
+  <label class="live"><input id="live" type="checkbox" checked> Живое обновление <span id="live-state" class="muted"></span></label>
+  <details id="extra" class="extra" hidden>
+    <summary></summary>
+    <p class="muted">Переменные не удалены, чтобы не сломать привязки слоёв.</p>
+    <ul></ul>
+  </details>
+  <div class="foot">
+    <span class="muted" id="hub-line-main"></span>
+    <button id="change-token" class="link" type="button">Сменить токен</button>
+  </div>
+</div>
+
+<script>
+  var $ = function (id) { return document.getElementById(id) }
+  var send = function (message) { parent.postMessage({ pluginMessage: message }, '*') }
+
+  var state = { sections: [], modes: [], selected: new Set(['common']), langs: null, busy: false }
+
+  var plural = function (n, forms) {
+    var mod10 = n % 10, mod100 = n % 100
+    if (mod10 === 1 && mod100 !== 11) return forms[0]
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return forms[1]
+    return forms[2]
+  }
+  var time = function (at) { return new Date(at).toLocaleTimeString('ru-RU') }
+
+  function show(view) {
+    $('token-view').hidden = view !== 'token'
+    $('main-view').hidden = view !== 'main'
+    if (view === 'token') $('token').focus()
+  }
+
+  // Разделы двух уровней: common, app → cars2, farm…
+  function rows() {
+    var list = []
+    state.sections.forEach(function (node) {
+      list.push({ path: node.path, label: node.label, keys: node.keys, level: 0 })
+      node.children.forEach(function (child) { list.push({ path: child.path, label: child.label, keys: child.keys, level: 1 }) })
+    })
+    return list
+  }
+
+  // Подраздел уже отмеченного раздела и так попадёт в выборку
+  function coveredBy(path) {
+    var found = null
+    state.selected.forEach(function (other) { if (other !== path && path.indexOf(other + '.') === 0) found = other })
+    return found
+  }
+
+  function chosen() {
+    return rows().filter(function (row) { return state.selected.has(row.path) && !coveredBy(row.path) })
+  }
+
+  function renderSections() {
+    var list = $('sections')
+    list.textContent = ''
+    rows().forEach(function (row) {
+      var covered = !!coveredBy(row.path)
+      var li = document.createElement('li')
+      var label = document.createElement('label')
+      label.className = 'row' + (covered ? ' covered' : '')
+      label.style.paddingLeft = (4 + row.level * 20) + 'px'
+      var box = document.createElement('input')
+      box.type = 'checkbox'
+      box.checked = covered || state.selected.has(row.path)
+      box.disabled = covered
+      box.addEventListener('change', function () {
+        if (box.checked) state.selected.add(row.path)
+        else state.selected.delete(row.path)
+        render()
+      })
+      var name = document.createElement('span')
+      name.className = 'label'
+      name.textContent = row.label
+      var count = document.createElement('span')
+      count.className = 'count'
+      count.textContent = row.keys
+      label.append(box, name, count)
+      li.append(label)
+      list.append(li)
+    })
+  }
+
+  function renderLangs() {
+    var box = $('langs')
+    box.textContent = ''
+    state.modes.forEach(function (mode) {
+      var chip = document.createElement('button')
+      chip.type = 'button'
+      chip.className = 'chip'
+      chip.textContent = mode.code
+      chip.title = mode.name
+      chip.setAttribute('aria-pressed', String(state.langs.indexOf(mode.code) !== -1))
+      chip.addEventListener('click', function () {
+        var on = state.langs.indexOf(mode.code) !== -1
+        // Порядок режимов — как в сервисе
+        state.langs = state.modes
+          .map(function (m) { return m.code })
+          .filter(function (code) { return code === mode.code ? !on : state.langs.indexOf(code) !== -1 })
+        render()
+      })
+      box.append(chip)
+    })
+  }
+
+  function render() {
+    // До ответа с разделами рисовать нечего
+    if (!state.langs) return
+    renderSections()
+    renderLangs()
+    var keys = chosen().reduce(function (sum, row) { return sum + row.keys }, 0)
+    $('selection').textContent = keys + ' ' + plural(keys, ['ключ', 'ключа', 'ключей']) + ' · ' +
+      state.langs.length + ' ' + plural(state.langs.length, ['режим', 'режима', 'режимов'])
+    $('load').disabled = state.busy || !chosen().length || !state.langs.length
+  }
+
+  function setStatus(text, kind) {
+    $('status').textContent = text
+    $('status').className = 'status' + (kind ? ' ' + kind : '')
+  }
+
+  function setExtra(names, append) {
+    var details = $('extra')
+    var list = details.querySelector('ul')
+    var current = append ? Array.prototype.map.call(list.children, function (li) { return li.textContent }) : []
+    names.forEach(function (name) { if (current.indexOf(name) === -1) current.push(name) })
+    list.textContent = ''
+    current.sort().forEach(function (name) {
+      var li = document.createElement('li')
+      li.textContent = name
+      list.append(li)
+    })
+    details.hidden = !current.length
+    details.querySelector('summary').textContent = 'Нет в выборке или устарели в сервисе: ' + current.length
+  }
+
+  function load() {
+    if ($('load').disabled) return
+    send({ type: 'load', prefixes: chosen().map(function (row) { return row.path }), langs: state.langs })
+  }
+
+  $('load').addEventListener('click', load)
+  document.addEventListener('keydown', function (event) {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+      event.preventDefault()
+      load()
+    }
+  })
+  $('token-form').addEventListener('submit', function (event) {
+    event.preventDefault()
+    var token = $('token').value.trim()
+    if (!token) return
+    $('token-error').textContent = ''
+    $('token').value = ''
+    show('main')
+    send({ type: 'token', token: token })
+  })
+  $('change-token').addEventListener('click', function () { send({ type: 'forget-token' }) })
+  $('live').addEventListener('change', function () {
+    $('live-state').textContent = ''
+    send({ type: 'live', on: $('live').checked })
+  })
+
+  window.onmessage = function (event) {
+    var message = event.data.pluginMessage
+    if (!message) return
+    if (message.type === 'init') {
+      $('hub-line').textContent = $('hub-line-main').textContent = message.hub.replace(/^https?:\/\//, '')
+      if (message.settings) {
+        state.selected = new Set(message.settings.prefixes)
+        state.langs = message.settings.langs
+        $('live').checked = message.settings.live !== false
+      }
+      show(message.hasToken ? 'main' : 'token')
+    } else if (message.type === 'sections') {
+      state.sections = message.sections
+      state.modes = message.modes
+      if (!state.langs) state.langs = message.modes.map(function (m) { return m.code })
+      render()
+    } else if (message.type === 'auth') {
+      $('token-error').textContent = message.message
+      show('token')
+    } else if (message.type === 'busy') {
+      state.busy = true
+      setStatus('Загружаю тексты…')
+      render()
+    } else if (message.type === 'result') {
+      state.busy = false
+      setStatus(message.text + ' · ' + time(message.at), 'success')
+      setExtra(message.stats.extra, false)
+      if ($('live').checked) $('live-state').textContent = '· следит за изменениями'
+      render()
+    } else if (message.type === 'error') {
+      state.busy = false
+      setStatus(message.message, 'danger')
+      render()
+    } else if (message.type === 'live') {
+      $('live-state').textContent = message.changed
+        ? '· обновлено ' + message.changed + ' в ' + time(message.at)
+        : '· проверено в ' + time(message.at)
+      if (message.extra.length) setExtra(message.extra, true)
+    } else if (message.type === 'live-error') {
+      $('live-state').textContent = '· нет связи, повтор через ' + Math.round(message.retryIn / 1000) + ' с'
+    }
+  }
+</script>

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import JSZip from 'jszip'
 
-// Выгрузка в Figma: не всё подряд, а выборка разделов — например, Cars 2 вместе с общими.
-// В архиве файл на каждый язык для встроенного импорта Figma: файл становится режимом коллекции,
-// вложенные группы — именами через /, поэтому в Figma получается дерево.
+// Тексты в Figma. Основной путь — плагин «Amaya Hub — тексты» (packages/figma-plugin), он скачивается отсюда.
+// Без плагина — выборка разделов (например, Cars 2 вместе с общими) архивом для встроенного импорта Figma:
+// файл на каждый язык становится режимом коллекции, вложенные группы — именами через /.
 interface TreeNode {
   path: string
   label: string
@@ -120,14 +120,48 @@ const onKeydown = (event: KeyboardEvent) => {
 <template>
   <UModal
     v-model:open="open"
-    title="Выгрузка в Figma"
-    description="В архиве файл на каждый язык. Перетащите все файлы в окно Variables в Figma: каждый станет режимом, имена через / — деревом групп."
+    title="Тексты в Figma"
+    description="Плагин берёт тексты прямо из сервиса и обновляет переменные в макете — по кнопке или вживую."
   >
     <template #body>
       <div
         class="space-y-4 text-sm"
         @keydown="onKeydown"
       >
+        <section class="rounded-lg border border-gray-200 p-3">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h3 class="font-semibold text-gray-900">
+                Плагин «Amaya Hub — тексты»
+              </h3>
+              <p class="mt-0.5 text-xs text-gray-500">
+                Разделы и языки выбираются в плагине. Тексты правятся здесь, в сервисе: правка прямо в слое отвязывает его от переменной.
+              </p>
+            </div>
+            <UButton
+              to="/api/figma/plugin.zip"
+              external
+              download
+              icon="i-lucide-download"
+              size="sm"
+              variant="soft"
+              class="shrink-0"
+            >
+              Скачать плагин
+            </UButton>
+          </div>
+          <ol class="mt-2 list-decimal space-y-0.5 pl-4 text-xs text-gray-600">
+            <li>Распакуйте архив.</li>
+            <li>В приложении Figma для компьютера: Plugins → Development → Import plugin from manifest → <code>manifest.json</code>.</li>
+            <li>Запустите плагин и вставьте токен — его выдаёт владелец сервиса.</li>
+          </ol>
+        </section>
+
+        <p class="text-xs text-gray-500">
+          Без плагина — архив для встроенного импорта: файл на каждый язык. Перетащите все файлы в окно Variables:
+          каждый станет режимом, имена через / — деревом групп.
+        </p>
+
         <section>
           <h3 class="mb-1.5 text-xs font-semibold text-gray-500">
             Разделы

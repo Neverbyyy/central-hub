@@ -1,7 +1,7 @@
 import { figmaExport } from '../../lib/figma'
 
-// Выборка для Figma: ?prefixes=common.,app.cars2.&langs=en,ru → { files: { en: …, ru: … } }, файл на язык = режим.
-// Пока за общим паролем; токен для плагина — когда станет известно, каким плагином импортирует Антон.
+// Выборка для встроенного импорта Figma: ?prefixes=common.,app.cars2.&langs=en,ru → { files: { en: …, ru: … } },
+// файл на язык = режим. За общим паролем; плагин ходит в /api/figma/plugin/* со своим токеном.
 export default defineEventHandler(async (event) => {
   const { prefixes, langs } = getQuery(event)
   if (typeof prefixes !== 'string' || !prefixes) throw badRequest('Нужен prefixes — разделы через запятую')

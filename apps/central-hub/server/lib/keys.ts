@@ -224,11 +224,15 @@ export async function getString(db: SupabaseClient, key: string) {
   }
 }
 
-/** Все действующие ключи (или ключи раздела) постранично — PostgREST отдаёт не больше 1000 строк за раз. */
-export async function allKeys<T>(db: SupabaseClient, columns: string, prefix?: string): Promise<T[]> {
+/**
+ * Все действующие ключи (или ключи раздела) постранично — PostgREST отдаёт не больше 1000 строк за раз.
+ * С since — только изменённые с этого момента, включая помеченные устаревшими.
+ */
+export async function allKeys<T>(db: SupabaseClient, columns: string, prefix?: string, { since }: { since?: string } = {}): Promise<T[]> {
   const rows: T[] = []
   for (let from = 0; ; from += PAGE) {
-    let request = db.from('localizations').select(columns).is('deprecated_at', null).order('technical_key').range(from, from + PAGE - 1)
+    let request = db.from('localizations').select(columns).order('technical_key').range(from, from + PAGE - 1)
+    request = since ? request.gte('updated_at', since) : request.is('deprecated_at', null)
     if (prefix?.trim()) request = request.like('technical_key', `${escapeLike(prefix.trim())}%`)
     const { data, error } = await request
     if (error) throw error

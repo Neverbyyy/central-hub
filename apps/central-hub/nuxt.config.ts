@@ -1,4 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import { fileURLToPath } from 'node:url'
+
 export default defineNuxtConfig({
   modules: [
     '@nuxt/eslint',
@@ -13,12 +15,13 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
-  // Только сервер: NUXT_HUB_PASSWORD, NUXT_SESSION_PASSWORD, NUXT_CLI_TOKEN и NUXT_MCP_TOKEN
+  // Только сервер: NUXT_HUB_PASSWORD, NUXT_SESSION_PASSWORD, NUXT_CLI_TOKEN, NUXT_MCP_TOKEN и NUXT_FIGMA_TOKEN
   runtimeConfig: {
     hubPassword: '',
     sessionPassword: '',
     cliToken: '',
-    mcpToken: ''
+    mcpToken: '',
+    figmaToken: ''
   },
 
   // l10n-core — TypeScript-исходники из workspace без сборки: их нужно встроить в бандл,
@@ -38,7 +41,9 @@ export default defineNuxtConfig({
   nitro: {
     externals: {
       inline: ['@amaya/l10n-core']
-    }
+    },
+    // Исходники плагина Figma: сервис отдаёт их архивом со своим адресом (/api/figma/plugin.zip)
+    serverAssets: [{ baseName: 'figma-plugin', dir: fileURLToPath(new URL('../../packages/figma-plugin/src', import.meta.url)) }]
   },
 
   // CJS-зависимости собираем заранее, иначе dev-сервер перезагружает страницу при первом открытии грида.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { figmaModeFiles, figmaName } from '../src'
+import { figmaModeFiles, figmaModeName, figmaName, figmaVariables } from '../src'
 
 describe('figmaName', () => {
   it('точки → /, чтобы в Figma получилось дерево', () => {
@@ -51,5 +51,33 @@ describe('figmaModeFiles', () => {
 
   it('часть ключа, которую DTCG поймёт иначе, — ошибка', () => {
     expect(() => figmaModeFiles([{ technical_key: 'legacy.x.$value', translations: {} }], { languages: ['en'] })).toThrow('часть «$value»')
+  })
+})
+
+describe('figmaModeName', () => {
+  it('режимы — английские названия языков, как у дизайнера в Figma', () => {
+    expect(['en', 'ru', 'de', 'es', 'it', 'pt', 'fr', 'sv', 'nl'].map(figmaModeName)).toEqual(
+      ['English', 'Russian', 'German', 'Spanish', 'Italian', 'Portuguese', 'French', 'Swedish', 'Dutch']
+    )
+  })
+})
+
+describe('figmaVariables', () => {
+  it('переменная на ключ: имя через /, описание, тексты выбранных языков; нет перевода — пустая строка', () => {
+    expect(figmaVariables([
+      { technical_key: 'common.button.continue.default', translations: { en: 'Continue', ru: 'Продолжить' }, description: 'Главная кнопка' },
+      { technical_key: 'app.cars2.paywall.title', translations: { en: 'Unlock all cars!', ru: null } }
+    ], { languages: ['en', 'ru'] })).toEqual([
+      { key: 'app.cars2.paywall.title', name: 'app/cars2/paywall/title', description: '', values: { en: 'Unlock all cars!', ru: '' } },
+      { key: 'common.button.continue.default', name: 'common/button/continue/default', description: 'Главная кнопка', values: { en: 'Continue', ru: 'Продолжить' } }
+    ])
+  })
+
+  it('те же проверки имён, что у файлов для импорта', () => {
+    expect(() => figmaVariables([
+      { technical_key: 'legacy.x.a.b.c', translations: {} },
+      { technical_key: 'legacy.x.a.b', translations: {} }
+    ], { languages: ['en'] })).toThrow('вложен в строку «legacy/x/a/b»')
+    expect(() => figmaVariables([{ technical_key: 'legacy.x.{a}', translations: {} }], { languages: ['en'] })).toThrow('часть «{a}»')
   })
 })

@@ -1,0 +1,5 @@
+{
+  "name": "@amaya/figma-plugin",
+  "private": true,
+  "description": "Плагин Figma «Amaya Hub — тексты»: переменные из сервиса локализации. Без сборки — сервис отдаёт src/ архивом."
+}
