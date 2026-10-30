@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { descriptionError, MIN_DESCRIPTION_LENGTH, MIN_SEGMENTS, NEW_KEY_ROOTS, newKeyError, type KeyContext, type RegistryKind } from '@amaya/l10n-core'
+import { descriptionError, escapeLike, MIN_DESCRIPTION_LENGTH, MIN_SEGMENTS, NEW_KEY_ROOTS, newKeyError, type KeyContext, type RegistryKind } from '@amaya/l10n-core'
+import { addCodeLabel, findSimilarCodes, keySuggestions, newKeyRegistryKind, type KeySuggestion } from '~/utils/keySuggestions'
 import type { RegistryEntry } from '~/composables/useLocalizations'
 
 // Новый ключ: имя проверяется на лету теми же правилами, что и в базе (packages/l10n-core),
@@ -23,6 +24,7 @@ const open = defineModel<boolean>('open', { required: true })
 
 const toast = useToast()
 const authRedirect = useAuthRedirect()
+const notifyError = useNotifyError()
 
 // Тексты и лимит длины в форме не спрашиваем: текст вписывают потом в гриде или через MCP, лимит — в панели ключа
 const emptyForm = () => ({ key: '', description: '', tags: [] as string[] })
@@ -74,57 +76,17 @@ const focusKeyEnd = () => nextTick(() => {
   caretAtEnd.value = true
 })
 
-// Разделы, которые уже есть: из того же дерева, что слева. Без него подсказки — только начала и справочник
-interface TreeNode { path: string, label: string, keys: number, children: TreeNode[] }
-const tree = shallowRef<{ roots: TreeNode[], nodes: Map<string, TreeNode> }>({ roots: [], nodes: new Map() })
-
-const loadTree = async () => {
-  try {
-    const roots = await $fetch<TreeNode[]>('/api/keys/tree')
-    const nodes = new Map<string, TreeNode>()
-    const walk = (list: TreeNode[]) => list.forEach((node) => {
-      nodes.set(node.path, node)
-      walk(node.children)
-    })
-    walk(roots)
-    tree.value = { roots, nodes }
-  } catch {
-    // Форма работает и без разделов
-  }
-}
+// Разделы, которые уже есть, — общие с деревом слева (useKeyTree). Без них подсказки — только начала и справочник
+const { tree, index: treeIndex, refresh: refreshTree } = useKeyTree({ immediate: false })
 
 watch(open, (value) => {
   if (!value) return
-  loadTree()
+  // Дерево обычно уже загружено для панели слева; панель скрыта или дерево не загрузилось — грузим сейчас
+  if (!tree.value) refreshTree()
   // Стоите в дереве в app → cars2 — ключ начинается с app.cars2.; legacy новым ключам нельзя
   const prefix = props.prefix?.replace(/\.$/, '')
   if (!form.key && prefix && prefix.split('.')[0] !== 'legacy') form.key = `${prefix}.`
 }, { immediate: true })
-
-// Первая часть ключа — из «Как называть ключи»; порядок — от самого частого
-const ROOT_HINTS = {
-  app: 'Игра: пейволлы, онбординги, баннеры',
-  web: 'Сайт или лендинг',
-  common: 'Общее для всех: кнопки, ссылки, цены, фразы',
-  brand: 'Отличается по юрлицу',
-  ds: 'Строки компонентов дизайн-системы',
-  test: 'Только для A/B-теста: test.<тест>.'
-} satisfies Record<typeof NEW_KEY_ROOTS[number], string>
-
-// Типичные разделы — пока в игре или на сайте своих ещё нет
-const TYPICAL: Record<string, Record<string, string>> = {
-  common: { button: 'кнопки', link: 'ссылки', price: 'цены', period: 'периоды', legal: 'юридические фразы' },
-  app: { paywall: 'пейволл', onboarding: 'онбординг', banner: 'баннер' },
-  web: { home: 'главная страница', faq: 'вопросы и ответы' },
-  brand: { legal: 'юридические фразы' }
-}
-
-const KIND_ADD: Record<RegistryKind, string> = { game: 'игру', site: 'сайт', brand: 'бренд', test: 'тест', project: 'проект' }
-
-const keysCount = (path: string) => {
-  const count = tree.value.nodes.get(path)?.keys
-  return count ? `${count} ${plural(count, ['ключ', 'ключа', 'ключей'])}` : ''
-}
 
 // Куда попадёт ключ: app. — только InApp, web. — только Pages Hub, common. — в оба
 const { rules: exportRules, targetNames } = useExportRules()
@@ -137,58 +99,10 @@ const keyTargets = computed(() => {
   return targetNames(value.endsWith('.') ? value : `${value}.`)
 })
 
-interface Part { segment: string, hint: string, targets?: string }
-
-// Что может идти после готовых частей. closed — выбор из известного списка (начала, справочник)
-const partsAfter = (done: string[]): { parts: Part[], kind?: RegistryKind, closed: boolean } => {
-  const path = done.join('.')
-  // test.<тест>. — дальше обычный ключ: подсказки те же, что с начала
-  const inner = done[0] === 'test' && done.length >= 2 ? done.slice(2) : done
-  if (!inner.length) {
-    const roots = Object.entries(ROOT_HINTS).filter(([root]) => !(done[0] === 'test' && root === 'test'))
-    // У начала сразу видно, в какой проект уйдёт ключ: app. — InApp, web. — Pages Hub
-    return { parts: roots.map(([segment, hint]) => ({ segment, hint, targets: targetNames(`${path ? `${path}.` : ''}${segment}.`) })), closed: true }
-  }
-  const root = inner[0]!
-  const kind = inner.length === 1 ? KIND_BY_ROOT[root] : undefined
-  if (kind) {
-    const parts = props.registry
-      .filter(entry => entry.kind === kind)
-      .map(entry => ({ segment: entry.code, hint: [entry.title, keysCount(`${path}.${entry.code}`)].filter(Boolean).join(' · ') }))
-    return { parts, kind, closed: true }
-  }
-  const typical = inner.length === (KIND_BY_ROOT[root] ? 2 : 1) ? TYPICAL[root] ?? {} : {}
-  const existing = tree.value.nodes.get(path)?.children ?? []
-  const parts = existing.map(node => ({ segment: node.label, hint: [typical[node.label], keysCount(node.path)].filter(Boolean).join(' · ') }))
-  for (const [segment, hint] of Object.entries(typical)) {
-    if (!parts.some(part => part.segment === segment)) parts.push({ segment, hint })
-  }
-  return { parts, closed: false }
-}
-
-interface Suggestion { value: string, segment: string, hint: string, targets?: string, add?: RegistryKind }
-
-const suggestions = computed<Suggestion[]>(() => {
-  if (!keyFocused.value || !caretAtEnd.value || dismissed.value) return []
-  const done = form.key.split('.')
-  const partial = done.pop()!
-  if (done.some(part => !part)) return []
-  const { parts, kind, closed } = partsAfter(done)
-  const base = done.length ? `${done.join('.')}.` : ''
-  // Ищем и по началу части, и по пояснению: «игра» найдёт app., «cars» — Cars 2. По пояснению — от двух букв,
-  // иначе «a» нашло бы и test. («A/B-теста»)
-  const matches = parts.filter(part => part.segment.startsWith(partial) || (partial.length >= 2 && part.hint.toLowerCase().includes(partial)))
-  // Из известного списка ничего не подошло — показываем весь: видно, что можно
-  const shown = matches.length || !closed ? matches : parts
-  const list: Suggestion[] = shown.map(part => ({ value: `${base}${part.segment}.`, segment: part.segment, hint: part.hint, targets: part.targets }))
-  // Кода нет в справочнике — предлагаем добавить: после совпадений, а если их нет — первым
-  if (kind && /^[a-z0-9_]{2,}$/.test(partial) && !parts.some(part => part.segment === partial)) {
-    const add = { value: `${base}${partial}.`, segment: partial, hint: `добавить ${KIND_ADD[kind]} в справочник`, add: kind }
-    if (matches.length) list.push(add)
-    else list.unshift(add)
-  }
-  return list
-})
+// Подсказки к последней части ключа — utils/keySuggestions. Только когда поле в фокусе и курсор в конце
+const suggestions = computed<KeySuggestion[]>(() => (keyFocused.value && caretAtEnd.value && !dismissed.value
+  ? keySuggestions(form.key, { registry: props.registry, tree: treeIndex.value, targetNames })
+  : []))
 
 // Пока часть не начали набирать, ничего не выбрано: Enter и Tab работают как обычно
 const active = ref(-1)
@@ -196,7 +110,7 @@ watch(suggestions, (list) => {
   active.value = list.length && form.key.split('.').at(-1) ? 0 : -1
 })
 
-const acceptSuggestion = (item: Suggestion) => {
+const acceptSuggestion = (item: KeySuggestion) => {
   onKeyInput(item.value)
   if (item.add) nextTick(() => codeTitleInput.value?.inputRef?.select())
   else focusKeyEnd()
@@ -227,7 +141,6 @@ const onEscape = (event: KeyboardEvent) => {
 interface Taken { for: string, key: string, kind: 'same' | 'parent' | 'inside', deprecated: boolean }
 const taken = ref<Taken | null>(null)
 const supabase = useSupabaseClient()
-const escapeLike = (value: string) => value.replace(/[\\%_]/g, char => `\\${char}`)
 
 // Начала ключа, которые сами могут быть ключами (от трёх частей): app.cars2.paywall для app.cars2.paywall.title
 const parentKeys = (value: string) => {
@@ -299,41 +212,19 @@ const openTaken = () => {
 const descriptionMessage = computed(() => (form.description.trim() ? descriptionError(form.description) : null))
 
 // Код из справочника, которого ещё нет: app.<игра>, web.<сайт>, brand.<бренд>, test.<тест>
-const KIND_BY_ROOT: Record<string, RegistryKind> = { app: 'game', web: 'site', brand: 'brand', test: 'test' }
 const KIND_NEW: Record<RegistryKind, string> = { game: 'новую игру', site: 'новый сайт', brand: 'новый бренд', test: 'новый тест', project: 'новый проект' }
 
 // Предлагаем добавить код, только когда он дописан — после него уже есть точка.
 // Иначе на полпути к app.cars2 форма предложит завести игру «car».
 const missingCode = computed(() => {
   const [root, code, ...rest] = key.value.split('.')
-  const kind = KIND_BY_ROOT[root ?? '']
+  const kind = newKeyRegistryKind(root ?? '')
   if (!kind || !code || !rest.length || !/^[a-z0-9_]+$/.test(code) || context.value.registry[kind]?.includes(code)) return null
   return { kind, code }
 })
 
-// Расстояние Левенштейна — сколько букв поправить, чтобы из одного кода получить другой
-const editDistance = (a: string, b: string) => {
-  let prev = Array.from({ length: b.length + 1 }, (_, j) => j)
-  for (let i = 1; i <= a.length; i++) {
-    const row = [i]
-    for (let j = 1; j <= b.length; j++) {
-      row[j] = Math.min(prev[j]! + 1, row[j - 1]! + 1, prev[j - 1]! + (a[i - 1] === b[j - 1] ? 0 : 1))
-    }
-    prev = row
-  }
-  return prev[b.length]!
-}
-
 // Существующие коды, похожие на набранный: опечатка или недописанный код (car → cars2)
-const similarCodes = computed(() => {
-  const missing = missingCode.value
-  if (!missing) return []
-  // У коротких кодов допуск в одну букву, иначе car похож на farm
-  const tolerance = (code: string) => Math.min(code.length, missing.code.length) >= 5 ? 2 : 1
-  return props.registry.filter(entry => entry.kind === missing.kind && (
-    entry.code.startsWith(missing.code) || missing.code.startsWith(entry.code) || editDistance(entry.code, missing.code) <= tolerance(entry.code)
-  ))
-})
+const similarCodes = computed(() => (missingCode.value ? findSimilarCodes(missingCode.value, props.registry) : []))
 
 const useCode = (code: string) => {
   const [root, , ...rest] = key.value.split('.')
@@ -361,7 +252,7 @@ const addCode = async () => {
     // Код есть — дальше раздел: курсор обратно в ключ, подсказки покажут типичные разделы
     focusKeyEnd()
   } catch (error) {
-    if (!(await authRedirect(error))) toast.add({ title: 'Не добавилось', description: errorMessage(error), color: 'error' })
+    await notifyError('Не добавилось', error)
   } finally {
     addingCode.value = false
   }
@@ -382,20 +273,13 @@ watchDebounced(key, async (value) => {
   }
 }, { debounce: 300 })
 
-const copyKey = async (value: string) => {
-  try {
-    await navigator.clipboard.writeText(value)
-    toast.add({ title: 'Ключ скопирован', description: value, duration: 1200 })
-  } catch (error) {
-    console.error(error)
-  }
-}
+const { copy } = useCopy()
 
 // Что мешает создать ключ — показывается рядом с кнопкой, чтобы она не была выключена молча
 const blockers = computed(() => {
   const list: string[] = []
   if (!key.value) list.push('ключ')
-  else if (missingCode.value) list.push(`добавить ${KIND_ADD[missingCode.value.kind]} в справочник`)
+  else if (missingCode.value) list.push(addCodeLabel(missingCode.value.kind))
   else if (nameError.value) list.push(unfinished.value ? 'дописать ключ' : 'исправить ключ')
   else if (takenMessage.value) list.push('другое имя ключа')
   if (descriptionError(form.description)) list.push(`описание от ${MIN_DESCRIPTION_LENGTH} символов`)
@@ -644,7 +528,7 @@ const onKeydown = (event: KeyboardEvent) => {
                 type="button"
                 class="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-muted"
                 :title="`Скопировать ${item.technical_key}`"
-                @click="copyKey(item.technical_key)"
+                @click="copy(item.technical_key, 'Ключ скопирован')"
               >
                 <span class="min-w-0 flex-1">
                   <span class="block truncate font-mono text-[11px] text-blue-600 dark:text-blue-400">{{ item.technical_key }}</span>

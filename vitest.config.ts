@@ -6,7 +6,7 @@ export default defineConfig({
       {
         test: {
           name: 'unit',
-          // tests/unit — серверный код без базы, например выгрузка в GitHub на поддельном API
+          // tests/unit — код без базы: выгрузка в GitHub на поддельном API, утилиты интерфейса (история, подсказки)
           include: ['packages/*/test/**/*.test.ts', 'tests/unit/**/*.test.ts']
         }
       },

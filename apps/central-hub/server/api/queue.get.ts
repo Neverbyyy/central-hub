@@ -1,16 +1,12 @@
 import { translationQueue } from '../lib/keys'
 
 // Очередь перевода: строки без перевода на язык или с устаревшим переводом
-export default defineEventHandler(async (event) => {
+export default defineHubHandler(async (event) => {
   const { lang, prefix, limit } = getQuery(event)
   if (typeof lang !== 'string' || !lang) throw badRequest('Нужен lang')
-  try {
-    return await translationQueue(useDb(event), {
-      lang,
-      prefix: typeof prefix === 'string' ? prefix : undefined,
-      limit: Number(limit) || 50
-    })
-  } catch (error) {
-    throwHubError(error)
-  }
+  return await translationQueue(useDb(event), {
+    lang,
+    prefix: typeof prefix === 'string' ? prefix : undefined,
+    limit: Number(limit) || 50
+  })
 })

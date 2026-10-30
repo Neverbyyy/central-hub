@@ -34,6 +34,7 @@ const emit = defineEmits<{
 
 const toast = useToast()
 const authRedirect = useAuthRedirect()
+const notifyError = useNotifyError()
 
 const PROJECTS = EXPORT_PROJECTS
 
@@ -125,9 +126,6 @@ const showChanges = (set: ExportSetInfo) => {
   changesOpen.value = true
 }
 
-const formatDate = (value: string) =>
-  new Date(value).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
-
 const OUTCOME_TITLE: Record<string, (pr: number) => string> = {
   created: pr => `PR #${pr} создан`,
   updated: pr => `PR #${pr} обновлён`,
@@ -161,7 +159,7 @@ const push = async (set: ExportSetInfo) => {
     }
     await loadSets()
   } catch (error) {
-    if (!(await authRedirect(error))) toast.add({ title: 'Не выгрузилось', description: errorMessage(error), color: 'error' })
+    await notifyError('Не выгрузилось', error)
   } finally {
     setPushing([set.name], false)
   }
@@ -191,9 +189,7 @@ const pushAll = async () => {
     })
   }
   for (const [i, r] of settled.entries()) {
-    if (r.status === 'rejected' && !(await authRedirect(r.reason))) {
-      toast.add({ title: `${PROJECTS[targets[i]!.name] ?? targets[i]!.name}: не выгрузилось`, description: errorMessage(r.reason), color: 'error' })
-    }
+    if (r.status === 'rejected') await notifyError(`${PROJECTS[targets[i]!.name] ?? targets[i]!.name}: не выгрузилось`, r.reason)
   }
   await loadSets()
 }
@@ -360,7 +356,7 @@ const findKey = (key: string) => {
               v-if="set.pending"
               class="mt-2 text-xs text-amber-700 dark:text-amber-400"
             >
-              Ждут утверждения: {{ set.pending }} {{ plural(set.pending, ['ключ', 'ключа', 'ключей']) }} — их правки в выгрузку не попадут.
+              Ждут утверждения: {{ keysCount(set.pending) }} — их правки в выгрузку не попадут.
               <!-- Черновики и тексты от ИИ — одной выборкой «Не утверждённые» -->
               <button
                 type="button"
@@ -387,7 +383,7 @@ const findKey = (key: string) => {
               v-else-if="set.lastRun"
               class="mt-2 text-[11px] text-muted"
             >
-              Последняя выгрузка: {{ formatDate(set.lastRun.created_at) }} · {{ set.lastRun.actor }}
+              Последняя выгрузка: {{ formatDateTime(set.lastRun.created_at, { year: false }) }} · {{ set.lastRun.actor }}
               <template v-if="set.lastRun.pr_url">
                 ·
                 <a

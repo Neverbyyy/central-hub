@@ -11,8 +11,20 @@ packages/figma-plugin/ плагин Figma «Amaya Hub — локализация
 supabase/              миграции базы (Supabase CLI)
 fixtures/legacy/       копии файлов локалей InApp и Pages Hub — для автотеста выгрузки
 tests/db/              автотесты базы: права, правила ключей, история, импорт и выгрузка
-tests/unit/            серверный код без базы: выгрузка в GitHub на поддельном API
+tests/unit/            код без базы: выгрузка в GitHub на поддельном API, история ключа, подсказки к ключу
 ```
+
+Внутри `apps/central-hub/app` общее вынесено из компонентов:
+
+```
+composables/   useLocalizations — грид и фильтры; useLanguages, useKeyTree, useExportRules — данные,
+               общие для нескольких мест (по одному запросу на страницу); useNotifyError, useCopy
+utils/         чистые функции без Vue: история ключа (history), подсказки к ключу (keySuggestions),
+               даты (formatDate), множественное число (plural) — покрыты tests/unit
+```
+
+На сервере маршруты `server/api/**` объявляются через `defineHubHandler` (`server/utils/db.ts`):
+`HubError` и ошибки базы уходят человеку понятным текстом без `try/catch` в каждом маршруте.
 
 Решения, принятые по ходу работы, — в [DECISIONS.md](DECISIONS.md).
 
@@ -41,7 +53,7 @@ pnpm dev          # сервис на http://localhost:3000
 pnpm build        # сборка apps/central-hub
 pnpm lint
 pnpm typecheck
-pnpm test         # unit-тесты packages/*
+pnpm test         # unit-тесты packages/* и tests/unit
 pnpm db:start     # локальный Supabase в Docker: миграции с нуля (нужен запущенный Docker Desktop)
 pnpm test:db      # тесты базы — только на локальном Supabase, строки InApp и Pages Hub берутся из fixtures
 pnpm test:stand   # права настоящего стенда из .env: публичный ключ ничего не может записать

@@ -25,10 +25,6 @@ const emit = defineEmits<{
 const THREE_DAYS = 3 * 24 * 60 * 60 * 1000
 const isNew = computed(() => !!props.row.created_at && Date.now() - new Date(props.row.created_at).getTime() <= THREE_DAYS)
 
-const formatDate = (value?: string) => value
-  ? new Date(value).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })
-  : '—'
-
 // Утверждённые без отметки — их большинство, отметки только у того, что требует внимания
 const STATUS_LABEL = { ai: 'Черновой перевод нейросети', draft: 'Черновик — ещё не утверждён' } as const
 
@@ -121,10 +117,10 @@ const cellTitle = (lang: string) => {
     </div>
 
     <div class="loc-cell px-3 text-[10px] text-muted">
-      {{ formatDate(row.created_at) }}
+      {{ formatDateTime(row.created_at) }}
     </div>
     <div class="loc-cell px-3 text-[10px] text-muted">
-      {{ formatDate(row.updated_at) }}
+      {{ formatDateTime(row.updated_at) }}
     </div>
   </div>
 </template>

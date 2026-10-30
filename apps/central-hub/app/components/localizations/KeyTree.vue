@@ -1,12 +1,7 @@
 <script setup lang="ts">
 // Дерево разделов ключей от общего к частному: app → cars2 → paywall.
 // Выбор раздела ставит фильтр по началу ключа.
-interface TreeNode {
-  path: string
-  label: string
-  keys: number
-  children: TreeNode[]
-}
+import type { KeyTreeNode } from '~/utils/keySuggestions'
 
 interface Item {
   label: string
@@ -24,7 +19,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{ select: [prefix: string] }>()
 
-const { data, status, refresh } = await useFetch<TreeNode[]>('/api/keys/tree', { server: false, lazy: true })
+// Те же данные читает форма «Новый ключ» для подсказок — один запрос на страницу
+const { tree: data, status, refresh } = useKeyTree()
 
 // Заглушка на время загрузки: уровень вложенности и ширина подписи, как у common → button, legacy → inapp
 const SKELETON = [
@@ -37,7 +33,7 @@ const SKELETON = [
 ]
 watch(() => props.version, () => refresh())
 
-const toItems = (nodes: TreeNode[]): Item[] => nodes.map(node => ({
+const toItems = (nodes: KeyTreeNode[]): Item[] => nodes.map(node => ({
   label: node.label,
   value: node.path,
   keys: node.keys,

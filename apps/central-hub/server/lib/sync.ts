@@ -3,8 +3,9 @@
 
 import { createHash } from 'node:crypto'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { filePath, keyInExportSet, legacyKey, readLocaleFile, renderLocaleFile, type LocaleEntry, type LocaleFormat } from '@amaya/l10n-core'
+import { escapeLike, filePath, keyInExportSet, legacyKey, readLocaleFile, renderLocaleFile, type LocaleEntry, type LocaleFormat } from '@amaya/l10n-core'
 import { HubError } from './errors'
+import { allKeys } from './keys'
 
 export interface ExportSet {
   name: string
@@ -50,12 +51,7 @@ interface KeyRow {
   legacy_path: string[] | null
 }
 
-const PAGE = 1000
-
 const sha256 = (text: string) => createHash('sha256').update(text).digest('hex')
-
-// _ и % в префиксе — обычные символы, а не шаблоны LIKE
-const escapeLike = (value: string) => value.replace(/[\\%_]/g, char => `\\${char}`)
 
 async function loadSet(db: SupabaseClient, name: string): Promise<ExportSet> {
   const { data, error } = await db.from('export_sets').select('*').eq('name', name).maybeSingle()
@@ -121,24 +117,16 @@ export async function importSet(
   return data as ImportReport
 }
 
+// Начала ключей набора: свой legacy и, если нужны новые ключи, включённые
+const setPrefixes = (set: ExportSet, legacyOnly = false) =>
+  [...new Set([set.legacy_prefix, ...(legacyOnly ? [] : set.include_prefixes)].filter((p): p is string => !!p))]
+
 async function loadKeys(db: SupabaseClient, set: ExportSet, legacyOnly: boolean): Promise<KeyRow[]> {
-  const prefixes = [...new Set([set.legacy_prefix, ...(legacyOnly ? [] : set.include_prefixes)].filter((p): p is string => !!p))]
   const rows = new Map<string, KeyRow>()
-  for (const prefix of prefixes) {
-    for (let from = 0; ; from += PAGE) {
-      const { data, error } = await db
-        .from('localizations')
-        .select('technical_key, approved, legacy_path')
-        .is('deprecated_at', null)
-        .like('technical_key', `${escapeLike(prefix)}%`)
-        .order('technical_key')
-        .range(from, from + PAGE - 1)
-      if (error) throw error
-      for (const row of data as KeyRow[]) {
-        // То же правило показывает интерфейс: «Выгрузка в код: InApp»
-        if (row.technical_key.startsWith(prefix) && keyInExportSet(set, row.technical_key)) rows.set(row.technical_key, row)
-      }
-      if (data.length < PAGE) break
+  for (const prefix of setPrefixes(set, legacyOnly)) {
+    for (const row of await allKeys<KeyRow>(db, 'technical_key, approved, legacy_path', prefix)) {
+      // То же правило показывает интерфейс: «Выгрузка в код: InApp»
+      if (keyInExportSet(set, row.technical_key)) rows.set(row.technical_key, row)
     }
   }
   return [...rows.values()]
@@ -147,7 +135,7 @@ async function loadKeys(db: SupabaseClient, set: ExportSet, legacyOnly: boolean)
 /** Сколько действующих ключей набора ждут утверждения хотя бы на одном языке: их правки в выгрузку не попадут. */
 export async function pendingApproval(db: SupabaseClient, setName: string): Promise<number> {
   const set = await loadSet(db, setName)
-  const prefixes = [...new Set([set.legacy_prefix, ...set.include_prefixes].filter((p): p is string => !!p))]
+  const prefixes = setPrefixes(set)
   const count = async (prefix: string) => {
     const { count, error } = await db
       .from('localizations')

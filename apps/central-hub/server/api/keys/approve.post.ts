@@ -5,9 +5,7 @@ export default defineEventHandler(async (event) => {
   const body = await readBody<{ key?: unknown, langs?: unknown, keys?: unknown }>(event)
 
   if (body && 'keys' in body) {
-    const { data, error } = await useDb(event).rpc('approve_keys', { p_keys: readKeys(body), p_actor: actor })
-    if (error) throwDbError(error)
-    return { count: data as number }
+    return rpcCount(event, 'approve_keys', { p_keys: readKeys(body), p_actor: actor })
   }
 
   const { key, langs } = body ?? {}
@@ -16,7 +14,5 @@ export default defineEventHandler(async (event) => {
     throw badRequest('Нужен список языков')
   }
 
-  const { data, error } = await useDb(event).rpc('approve_translations', { p_key: key, p_langs: langs, p_actor: actor })
-  if (error) throwDbError(error)
-  return { count: data as number }
+  return rpcCount(event, 'approve_translations', { p_key: key, p_langs: langs, p_actor: actor })
 })

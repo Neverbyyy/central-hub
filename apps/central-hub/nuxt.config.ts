@@ -65,7 +65,7 @@ export default defineNuxtConfig({
   // в проекте две версии cookie, и общая копия (0.7 от express) — не та, что импортирует @supabase/ssr (1.x)
   vite: {
     optimizeDeps: {
-      include: ['jszip', '@rive-app/webgl2', '@nuxtjs/supabase > @supabase/ssr > cookie']
+      include: ['jszip', '@nuxtjs/supabase > @supabase/ssr > cookie']
     }
   },
 

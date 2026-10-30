@@ -1,7 +1,7 @@
 import { importSet } from '../../../lib/sync'
 
 // `amaya-l10n import`: файлы проекта как есть → строки legacy.<проект>. и шаблоны выгрузки
-export default defineEventHandler(async (event) => {
+export default defineHubHandler(async (event) => {
   requireToken(event, 'cli')
 
   const body = await readBody<{ files?: unknown, sourceRef?: unknown, actor?: unknown }>(event)
@@ -12,12 +12,8 @@ export default defineEventHandler(async (event) => {
   const actor = typeof body?.actor === 'string' && body.actor.trim() ? body.actor.trim().slice(0, 60) : 'amaya-l10n'
   const sourceRef = typeof body?.sourceRef === 'string' ? body.sourceRef.slice(0, 200) : null
 
-  try {
-    return await importSet(useDb(event), getRouterParam(event, 'set')!, files as Record<string, string>, {
-      actor: `${actor} (CLI)`,
-      sourceRef
-    })
-  } catch (error) {
-    throwHubError(error)
-  }
+  return await importSet(useDb(event), getRouterParam(event, 'set')!, files as Record<string, string>, {
+    actor: `${actor} (CLI)`,
+    sourceRef
+  })
 })

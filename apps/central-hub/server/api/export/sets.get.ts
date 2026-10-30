@@ -2,7 +2,7 @@ import { findOpenPr } from '../../lib/github'
 import { pendingApproval } from '../../lib/sync'
 
 // Наборы для окна «Выгрузка в код»: куда уходят, сколько ждёт утверждения, последняя выгрузка и открытый PR
-export default defineEventHandler(async (event) => {
+export default defineHubHandler(async (event) => {
   const db = useDb(event)
   const repos = exportRepos(event)
   const token = useRuntimeConfig(event).githubToken as string
@@ -23,32 +23,28 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  try {
-    return await Promise.all((sets as { name: string, project: string, path_template: string }[]).map(async (set) => {
-      const [pending, last, pr] = await Promise.all([
-        pendingApproval(db, set.name),
-        db.from('export_runs')
-          .select('outcome, pr_number, pr_url, actor, created_at')
-          .eq('set_name', set.name)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-        openPr(set.name)
-      ])
-      if (last.error) throw last.error
-      return {
-        name: set.name,
-        project: set.project,
-        path: set.path_template,
-        repo: repos.get(set.name) ?? null,
-        // Репозиторий указан, но токена нет — выгружать нечем
-        connected: !!token && repos.has(set.name),
-        pending,
-        lastRun: last.data,
-        openPr: pr
-      }
-    }))
-  } catch (error) {
-    throwHubError(error)
-  }
+  return await Promise.all((sets as { name: string, project: string, path_template: string }[]).map(async (set) => {
+    const [pending, last, pr] = await Promise.all([
+      pendingApproval(db, set.name),
+      db.from('export_runs')
+        .select('outcome, pr_number, pr_url, actor, created_at')
+        .eq('set_name', set.name)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      openPr(set.name)
+    ])
+    if (last.error) throw last.error
+    return {
+      name: set.name,
+      project: set.project,
+      path: set.path_template,
+      repo: repos.get(set.name) ?? null,
+      // Репозиторий указан, но токена нет — выгружать нечем
+      connected: !!token && repos.has(set.name),
+      pending,
+      lastRun: last.data,
+      openPr: pr
+    }
+  }))
 })

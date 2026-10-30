@@ -2,7 +2,7 @@
 // Без Nuxt-глобалов: общий для маршрутов интерфейса, MCP и тестов базы.
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { checkText, descriptionError, figmaUrlError, MAX_VALUE_LENGTH, newKeyError, type KeyContext, type RegistryKind, type TextIssue } from '@amaya/l10n-core'
+import { checkText, descriptionError, escapeLike, figmaUrlError, MAX_VALUE_LENGTH, newKeyError, type KeyContext, type RegistryKind, type TextIssue } from '@amaya/l10n-core'
 import { HubError } from './errors'
 
 export type KeyStatus = 'draft' | 'ai' | 'approved'
@@ -41,9 +41,6 @@ interface KeyRow {
 }
 
 const PAGE = 1000
-
-// _ и % — обычные символы, а не шаблоны LIKE
-const escapeLike = (value: string) => value.replace(/[\\%_]/g, char => `\\${char}`)
 
 /** Справочник и языки — то, по чему проверяется имя ключа. */
 export async function loadKeyContext(db: SupabaseClient): Promise<KeyContext> {

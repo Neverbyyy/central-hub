@@ -1,10 +1,4 @@
 import { keyTreeNested } from '../../lib/keys'
 
-// Разделы ключей для дерева слева
-export default defineEventHandler(async (event) => {
-  try {
-    return await keyTreeNested(useDb(event))
-  } catch (error) {
-    throwHubError(error)
-  }
-})
+// Разделы ключей для дерева слева и подсказок в форме «Новый ключ»
+export default defineHubHandler(event => keyTreeNested(useDb(event)))

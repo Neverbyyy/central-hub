@@ -53,16 +53,9 @@ const crumbs = computed(() => {
   return parts.map((label, i) => ({ label, prefix: `${parts.slice(0, i + 1).join('.')}.` }))
 })
 
-const toast = useToast()
+const { copy } = useCopy()
 
-const copyLink = async () => {
-  try {
-    await navigator.clipboard.writeText(window.location.href)
-    toast.add({ title: 'Ссылка на выборку скопирована', duration: 1500 })
-  } catch (error) {
-    console.error(error)
-  }
-}
+const copyLink = () => copy(window.location.href, 'Ссылка на выборку скопирована')
 </script>
 
 <template>

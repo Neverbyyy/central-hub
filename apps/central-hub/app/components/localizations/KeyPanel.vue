@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { createReusableTemplate } from '@vueuse/core'
 import type { Localization, TranslationStatus } from '~/composables/useLocalizations'
+import type { HistoryAction, HistoryEntry, HistoryPage } from '~/utils/history'
 
 // Панель ключа справа. Не модальная: грид остаётся под клавиатурой, панель следует за активной строкой.
 const props = defineProps<{
@@ -31,33 +32,12 @@ interface KeyDetails extends Localization {
   updated_by: string | null
 }
 
-interface HistoryEntry {
-  lang: string | null
-  field: string
-  old_value: string | null
-  new_value: string | null
-}
-
-// Одно действие — одна правка: импорт 9 языков или «Утвердить всё» приходят одной записью
-interface HistoryAction {
-  id: number
-  created_at: string
-  actor: string | null
-  source: string
-  entries: HistoryEntry[]
-}
-
-interface HistoryPage {
-  total: number
-  actions: HistoryAction[]
-}
-
 const HISTORY_FIRST = 10
 const HISTORY_MORE = 20
 
 const supabase = useSupabaseClient()
 const toast = useToast()
-const authRedirect = useAuthRedirect()
+const notifyError = useNotifyError()
 
 const details = ref<KeyDetails | null>(null)
 const history = ref<HistoryAction[]>([])
@@ -112,7 +92,7 @@ const loadMoreHistory = async () => {
     history.value = [...history.value, ...page.actions.filter(a => !seen.has(a.id))]
     historyTotal.value = page.total
   } catch (error) {
-    if (!(await authRedirect(error))) toast.add({ title: 'История не загрузилась', description: errorMessage(error), color: 'error' })
+    await notifyError('История не загрузилась', error)
   } finally {
     loadingMore.value = false
   }
@@ -144,14 +124,7 @@ const codeKey = computed(() => details.value?.legacy_path?.join('.') ?? props.te
 const { rules: exportRules, targetNames } = useExportRules()
 const exportTargets = computed(() => (exportRules.value.length && details.value && !details.value.deprecated_at ? targetNames(props.technicalKey) : null))
 
-const copy = async (text: string) => {
-  try {
-    await navigator.clipboard.writeText(text)
-    toast.add({ title: 'Скопировано', description: text, duration: 1500 })
-  } catch (error) {
-    console.error(error)
-  }
-}
+const { copy } = useCopy()
 
 // --- Языки и статусы ---
 const STATUS: Record<TranslationStatus, { label: string, color: 'neutral' | 'success' | 'secondary' }> = {
@@ -177,7 +150,7 @@ const languageRows = computed(() => props.languages.map((lang) => {
     status: status ? STATUS[status] : null,
     stale: !!details.value?.stale_langs?.includes(lang),
     // Утвердить можно то, что есть и ещё не утверждено или устарело
-    canApprove: !!text && (status !== 'approved' || !!details.value?.stale_langs?.includes(lang)),
+    canApprove: !!details.value && canApproveLang(details.value, lang),
     tooLong: !!text && !!details.value?.max_length && text.length > details.value.max_length
   }
 }))
@@ -192,9 +165,7 @@ const approve = async (langs: string[]) => {
     toast.add({ title: `Утверждено: ${count} ${plural(count, ['язык', 'языка', 'языков'])}`, color: 'success', duration: 2000 })
     await load()
   } catch (error) {
-    if (!(await authRedirect(error))) {
-      toast.add({ title: 'Не удалось утвердить', description: errorMessage(error), color: 'error' })
-    }
+    await notifyError('Не удалось утвердить', error)
   } finally {
     approving.value = null
   }
@@ -210,79 +181,13 @@ const restore = async () => {
     await load()
     emit('restored', props.technicalKey)
   } catch (error) {
-    if (!(await authRedirect(error))) {
-      toast.add({ title: 'Не удалось вернуть', description: errorMessage(error), color: 'error' })
-    }
+    await notifyError('Не удалось вернуть', error)
   } finally {
     restoring.value = false
   }
 }
 
-// --- История ---
-const FIELD_LABEL: Record<string, string> = {
-  created: 'Создан',
-  translation: 'Текст',
-  status: 'Статус',
-  description: 'Описание',
-  max_length: 'Лимит',
-  tags: 'Теги',
-  figma_url: 'Figma'
-}
-
-// Создание и пометка «устаревший» — событие без «было → стало»
-const entryTitle = (entry: HistoryEntry) => entry.field === 'deprecated'
-  ? (entry.new_value ? 'Помечен устаревшим' : 'Возвращён из устаревших')
-  : (FIELD_LABEL[entry.field] ?? entry.field)
-
-const hasDiff = (entry: HistoryEntry) => entry.field !== 'created' && entry.field !== 'deprecated'
-
-const SOURCE_LABEL: Record<string, string> = {
-  ui: 'интерфейс',
-  mcp: 'ИИ через MCP',
-  import: 'импорт',
-  sql: 'база',
-  test: 'автотест'
-}
-
-const STATUS_WORD: Record<string, string> = { approved: 'утверждён', draft: 'черновик', ai: 'от ИИ' }
-
-const valueText = (entry: HistoryEntry, value: string | null) => {
-  if (value === null || value === '') return '—'
-  return entry.field === 'status' ? (STATUS_WORD[value] ?? value) : value
-}
-
-// Языки действия коротко: EN, RU, DE +6
-const langList = (entries: HistoryEntry[]) => {
-  const langs = [...new Set(entries.map(e => e.lang).filter((l): l is string => !!l))].map(l => l.toUpperCase())
-  return langs.length > 3 ? `${langs.slice(0, 3).join(', ')} +${langs.length - 3}` : langs.join(', ')
-}
-
-const languagesWord = (n: number) => `${n} ${plural(n, ['языке', 'языках', 'языках'])}`
-
-// Сводка действия из нескольких записей; подробности — по клику
-const isCreation = (action: HistoryAction) => action.entries.some(e => e.field === 'created')
-
-// Подробности действия; у создания сама запись «Создан» — уже заголовок карточки
-const detailEntries = (action: HistoryAction) => action.entries.filter(e => e.field !== 'created')
-
-const detailsLabel = (action: HistoryAction) => {
-  const n = detailEntries(action).length
-  return isCreation(action) ? `Тексты (${n})` : `Подробности (${n})`
-}
-
-const actionSummary = (action: HistoryAction) => {
-  const { entries } = action
-  const texts = entries.filter(e => e.field === 'translation').length
-  // Создание ключа вместе с первыми текстами — просто «Создан», тексты под кнопкой
-  if (isCreation(action)) return 'Создан'
-  if (entries.every(e => e.field === 'status' && e.new_value === 'approved')) return `Утверждено: ${langList(entries)}`
-  if (entries.every(e => e.field === 'translation')) {
-    return action.source === 'import' ? `Импорт: тексты на ${languagesWord(texts)}` : `Тексты: ${langList(entries)}`
-  }
-  const fields = [...new Set(entries.map(e => entryTitle(e)))]
-  return `${entries.length} ${plural(entries.length, ['изменение', 'изменения', 'изменений'])}: ${fields.join(', ').toLowerCase()}`
-}
-
+// --- История: заголовки и сводки — utils/history ---
 const openActions = ref(new Set<number>())
 const toggleAction = (id: number) => {
   const next = new Set(openActions.value)
@@ -291,10 +196,6 @@ const toggleAction = (id: number) => {
 }
 
 const [DefineEntry, ReuseEntry] = createReusableTemplate<{ entry: HistoryEntry }>()
-
-const formatDate = (value?: string | null) => value
-  ? new Date(value).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })
-  : '—'
 </script>
 
 <template>
@@ -439,7 +340,7 @@ const formatDate = (value?: string | null) => value
           {{ exportTargets ? `Выгрузка в код: ${exportTargets}` : 'В код не выгружается: ключ не входит ни в один проект' }}
         </p>
         <p class="text-muted">
-          Создан {{ formatDate(details.created_at) }}<template v-if="details.created_by">
+          Создан {{ formatDateTime(details.created_at) }}<template v-if="details.created_by">
             · {{ details.created_by }}
           </template>
         </p>
@@ -556,9 +457,9 @@ const formatDate = (value?: string | null) => value
             v-if="entry.field === 'status'"
             class="text-toned"
           >
-            {{ valueText(entry, entry.old_value) }} → <span class="font-medium text-gray-800 dark:text-gray-100">{{ valueText(entry, entry.new_value) }}</span>
+            {{ entryValueText(entry, entry.old_value) }} → <span class="font-medium text-gray-800 dark:text-gray-100">{{ entryValueText(entry, entry.new_value) }}</span>
           </p>
-          <template v-else-if="hasDiff(entry)">
+          <template v-else-if="entryHasDiff(entry)">
             <p
               v-if="entry.old_value"
               class="whitespace-pre-line break-words rounded bg-red-50 dark:bg-red-950/40 px-2 py-1 text-red-800 dark:text-red-300 line-through decoration-red-300 dark:decoration-red-800"
@@ -600,7 +501,7 @@ const formatDate = (value?: string | null) => value
                 v-else
                 class="font-medium text-gray-800 dark:text-gray-100"
               >{{ actionSummary(action) }}</span>
-              <span class="ml-auto shrink-0 text-[10px] tabular-nums text-muted">{{ formatDate(action.created_at) }}</span>
+              <span class="ml-auto shrink-0 text-[10px] tabular-nums text-muted">{{ formatDateTime(action.created_at) }}</span>
             </div>
             <div class="space-y-1 px-3 py-2">
               <ReuseEntry
@@ -619,14 +520,14 @@ const formatDate = (value?: string | null) => value
                     class="size-3.5 text-muted transition-transform"
                     :class="{ 'rotate-90': openActions.has(action.id) }"
                   />
-                  {{ openActions.has(action.id) ? (isCreation(action) ? 'Скрыть тексты' : 'Скрыть подробности') : detailsLabel(action) }}
+                  {{ openActions.has(action.id) ? (isCreationAction(action) ? 'Скрыть тексты' : 'Скрыть подробности') : actionDetailsLabel(action) }}
                 </button>
                 <ul
                   v-if="openActions.has(action.id)"
                   class="space-y-2 pt-1"
                 >
                   <li
-                    v-for="(entry, i) in detailEntries(action)"
+                    v-for="(entry, i) in actionDetailEntries(action)"
                     :key="i"
                     class="space-y-1"
                   >
@@ -642,7 +543,7 @@ const formatDate = (value?: string | null) => value
                 </ul>
               </template>
               <p class="text-[10px] text-muted">
-                {{ action.actor || 'без имени' }} · {{ SOURCE_LABEL[action.source] ?? action.source }}
+                {{ action.actor || 'без имени' }} · {{ historySourceLabel(action.source) }}
               </p>
             </div>
           </li>

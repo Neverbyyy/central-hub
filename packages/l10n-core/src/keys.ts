@@ -30,6 +30,9 @@ const ROOT_REGISTRY: Partial<Record<KeyRoot, RegistryKind>> = {
   legacy: 'project'
 }
 
+/** Какой справочник у второй части ключа: app → игры, web → сайты; у common и ds — никакого. */
+export const registryKindOf = (root: string): RegistryKind | undefined => ROOT_REGISTRY[root as KeyRoot]
+
 const KIND_LABEL: Record<RegistryKind, string> = {
   game: 'игры',
   site: 'сайта',

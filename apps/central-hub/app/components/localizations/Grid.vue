@@ -151,19 +151,7 @@ const onCancel = () => {
   focusGrid()
 }
 
-const notifyCopied = (text: string) => {
-  toast.add({ title: 'Скопировано', description: text.length > 80 ? `${text.slice(0, 80)}…` : text, duration: 1200 })
-}
-
-const copy = async (text: string) => {
-  if (!text) return
-  try {
-    await navigator.clipboard.writeText(text)
-    notifyCopied(text)
-  } catch (err) {
-    console.error(err)
-  }
-}
+const { copy, notifyCopied } = useCopy()
 
 const onCellDown = (row: number, col: number) => {
   active.value = { row, col }

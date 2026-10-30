@@ -44,9 +44,6 @@ importers:
       '@nuxtjs/supabase':
         specifier: ^2.0.6
         version: 2.0.6
-      '@rive-app/webgl2':
-        specifier: ^2.37.5
-        version: 2.37.5
       '@supabase/supabase-js':
         specifier: ^2.104.1
         version: 2.104.1
@@ -1299,9 +1296,6 @@ packages:
 
   '@poppinss/exception@1.2.3':
     resolution: {integrity: sha512-dCED+QRChTVatE9ibtoaxc+WkdzOSjYTKi/+uacHWIsfodVfpsueo3+DKpgU5Px8qXjgmXkSvhXvSCz3fnP9lw==}
-
-  '@rive-app/webgl2@2.37.5':
-    resolution: {integrity: sha512-HvzjvComnOh1pns/BIGbnrZglNxNov5yhmpWO2+i6jlrbV8uovgAWlNm4HTmt+X6eKDrnh8x6G236ABXIqoORQ==}
 
   '@rolldown/pluginutils@1.0.0-rc.13':
     resolution: {integrity: sha512-3ngTAv6F/Py35BsYbeeLeecvhMKdsKm4AoOETVhAA+Qc8nrA2I0kF7oa93mE9qnIurngOSpMnQ0x2nQY2FPviA==}
@@ -6880,8 +6874,6 @@ snapshots:
       supports-color: 10.2.2
 
   '@poppinss/exception@1.2.3': {}
-
-  '@rive-app/webgl2@2.37.5': {}
 
   '@rolldown/pluginutils@1.0.0-rc.13': {}
 

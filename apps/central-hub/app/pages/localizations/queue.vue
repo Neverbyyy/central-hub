@@ -18,11 +18,11 @@ const PAGE = 50
 
 const route = useRoute()
 const router = useRouter()
-const supabase = useSupabaseClient()
 const toast = useToast()
-const authRedirect = useAuthRedirect()
+const notifyError = useNotifyError()
 
-const languages = ref<{ code: string, name: string }[]>([])
+// Языки перевода — общие с гридом и палитрой Ctrl+K (useLanguages)
+const { targets: languages, load: loadLanguages } = useLanguages()
 const lang = computed(() => typeof route.query.lang === 'string' ? route.query.lang : '')
 const prefix = computed(() => typeof route.query.prefix === 'string' ? route.query.prefix : '')
 
@@ -62,9 +62,7 @@ const fetchQueue = async (reset: boolean) => {
     total.value = data.total
     if (reset || items.value.length === fresh.length) startItem()
   } catch (error) {
-    if (!(await authRedirect(error))) {
-      toast.add({ title: 'Очередь не загрузилась', description: errorMessage(error), color: 'error' })
-    }
+    await notifyError('Очередь не загрузилась', error)
   } finally {
     if (gen === generation) loading.value = false
   }
@@ -78,20 +76,17 @@ const restart = () => {
   fetchQueue(true)
 }
 
-onMounted(async () => {
-  const { data } = await supabase
-    .from('languages')
-    .select('code, name')
-    .eq('in_editor', true)
-    .eq('is_source', false)
-    .order('position')
-  languages.value = data ?? []
-  // Без языка в адресе берём первый; смену адреса подхватит watch ниже
-  if (!lang.value && languages.value[0]) {
-    await router.replace({ query: { ...route.query, lang: languages.value[0].code } })
-    return
-  }
-  restart()
+// Без языка в адресе берём первый, как только языки есть; смену адреса подхватит watch ниже
+const pickFirstLanguage = () => {
+  if (!lang.value && languages.value[0]) router.replace({ query: { ...route.query, lang: languages.value[0].code } })
+}
+watch(languages, pickFirstLanguage)
+
+// Язык уже в адресе — очередь грузится сразу, не дожидаясь списка языков
+onMounted(() => {
+  loadLanguages()
+  pickFirstLanguage()
+  if (lang.value) restart()
 })
 
 watch([lang, prefix], restart)
@@ -156,8 +151,8 @@ const save = async () => {
         description: `Сейчас: «${data.data.current ?? '—'}». Enter ещё раз — сохранить ваш вариант.`,
         color: 'warning'
       })
-    } else if (!(await authRedirect(error))) {
-      toast.add({ title: 'Не сохранилось', description: errorMessage(error), color: 'error' })
+    } else {
+      await notifyError('Не сохранилось', error)
     }
   } finally {
     saving.value = false

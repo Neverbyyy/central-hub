@@ -1,15 +1,8 @@
 <script setup lang="ts">
-import JSZip from 'jszip'
-
 // Тексты в Figma. Основной путь — плагин «Amaya Hub — локализация» (packages/figma-plugin), он скачивается отсюда.
 // Без плагина — выборка разделов (например, Cars 2 вместе с общими) архивом для встроенного импорта Figma:
 // файл на каждый язык становится режимом коллекции, вложенные группы — именами через /.
-interface TreeNode {
-  path: string
-  label: string
-  keys: number
-  children: TreeNode[]
-}
+import type { KeyTreeNode } from '~/utils/keySuggestions'
 
 interface Row {
   path: string
@@ -28,21 +21,10 @@ const props = defineProps<{
 const open = defineModel<boolean>('open', { required: true })
 
 const toast = useToast()
-const authRedirect = useAuthRedirect()
+const notifyError = useNotifyError()
 
-// Тот же запрос, что у дерева слева — Nuxt отдаст уже загруженные данные
-const { data: tree } = useFetch<TreeNode[]>('/api/keys/tree', { server: false, lazy: true })
-
-// Все разделы дерева по пути — и свёрнутые тоже
-const nodes = computed(() => {
-  const map = new Map<string, TreeNode>()
-  const walk = (list: TreeNode[]) => list.forEach((node) => {
-    map.set(node.path, node)
-    walk(node.children)
-  })
-  walk(tree.value ?? [])
-  return map
-})
+// Те же данные, что у дерева слева (useKeyTree); nodes — все разделы по пути, и свёрнутые тоже
+const { tree, index: nodes, refresh: refreshTree } = useKeyTree({ immediate: false })
 
 const selected = ref(new Set<string>())
 const expanded = ref(new Set<string>())
@@ -56,6 +38,8 @@ const ancestors = (path: string) => path.split('.').slice(0, -1).map((_, i, part
 // Каждое открытие — от раздела, выбранного в дереве, плюс общие строки; путь к нему раскрыт
 watch(open, (value) => {
   if (!value) return
+  // Дерево обычно уже загружено для панели слева; панель скрыта — грузим сейчас
+  if (!tree.value) refreshTree()
   selected.value = new Set(['common', ...(current.value ? [current.value] : [])])
   expanded.value = new Set(current.value ? ancestors(current.value) : [])
   chosenLanguages.value = [...props.languages]
@@ -64,7 +48,7 @@ watch(open, (value) => {
 // Видимые строки: у раскрытого раздела видны подразделы
 const rows = computed<Row[]>(() => {
   const list: Row[] = []
-  const walk = (items: TreeNode[], level: number) => items.forEach((node) => {
+  const walk = (items: KeyTreeNode[], level: number) => items.forEach((node) => {
     list.push({ path: node.path, label: node.label, keys: node.keys, level, hasChildren: node.children.length > 0 })
     if (expanded.value.has(node.path)) walk(node.children, level + 1)
   })
@@ -122,13 +106,15 @@ const exportFile = async () => {
       query: { prefixes: prefixes.map(p => `${p}.`).join(','), langs: chosenLanguages.value.join(',') }
     })
     // Имя файла станет именем режима в Figma: en, ru, de…
+    // JSZip — только по нажатию: ~150 КБ не грузятся вместе со страницей
+    const { default: JSZip } = await import('jszip')
     const zip = new JSZip()
     for (const [lang, tree] of Object.entries(result.files)) zip.file(`${lang}.json`, JSON.stringify(tree, null, 2))
     downloadBlob(await zip.generateAsync({ type: 'blob' }), `figma-${prefixes.join('+')}.zip`)
-    toast.add({ title: `Для Figma выгружено: ${result.keys} ${plural(result.keys, ['ключ', 'ключа', 'ключей'])}`, color: 'success' })
+    toast.add({ title: `Для Figma выгружено: ${keysCount(result.keys)}`, color: 'success' })
     open.value = false
   } catch (error) {
-    if (!(await authRedirect(error))) toast.add({ title: 'Не выгрузилось', description: errorMessage(error), color: 'error' })
+    await notifyError('Не выгрузилось', error)
   } finally {
     exporting.value = false
   }
@@ -266,7 +252,7 @@ const onKeydown = (event: KeyboardEvent) => {
     <template #footer>
       <div class="flex w-full items-center justify-between gap-3">
         <span class="text-xs text-muted">
-          {{ total }} {{ plural(total, ['ключ', 'ключа', 'ключей']) }} · {{ chosenLanguages.length }} {{ plural(chosenLanguages.length, ['режим', 'режима', 'режимов']) }}
+          {{ keysCount(total) }} · {{ chosenLanguages.length }} {{ plural(chosenLanguages.length, ['режим', 'режима', 'режимов']) }}
         </span>
         <UButton
           icon="i-lucide-download"

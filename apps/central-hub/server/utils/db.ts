@@ -39,3 +39,20 @@ export function throwHubError(error: unknown): never {
   }
   throw error
 }
+
+/** Маршрут, у которого HubError и ошибки базы уходят человеку понятным текстом (throwHubError). */
+export const defineHubHandler = <T>(handler: (event: H3Event) => Promise<T>) =>
+  defineEventHandler(async (event) => {
+    try {
+      return await handler(event)
+    } catch (error) {
+      throwHubError(error)
+    }
+  })
+
+/** Функция базы, которая возвращает число затронутых строк: утвердить, пометить устаревшими, вернуть. */
+export async function rpcCount(event: H3Event, fn: string, args: Record<string, unknown>) {
+  const { data, error } = await useDb(event).rpc(fn, args)
+  if (error) throwDbError(error)
+  return { count: data as number }
+}

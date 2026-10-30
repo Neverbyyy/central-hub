@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { CommandPaletteGroup, CommandPaletteItem } from '@nuxt/ui'
+import { escapeLike } from '@amaya/l10n-core'
 
 // Палитра команд по Ctrl+K / ⌘K: найти ключ, открыть очередь перевода, применить частый фильтр
 const open = ref(false)
@@ -37,7 +38,6 @@ interface Found {
 }
 
 const found = ref<Found[]>([])
-const escapeLike = (value: string) => value.replace(/[\\%_]/g, char => `\\${char}`)
 
 watchDebounced(searchTerm, async (value) => {
   const term = value.trim().toLowerCase()
@@ -59,21 +59,15 @@ watchDebounced(searchTerm, async (value) => {
 }, { debounce: 200 })
 
 // --- Языки для очереди перевода ---
-const languages = ref<{ code: string, name: string }[]>([])
+// Общие с гридом и очередью (useLanguages) — грузятся при первом открытии, если ещё не загружены
+const { targets: languages, load: loadLanguages } = useLanguages()
 
-watch(open, async (value) => {
+watch(open, (value) => {
   if (!value) {
     searchTerm.value = ''
     return
   }
-  if (languages.value.length) return
-  const { data } = await supabase
-    .from('languages')
-    .select('code, name')
-    .eq('in_editor', true)
-    .eq('is_source', false)
-    .order('position')
-  languages.value = data ?? []
+  loadLanguages()
 })
 
 const groups = computed<CommandPaletteGroup<CommandPaletteItem>[]>(() => {

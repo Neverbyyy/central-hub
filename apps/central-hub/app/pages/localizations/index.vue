@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import type { DropdownMenuItem } from '@nuxt/ui'
-import JSZip from 'jszip'
 import type { Localization } from '~/composables/useLocalizations'
 
 definePageMeta({ title: 'Локализации' })
 
 const toast = useToast()
-const authRedirect = useAuthRedirect()
+const notifyError = useNotifyError()
 
 const {
   languages,
@@ -181,9 +180,8 @@ const restoreSelected = async () => {
 // Выделенные ключи целиком: все языки с текстом становятся утверждёнными и уходят в выгрузку в проекты
 const approving = ref(false)
 
-// Есть что утверждать: язык с текстом не утверждён или его перевод устарел — то же правило, что в панели ключа и на сервере
-const canApprove = (row: Localization) => Object.entries(row.translations ?? {})
-  .some(([lang, text]) => !!text && (row.status?.[lang] !== 'approved' || row.stale_langs?.includes(lang)))
+// Есть что утверждать хотя бы на одном языке — то же правило, что в панели ключа и на сервере
+const canApprove = (row: Localization) => Object.keys(row.translations ?? {}).some(lang => canApproveLang(row, lang))
 
 // Статусы строк приходят в реальном времени — кнопка сама прячется, если всё выделенное утвердили
 const keysToApprove = computed(() => rows.value
@@ -202,7 +200,7 @@ const approveSelected = async () => {
       : { title: 'Всё выделенное уже утверждено', color: 'neutral' })
     selectedKeys.value = new Set()
   } catch (error) {
-    if (!(await authRedirect(error))) toast.add({ title: 'Не утвердилось', description: errorMessage(error), color: 'error' })
+    await notifyError('Не утвердилось', error)
   } finally {
     approving.value = false
   }
@@ -259,6 +257,8 @@ const exportZip = async () => {
   exporting.value = true
   try {
     const all = await fetchAll()
+    // JSZip — только по нажатию: ~150 КБ не грузятся вместе со страницей
+    const { default: JSZip } = await import('jszip')
     const zip = new JSZip()
     for (const lang of languageCodes.value) {
       const file: Record<string, string> = {}
@@ -343,7 +343,7 @@ const exportZip = async () => {
 
       <div class="flex shrink-0 items-center gap-3 whitespace-nowrap">
         <span class="whitespace-nowrap text-xs text-muted">
-          {{ total === null ? '…' : `${total} ${plural(total, ['ключ', 'ключа', 'ключей'])}` }}
+          {{ total === null ? '…' : keysCount(total) }}
         </span>
 
         <UDropdownMenu
@@ -453,7 +453,7 @@ const exportZip = async () => {
       >
         <div class="pointer-events-auto flex items-center gap-2 whitespace-nowrap rounded-xl border border-default bg-default py-1.5 pl-4 pr-1.5 shadow-lg">
           <span class="mr-1 text-sm text-toned">
-            Выбрано: {{ selectedKeys.size }} {{ plural(selectedKeys.size, ['ключ', 'ключа', 'ключей']) }}
+            Выбрано: {{ keysCount(selectedKeys.size) }}
           </span>
           <UButton
             v-if="filters.deprecated"

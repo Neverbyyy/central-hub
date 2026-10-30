@@ -1,5 +1,5 @@
 import type { RealtimeChannel } from '@supabase/supabase-js'
-import type { RegistryKind } from '@amaya/l10n-core'
+import { escapeLike, type RegistryKind } from '@amaya/l10n-core'
 
 export interface RegistryEntry {
   kind: RegistryKind
@@ -38,15 +38,16 @@ export type CommitMove = 'down' | 'right' | 'left' | 'stay' | 'blur'
 // pending — не утверждённые: черновики и тексты от ИИ вместе, то, что не уходит в выгрузку в код
 export type StatusFilter = '' | TranslationStatus | 'pending'
 
+/** Есть что утверждать на языке: текст есть, а статус не «утверждён» или перевод устарел — то же правило у сервера. */
+export const canApproveLang = (row: Pick<Localization, 'translations' | 'status' | 'stale_langs'>, lang: string) =>
+  !!row.translations?.[lang] && (row.status?.[lang] !== 'approved' || !!row.stale_langs?.includes(lang))
+
 const PAGE_SIZE = 100
 const SELECT = 'technical_key, translations, status, based_on, source_rev, stale_langs, deprecated_at, created_at, updated_at'
 const WEEK = 7 * 24 * 60 * 60 * 1000
 
 // Параметры адреса, которые описывают выборку; остальные (key, new) не трогаем
 const FILTER_PARAMS = ['q', 'tags', 'status', 'stale', 'missing', 'recent', 'prefix', 'deprecated']
-
-// % и _ в поиске — обычные символы, а не шаблоны LIKE
-const escapeLike = (value: string) => value.replace(/[\\%_]/g, char => `\\${char}`)
 
 const asString = (value: unknown) => (typeof value === 'string' ? value : '')
 
@@ -72,11 +73,12 @@ export function useLocalizations() {
   // Браузер только читает — публичному ключу запись закрыта; изменения идут через /api
   const supabase = useSupabaseClient()
   const toast = useToast()
-  const authRedirect = useAuthRedirect()
+  const notifyError = useNotifyError()
   const route = useRoute()
   const router = useRouter()
 
-  const languages = ref<Language[]>([])
+  // Языки — общие с очередью и палитрой Ctrl+K (useLanguages)
+  const { languages, error: languagesError, load: loadLanguages } = useLanguages()
   const languageCodes = computed(() => languages.value.map(l => l.code))
   // Коды игр, сайтов, брендов, тестов — по ним проверяется имя нового ключа
   const registry = ref<RegistryEntry[]>([])
@@ -184,18 +186,9 @@ export function useLocalizations() {
     return query
   }
 
-  const loadLanguages = async () => {
-    const { data, error } = await supabase
-      .from('languages')
-      .select('code, name, dir, is_source')
-      .eq('in_editor', true)
-      .order('position')
-    if (error) {
-      toast.add({ title: 'Не загрузились языки', description: error.message, color: 'error' })
-      return
-    }
-    languages.value = (data ?? []) as Language[]
-  }
+  watch(languagesError, (error) => {
+    if (error) toast.add({ title: 'Не загрузились языки', description: error.message, color: 'error' })
+  })
 
   const loadRegistry = async () => {
     const { data, error } = await supabase.from('registry').select('kind, code, title').order('kind').order('code')
@@ -324,9 +317,7 @@ export function useLocalizations() {
 
       // Откатываем, только если за это время ячейку не поменяли ещё раз
       if ((target.translations?.[lang] ?? '') === value) setCell(target, lang, prev)
-      if (!(await authRedirect(error))) {
-        toast.add({ title: 'Не сохранилось', description: errorMessage(error), color: 'error' })
-      }
+      await notifyError('Не сохранилось', error)
       return false
     }
   }
@@ -363,12 +354,10 @@ export function useLocalizations() {
   const restoreKeys = async (keys: string[]) => {
     try {
       const { count } = await $fetch('/api/keys/restore', { method: 'POST', body: { keys } })
-      toast.add({ title: `Возвращено: ${count} ${plural(count, ['ключ', 'ключа', 'ключей'])}`, color: 'success' })
+      toast.add({ title: `Возвращено: ${keysCount(count)}`, color: 'success' })
       await reload()
     } catch (error) {
-      if (!(await authRedirect(error))) {
-        toast.add({ title: 'Не удалось вернуть', description: errorMessage(error), color: 'error' })
-      }
+      await notifyError('Не удалось вернуть', error)
     }
   }
 
@@ -377,9 +366,7 @@ export function useLocalizations() {
     try {
       count = (await $fetch('/api/keys/deprecate', { method: 'POST', body: { keys } })).count
     } catch (error) {
-      if (!(await authRedirect(error))) {
-        toast.add({ title: 'Не удалось пометить устаревшими', description: errorMessage(error), color: 'error' })
-      }
+      await notifyError('Не удалось пометить устаревшими', error)
       return false
     }
 

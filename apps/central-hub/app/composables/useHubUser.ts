@@ -23,3 +23,16 @@ export function useAuthRedirect() {
     return true
   }
 }
+
+/**
+ * Ошибка запроса — тостом с заголовком; кончилась сессия или человек не представился — на вход (useAuthRedirect).
+ * Вызывать в setup.
+ */
+export function useNotifyError() {
+  const authRedirect = useAuthRedirect()
+  const toast = useToast()
+
+  return async (title: string, error: unknown) => {
+    if (!(await authRedirect(error))) toast.add({ title, description: errorMessage(error), color: 'error' })
+  }
+}
