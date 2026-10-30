@@ -139,6 +139,11 @@ watch(() => props.row?.updated_at, (value, old) => {
 // Код legacy-проекта зовёт строку по её старому пути: t('basic.task_1'), а не по ключу сервиса
 const codeKey = computed(() => details.value?.legacy_path?.join('.') ?? props.technicalKey)
 
+// В какой проект уходит ключ: app. — только InApp, web. — только Pages Hub, common. — в оба.
+// null — наборы ещё грузятся или ключ устарел (в код он не уходит, об этом говорит плашка)
+const { rules: exportRules, targetNames } = useExportRules()
+const exportTargets = computed(() => (exportRules.value.length && details.value && !details.value.deprecated_at ? targetNames(props.technicalKey) : null))
+
 const copy = async (text: string) => {
   try {
     await navigator.clipboard.writeText(text)
@@ -422,6 +427,16 @@ const formatDate = (value?: string | null) => value
           class="text-muted"
         >
           В коде проекта: <code class="font-mono">{{ codeKey }}</code>
+        </p>
+        <p
+          v-if="exportTargets !== null"
+          class="flex items-center gap-1 text-muted"
+        >
+          <UIcon
+            name="i-lucide-git-pull-request"
+            class="size-3.5 shrink-0"
+          />
+          {{ exportTargets ? `Выгрузка в код: ${exportTargets}` : 'В код не выгружается: ключ не входит ни в один проект' }}
         </p>
         <p class="text-muted">
           Создан {{ formatDate(details.created_at) }}<template v-if="details.created_by">

@@ -40,6 +40,13 @@ const {
 const route = useRoute()
 const router = useRouter()
 const grid = useTemplateRef('grid')
+const searchInput = useTemplateRef('searchInput')
+
+// Крестик в поиске: стереть запрос и остаться в поле
+const clearSearch = () => {
+  q.value = ''
+  searchInput.value?.inputRef?.focus()
+}
 
 // --- Выделение строк ---
 const selectedKeys = ref(new Set<string>())
@@ -101,11 +108,16 @@ watchDebounced(focusedKey, (key) => {
   }
 }, { debounce: 150 })
 
-// --- Новый ключ: после создания показываем его поиском и в панели ---
+// --- Новый ключ: после создания показываем его раздел поиском, а сам ключ — в панели ---
 const creating = ref(false)
 
 const onKeyCreated = (key: string) => {
-  q.value = key
+  // Весь раздел, а не один ключ: app.farm.banner.title_1 → app.farm.banner. — видно и соседей, title, title_2…
+  // Точка в конце — чтобы не цеплять app.farm.banner_promo
+  const section = `${key.slice(0, key.lastIndexOf('.'))}.`
+  // Второй ключ подряд в том же разделе: поиск не меняется, и сам грид бы не перечитался
+  if (q.value === section) reload()
+  else q.value = section
   treeVersion.value++
   openPanel(key)
 }
@@ -275,11 +287,33 @@ const exportZip = async () => {
           @click="treeOpen = !treeOpen"
         />
         <UInput
+          ref="searchInput"
           v-model="q"
           icon="i-lucide-search"
           placeholder="Поиск по ключу или тексту…"
           class="w-full min-w-32 max-w-sm"
-        />
+          :ui="{ trailing: 'pe-1' }"
+        >
+          <template
+            v-if="q"
+            #trailing
+          >
+            <!-- Тот же крестик, что у раздела в фильтрах. mousedown.prevent: фокус остаётся в поле -->
+            <button
+              type="button"
+              class="rounded p-1 text-muted hover:text-default"
+              aria-label="Очистить поиск"
+              title="Очистить поиск"
+              @mousedown.prevent
+              @click="clearSearch"
+            >
+              <UIcon
+                name="i-lucide-x"
+                class="size-3"
+              />
+            </button>
+          </template>
+        </UInput>
         <USelectMenu
           v-model="selectedTags"
           :items="availableTags"
@@ -393,6 +427,7 @@ const exportZip = async () => {
       v-model:open="creating"
       :registry="registry"
       :languages="languageCodes"
+      :prefix="filters.prefix"
       @created="onKeyCreated"
       @open="showExisting"
       @registry-changed="loadRegistry"

@@ -5,6 +5,9 @@
 export const KEY_ROOTS = ['common', 'app', 'web', 'brand', 'ds', 'test', 'legacy'] as const
 export type KeyRoot = typeof KEY_ROOTS[number]
 
+// Начала новых ключей: legacy.* приходит только импортом
+export const NEW_KEY_ROOTS = KEY_ROOTS.filter((root): root is Exclude<KeyRoot, 'legacy'> => root !== 'legacy')
+
 export type RegistryKind = 'game' | 'site' | 'brand' | 'test' | 'project'
 
 export interface KeyContext {
@@ -85,12 +88,13 @@ export const MIN_DESCRIPTION_LENGTH = 10
  * legacy.* — строки из файлов проектов, их приносит только импорт.
  */
 export function newKeyError(key: string, ctx: KeyContext): string | null {
-  const error = keyError(key, ctx)
-  if (error) return error
-  if (key.startsWith('legacy.')) {
+  // Начало — первым: «legacy» без продолжения — не «короткий ключ», а начало, которое новому ключу нельзя
+  const root = key.split('.')[0]!
+  if (root === 'legacy') {
     return 'legacy.* — строки из файлов проектов, они приходят только импортом. Новый ключ — по новой схеме: common., app.<игра>., web.<сайт>. … Или возьмите существующую строку из похожих'
   }
-  return null
+  if (key && !isRoot(root)) return `Ключ начинается с ${NEW_KEY_ROOTS.map(r => `${r}.`).join(', ')}`
+  return keyError(key, ctx)
 }
 
 /** Ошибка описания нового ключа или null. */

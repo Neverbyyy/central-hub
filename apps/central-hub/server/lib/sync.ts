@@ -3,7 +3,7 @@
 
 import { createHash } from 'node:crypto'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { filePath, legacyKey, readLocaleFile, renderLocaleFile, type LocaleEntry, type LocaleFormat } from '@amaya/l10n-core'
+import { filePath, keyInExportSet, legacyKey, readLocaleFile, renderLocaleFile, type LocaleEntry, type LocaleFormat } from '@amaya/l10n-core'
 import { HubError } from './errors'
 
 export interface ExportSet {
@@ -135,8 +135,8 @@ async function loadKeys(db: SupabaseClient, set: ExportSet, legacyOnly: boolean)
         .range(from, from + PAGE - 1)
       if (error) throw error
       for (const row of data as KeyRow[]) {
-        const excluded = set.exclude_prefixes.some(p => row.technical_key.startsWith(p))
-        if (row.technical_key.startsWith(prefix) && !excluded) rows.set(row.technical_key, row)
+        // То же правило показывает интерфейс: «Выгрузка в код: InApp»
+        if (row.technical_key.startsWith(prefix) && keyInExportSet(set, row.technical_key)) rows.set(row.technical_key, row)
       }
       if (data.length < PAGE) break
     }

@@ -35,7 +35,7 @@ const emit = defineEmits<{
 const toast = useToast()
 const authRedirect = useAuthRedirect()
 
-const PROJECTS: Record<string, string> = { inapp: 'InApp', pages_hub: 'Pages Hub' }
+const PROJECTS = EXPORT_PROJECTS
 
 const sets = ref<ExportSetInfo[] | null>(null)
 const setsError = ref('')

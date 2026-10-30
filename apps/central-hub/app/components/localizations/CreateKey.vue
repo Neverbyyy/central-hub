@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import { checkText, descriptionError, MIN_DESCRIPTION_LENGTH, newKeyError, type KeyContext, type RegistryKind } from '@amaya/l10n-core'
+import { descriptionError, MIN_DESCRIPTION_LENGTH, MIN_SEGMENTS, NEW_KEY_ROOTS, newKeyError, type KeyContext, type RegistryKind } from '@amaya/l10n-core'
 import type { RegistryEntry } from '~/composables/useLocalizations'
 
 // Новый ключ: имя проверяется на лету теми же правилами, что и в базе (packages/l10n-core),
 // а похожие строки показываются до создания — чтобы брать существующий ключ, а не плодить дубль.
+// Схему не нужно помнить: под полем — подсказки к следующей части ключа.
 const props = defineProps<{
   registry: RegistryEntry[]
   languages: string[]
+  // Раздел, открытый в дереве (app.cars2), — с него начинается новый ключ
+  prefix?: string
 }>()
 
 const emit = defineEmits<{
@@ -21,7 +24,8 @@ const open = defineModel<boolean>('open', { required: true })
 const toast = useToast()
 const authRedirect = useAuthRedirect()
 
-const emptyForm = () => ({ key: '', description: '', en: '', tags: [] as string[], maxLength: '' })
+// Тексты и лимит длины в форме не спрашиваем: текст вписывают потом в гриде или через MCP, лимит — в панели ключа
+const emptyForm = () => ({ key: '', description: '', tags: [] as string[] })
 const form = reactive(emptyForm())
 const pending = ref(false)
 const serverError = ref('')
@@ -33,6 +37,190 @@ const context = computed<KeyContext>(() => {
 })
 
 const key = computed(() => form.key.trim())
+
+// --- Ввод ключа с подсказками ---
+const keyInput = useTemplateRef('keyInput')
+const keyEl = () => keyInput.value?.inputRef as HTMLInputElement | null | undefined
+const keyFocused = ref(false)
+// Подсказки — только когда курсор в конце: правку в середине ключа они бы сбивали
+const caretAtEnd = ref(true)
+// Esc прячет подсказки до следующей буквы
+const dismissed = ref(false)
+
+const updateCaret = () => {
+  const el = keyEl()
+  caretAtEnd.value = !el || (el.selectionStart === el.value.length && el.selectionEnd === el.value.length)
+}
+
+// Пробелы, дефисы и заглавные сразу приводим к виду ключа: «Paywall Title» → paywall_title
+const normalizeKey = (value: string) => value.toLowerCase().replace(/[\s-]/g, '_')
+
+const onKeyInput = (value: string) => {
+  const normalized = normalizeKey(value)
+  form.key = normalized
+  dismissed.value = false
+  // Замены один к одному — курсор остаётся там, где печатали, а не прыгает в конец
+  const el = keyEl()
+  const pos = el?.selectionStart ?? normalized.length
+  if (normalized !== value) nextTick(() => el?.setSelectionRange(pos, pos))
+  updateCaret()
+}
+
+const focusKeyEnd = () => nextTick(() => {
+  const el = keyEl()
+  if (!el) return
+  el.focus()
+  el.setSelectionRange(el.value.length, el.value.length)
+  caretAtEnd.value = true
+})
+
+// Разделы, которые уже есть: из того же дерева, что слева. Без него подсказки — только начала и справочник
+interface TreeNode { path: string, label: string, keys: number, children: TreeNode[] }
+const tree = shallowRef<{ roots: TreeNode[], nodes: Map<string, TreeNode> }>({ roots: [], nodes: new Map() })
+
+const loadTree = async () => {
+  try {
+    const roots = await $fetch<TreeNode[]>('/api/keys/tree')
+    const nodes = new Map<string, TreeNode>()
+    const walk = (list: TreeNode[]) => list.forEach((node) => {
+      nodes.set(node.path, node)
+      walk(node.children)
+    })
+    walk(roots)
+    tree.value = { roots, nodes }
+  } catch {
+    // Форма работает и без разделов
+  }
+}
+
+watch(open, (value) => {
+  if (!value) return
+  loadTree()
+  // Стоите в дереве в app → cars2 — ключ начинается с app.cars2.; legacy новым ключам нельзя
+  const prefix = props.prefix?.replace(/\.$/, '')
+  if (!form.key && prefix && prefix.split('.')[0] !== 'legacy') form.key = `${prefix}.`
+}, { immediate: true })
+
+// Первая часть ключа — из «Как называть ключи»; порядок — от самого частого
+const ROOT_HINTS = {
+  app: 'Игра: пейволлы, онбординги, баннеры',
+  web: 'Сайт или лендинг',
+  common: 'Общее для всех: кнопки, ссылки, цены, фразы',
+  brand: 'Отличается по юрлицу',
+  ds: 'Строки компонентов дизайн-системы',
+  test: 'Только для A/B-теста: test.<тест>.'
+} satisfies Record<typeof NEW_KEY_ROOTS[number], string>
+
+// Типичные разделы — пока в игре или на сайте своих ещё нет
+const TYPICAL: Record<string, Record<string, string>> = {
+  common: { button: 'кнопки', link: 'ссылки', price: 'цены', period: 'периоды', legal: 'юридические фразы' },
+  app: { paywall: 'пейволл', onboarding: 'онбординг', banner: 'баннер' },
+  web: { home: 'главная страница', faq: 'вопросы и ответы' },
+  brand: { legal: 'юридические фразы' }
+}
+
+const KIND_ADD: Record<RegistryKind, string> = { game: 'игру', site: 'сайт', brand: 'бренд', test: 'тест', project: 'проект' }
+
+const keysCount = (path: string) => {
+  const count = tree.value.nodes.get(path)?.keys
+  return count ? `${count} ${plural(count, ['ключ', 'ключа', 'ключей'])}` : ''
+}
+
+// Куда попадёт ключ: app. — только InApp, web. — только Pages Hub, common. — в оба
+const { rules: exportRules, targetNames } = useExportRules()
+
+// Как только понятно начало. null — начала ещё нет или наборы не загрузились
+const keyTargets = computed(() => {
+  const value = key.value
+  const root = value.split('.')[0]!
+  if (!exportRules.value.length || !value.includes('.') || !(NEW_KEY_ROOTS as readonly string[]).includes(root)) return null
+  return targetNames(value.endsWith('.') ? value : `${value}.`)
+})
+
+interface Part { segment: string, hint: string, targets?: string }
+
+// Что может идти после готовых частей. closed — выбор из известного списка (начала, справочник)
+const partsAfter = (done: string[]): { parts: Part[], kind?: RegistryKind, closed: boolean } => {
+  const path = done.join('.')
+  // test.<тест>. — дальше обычный ключ: подсказки те же, что с начала
+  const inner = done[0] === 'test' && done.length >= 2 ? done.slice(2) : done
+  if (!inner.length) {
+    const roots = Object.entries(ROOT_HINTS).filter(([root]) => !(done[0] === 'test' && root === 'test'))
+    // У начала сразу видно, в какой проект уйдёт ключ: app. — InApp, web. — Pages Hub
+    return { parts: roots.map(([segment, hint]) => ({ segment, hint, targets: targetNames(`${path ? `${path}.` : ''}${segment}.`) })), closed: true }
+  }
+  const root = inner[0]!
+  const kind = inner.length === 1 ? KIND_BY_ROOT[root] : undefined
+  if (kind) {
+    const parts = props.registry
+      .filter(entry => entry.kind === kind)
+      .map(entry => ({ segment: entry.code, hint: [entry.title, keysCount(`${path}.${entry.code}`)].filter(Boolean).join(' · ') }))
+    return { parts, kind, closed: true }
+  }
+  const typical = inner.length === (KIND_BY_ROOT[root] ? 2 : 1) ? TYPICAL[root] ?? {} : {}
+  const existing = tree.value.nodes.get(path)?.children ?? []
+  const parts = existing.map(node => ({ segment: node.label, hint: [typical[node.label], keysCount(node.path)].filter(Boolean).join(' · ') }))
+  for (const [segment, hint] of Object.entries(typical)) {
+    if (!parts.some(part => part.segment === segment)) parts.push({ segment, hint })
+  }
+  return { parts, closed: false }
+}
+
+interface Suggestion { value: string, segment: string, hint: string, targets?: string, add?: RegistryKind }
+
+const suggestions = computed<Suggestion[]>(() => {
+  if (!keyFocused.value || !caretAtEnd.value || dismissed.value) return []
+  const done = form.key.split('.')
+  const partial = done.pop()!
+  if (done.some(part => !part)) return []
+  const { parts, kind, closed } = partsAfter(done)
+  const base = done.length ? `${done.join('.')}.` : ''
+  // Ищем и по началу части, и по пояснению: «игра» найдёт app., «cars» — Cars 2. По пояснению — от двух букв,
+  // иначе «a» нашло бы и test. («A/B-теста»)
+  const matches = parts.filter(part => part.segment.startsWith(partial) || (partial.length >= 2 && part.hint.toLowerCase().includes(partial)))
+  // Из известного списка ничего не подошло — показываем весь: видно, что можно
+  const shown = matches.length || !closed ? matches : parts
+  const list: Suggestion[] = shown.map(part => ({ value: `${base}${part.segment}.`, segment: part.segment, hint: part.hint, targets: part.targets }))
+  // Кода нет в справочнике — предлагаем добавить: после совпадений, а если их нет — первым
+  if (kind && /^[a-z0-9_]{2,}$/.test(partial) && !parts.some(part => part.segment === partial)) {
+    const add = { value: `${base}${partial}.`, segment: partial, hint: `добавить ${KIND_ADD[kind]} в справочник`, add: kind }
+    if (matches.length) list.push(add)
+    else list.unshift(add)
+  }
+  return list
+})
+
+// Пока часть не начали набирать, ничего не выбрано: Enter и Tab работают как обычно
+const active = ref(-1)
+watch(suggestions, (list) => {
+  active.value = list.length && form.key.split('.').at(-1) ? 0 : -1
+})
+
+const acceptSuggestion = (item: Suggestion) => {
+  onKeyInput(item.value)
+  if (item.add) nextTick(() => codeTitleInput.value?.inputRef?.select())
+  else focusKeyEnd()
+}
+
+const onKeyKeydown = (event: KeyboardEvent) => {
+  const list = suggestions.value
+  if (!list.length || event.isComposing) return
+  if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    event.preventDefault()
+    const step = event.key === 'ArrowDown' ? 1 : -1
+    active.value = active.value < 0 ? (step > 0 ? 0 : list.length - 1) : (active.value + step + list.length) % list.length
+  } else if ((event.key === 'Enter' || event.key === 'Tab') && active.value >= 0 && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
+    event.preventDefault()
+    acceptSuggestion(list[active.value]!)
+  }
+}
+
+// Esc при открытых подсказках прячет их, а не закрывает всю панель
+const onEscape = (event: KeyboardEvent) => {
+  if (!suggestions.value.length) return
+  event.preventDefault()
+  dismissed.value = true
+}
 
 // --- Имя уже занято: проверяем сразу при вводе, а не после «Создать ключ» ---
 // same — такой ключ есть; parent — начало нового ключа уже строка; inside — новый ключ стал бы началом существующего
@@ -52,15 +240,16 @@ const nameError = computed(() => (key.value ? newKeyError(key.value, context.val
 watchDebounced(key, async (value) => {
   if (!value || nameError.value) return
   const columns = 'technical_key, deprecated_at'
+  // Устаревшие ключи имя раздела не занимают (в выгрузку не попадают) — как и в базе. Совпадение целиком — занимают
   const [same, inside] = await Promise.all([
     supabase.from('localizations').select(columns).in('technical_key', [value, ...parentKeys(value)]),
-    supabase.from('localizations').select(columns).like('technical_key', `${escapeLike(value)}.%`).limit(1)
+    supabase.from('localizations').select(columns).like('technical_key', `${escapeLike(value)}.%`).is('deprecated_at', null).limit(1)
   ])
   if (value !== key.value) return
   type Row = { technical_key: string, deprecated_at: string | null }
   const rows = (same.data ?? []) as Row[]
   const exact = rows.find(row => row.technical_key === value)
-  const parent = rows.find(row => row.technical_key !== value)
+  const parent = rows.find(row => row.technical_key !== value && !row.deprecated_at)
   const row = exact ?? parent ?? (inside.data as Row[] | null)?.[0]
   taken.value = row
     ? { for: value, key: row.technical_key, kind: exact ? 'same' : parent ? 'parent' : 'inside', deprecated: !!row.deprecated_at }
@@ -78,11 +267,28 @@ const takenMessage = computed(() => {
       ? `Ключ «${t.key}» уже есть, он помечен устаревшим — верните его вместо нового`
       : `Ключ «${t.key}» уже есть`
   }
-  if (t.kind === 'parent') return `«${t.key}» — уже строка, а не раздел: внутри неё ключ не создать`
+  if (t.kind === 'parent') {
+    return `«${t.key}» — уже строка, а не раздел: внутри неё ключ не создать. Если это раздел, пометьте строку устаревшей — имя освободится`
+  }
   return `Уже есть ключ «${t.key}»: «${key.value}» — раздел, а не строка`
 })
 
-const keyMessage = computed(() => nameError.value ?? takenMessage.value)
+// Неизвестный код объясняет плашка «нет в справочнике» с кнопкой «Добавить» — второй раз красным не пишем
+const keyMessage = computed(() => (missingCode.value ? null : nameError.value ?? takenMessage.value))
+
+// Ключ ещё дописывают: точка в конце, есть подсказки к последней части или частей пока меньше трёх.
+// Пока поле в фокусе, это не ошибка; красным — только то, что дописыванием не исправить
+const unfinished = computed(() => {
+  const value = key.value
+  if (!value) return true
+  const parts = value.split('.')
+  // legacy — не «недописано»: такое начало новому ключу нельзя, объясняем сразу
+  if (parts[0] === 'legacy') return false
+  if (value.endsWith('.') || suggestions.value.length) return true
+  return parts.length < MIN_SEGMENTS && parts.every(Boolean) && (NEW_KEY_ROOTS as readonly string[]).includes(parts[0]!)
+})
+
+const shownKeyMessage = computed(() => (keyFocused.value && unfinished.value ? null : keyMessage.value))
 
 const openTaken = () => {
   if (!takenNow.value) return
@@ -135,7 +341,13 @@ const useCode = (code: string) => {
 }
 
 const codeTitle = ref('')
+const codeTitleInput = useTemplateRef('codeTitleInput')
 const addingCode = ref(false)
+
+// Название подставляем из кода — обычно остаётся только нажать Enter: dino → Dino
+watch(() => missingCode.value?.code, (code) => {
+  codeTitle.value = code ? code.charAt(0).toUpperCase() + code.slice(1).replaceAll('_', ' ') : ''
+})
 
 const addCode = async () => {
   const missing = missingCode.value
@@ -146,6 +358,8 @@ const addCode = async () => {
     toast.add({ title: `Добавлено в справочник: ${missing.code}`, color: 'success' })
     codeTitle.value = ''
     emit('registryChanged')
+    // Код есть — дальше раздел: курсор обратно в ключ, подсказки покажут типичные разделы
+    focusKeyEnd()
   } catch (error) {
     if (!(await authRedirect(error))) toast.add({ title: 'Не добавилось', description: errorMessage(error), color: 'error' })
   } finally {
@@ -153,25 +367,20 @@ const addCode = async () => {
   }
 }
 
-const maxLength = computed(() => Number(form.maxLength) || null)
-const textIssues = computed(() => checkText({ text: form.en, maxLength: maxLength.value, isNew: true }))
-const hasTextErrors = computed(() => textIssues.value.some(i => i.level === 'error'))
-
-// --- Похожие строки ---
+// --- Похожие строки: по ключу ---
 const similar = ref<{ technical_key: string, en: string | null, score: number }[]>([])
-const similarQuery = computed(() => ({ text: form.en.trim(), key: key.value }))
 
-watchDebounced(similarQuery, async (query) => {
-  if (!query.text && !query.key) {
+watchDebounced(key, async (value) => {
+  if (!value) {
     similar.value = []
     return
   }
   try {
-    similar.value = await $fetch('/api/keys/similar', { query })
+    similar.value = await $fetch('/api/keys/similar', { query: { key: value } })
   } catch {
     similar.value = []
   }
-}, { debounce: 300, deep: true })
+}, { debounce: 300 })
 
 const copyKey = async (value: string) => {
   try {
@@ -186,18 +395,17 @@ const copyKey = async (value: string) => {
 const blockers = computed(() => {
   const list: string[] = []
   if (!key.value) list.push('ключ')
-  else if (nameError.value) list.push('исправить ключ')
+  else if (missingCode.value) list.push(`добавить ${KIND_ADD[missingCode.value.kind]} в справочник`)
+  else if (nameError.value) list.push(unfinished.value ? 'дописать ключ' : 'исправить ключ')
   else if (takenMessage.value) list.push('другое имя ключа')
   if (descriptionError(form.description)) list.push(`описание от ${MIN_DESCRIPTION_LENGTH} символов`)
-  if (!form.en.trim()) list.push('текст на английском')
-  else if (hasTextErrors.value) list.push('исправить текст')
   return list
 })
 
 const canSubmit = computed(() => !blockers.value.length && !pending.value)
 
 // Ответ сервера относится к отправленной форме — после правки он уже неверен
-watch(() => [form.key, form.description, form.en], () => {
+watch(() => [form.key, form.description], () => {
   serverError.value = ''
 })
 
@@ -208,7 +416,7 @@ const submit = async () => {
   try {
     const created = await $fetch('/api/keys', {
       method: 'POST',
-      body: { key: key.value, description: form.description, en: form.en, tags: form.tags, maxLength: maxLength.value }
+      body: { key: key.value, description: form.description, tags: form.tags }
     })
     toast.add({ title: 'Ключ создан', description: created.key, color: 'success' })
     emit('created', created.key)
@@ -235,6 +443,8 @@ const onKeydown = (event: KeyboardEvent) => {
     title="Новый ключ"
     description="Имя по схеме «Как называть ключи», описание обязательно. Сначала посмотрите похожие строки."
     :ui="{ content: 'max-w-xl' }"
+    :content="{ onEscapeKeyDown: onEscape }"
+    @after:enter="focusKeyEnd"
   >
     <template #body>
       <form
@@ -245,17 +455,95 @@ const onKeydown = (event: KeyboardEvent) => {
         <UFormField
           label="Ключ"
           required
-          :error="keyMessage ?? undefined"
-          help="От общего к частному: app.cars2.paywall.title, common.button.continue.default"
+          :error="shownKeyMessage ?? undefined"
         >
-          <UInput
-            v-model="form.key"
-            class="w-full"
-            :ui="{ base: 'font-mono' }"
-            placeholder="app.cars2.paywall.title"
-            autofocus
-          />
-          <template #error="{ error }">
+          <template #help>
+            <span v-if="keyTargets === null">
+              Начните вводить — подсказки покажут, что дальше. От общего к частному: app.cars2.paywall.title
+            </span>
+            <span
+              v-else
+              class="inline-flex items-center gap-1"
+            >
+              <UIcon
+                name="i-lucide-git-pull-request"
+                class="size-3.5 shrink-0"
+              />
+              {{ keyTargets ? `Выгрузка в код: ${keyTargets}` : 'В код не выгружается: такие ключи не входят ни в один проект' }}
+            </span>
+          </template>
+          <div class="relative">
+            <UInput
+              ref="keyInput"
+              :model-value="form.key"
+              class="w-full"
+              :ui="{ base: 'font-mono' }"
+              placeholder="app.cars2.paywall.title"
+              autofocus
+              autocomplete="off"
+              spellcheck="false"
+              role="combobox"
+              aria-autocomplete="list"
+              aria-controls="key-suggestions"
+              :aria-expanded="suggestions.length > 0"
+              :aria-activedescendant="active >= 0 ? `key-suggestion-${active}` : undefined"
+              @update:model-value="onKeyInput"
+              @keydown="onKeyKeydown"
+              @keyup="updateCaret"
+              @click="updateCaret"
+              @focus="keyFocused = true; updateCaret()"
+              @blur="keyFocused = false"
+            />
+            <!-- Подсказки к следующей части ключа: клик не уводит фокус из поля -->
+            <div
+              v-if="suggestions.length"
+              class="absolute inset-x-0 top-full z-10 mt-1 overflow-hidden rounded-lg border border-default bg-default shadow-lg"
+            >
+              <ul
+                id="key-suggestions"
+                role="listbox"
+                aria-label="Подсказки к ключу"
+                class="max-h-64 overflow-y-auto p-1"
+              >
+                <li
+                  v-for="(item, i) in suggestions"
+                  :id="`key-suggestion-${i}`"
+                  :key="`${item.value}${item.add ? '+' : ''}`"
+                  role="option"
+                  :aria-selected="i === active"
+                  class="flex cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 text-sm"
+                  :class="i === active ? 'bg-elevated' : ''"
+                  @mousedown.prevent
+                  @mousemove="active = i"
+                  @click="acceptSuggestion(item)"
+                >
+                  <UIcon
+                    v-if="item.add"
+                    name="i-lucide-plus"
+                    class="size-4 shrink-0 text-primary"
+                  />
+                  <span class="shrink-0 font-mono text-highlighted">{{ item.segment }}.</span>
+                  <span
+                    class="min-w-0 truncate text-xs"
+                    :class="item.add ? 'text-primary' : 'text-muted'"
+                  >{{ item.hint }}</span>
+                  <span
+                    v-if="item.targets"
+                    class="ml-auto shrink-0 rounded bg-elevated px-1.5 py-0.5 text-[11px] text-toned"
+                    :title="`Выгрузка в код: ${item.targets}`"
+                  >{{ item.targets }}</span>
+                </li>
+              </ul>
+              <p class="border-t border-default px-3 py-1.5 text-[11px] text-muted">
+                <UKbd>↑</UKbd> <UKbd>↓</UKbd> выбрать · <UKbd>Enter</UKbd> или <UKbd>Tab</UKbd> подставить · <UKbd>Esc</UKbd> скрыть
+              </p>
+            </div>
+          </div>
+          <!-- Слот — только при ошибке: объявленный всегда, он прятал подсказку под полем (UFormField рисует одно из двух) -->
+          <template
+            v-if="shownKeyMessage"
+            #error="{ error }"
+          >
             {{ error }}
             <button
               v-if="takenNow && !nameError"
@@ -293,6 +581,7 @@ const onKeydown = (event: KeyboardEvent) => {
           <span>{{ similarCodes.length ? 'Или добавить' : 'Добавить' }} в справочник как {{ KIND_NEW[missingCode.kind] }}:</span>
           <div class="flex gap-2">
             <UInput
+              ref="codeTitleInput"
               v-model="codeTitle"
               size="sm"
               class="flex-1"
@@ -325,48 +614,13 @@ const onKeydown = (event: KeyboardEvent) => {
           />
         </UFormField>
 
-        <UFormField
-          label="Текст (EN)"
-          required
-        >
-          <UTextarea
-            v-model="form.en"
+        <UFormField label="Теги">
+          <UInputTags
+            v-model="form.tags"
             class="w-full"
-            :rows="2"
-            autoresize
+            placeholder="Enter — добавить"
           />
-          <ul
-            v-if="textIssues.length"
-            class="mt-1 flex flex-col gap-0.5 text-xs"
-          >
-            <li
-              v-for="issue in textIssues"
-              :key="issue.message"
-              :class="issue.level === 'error' ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400'"
-            >
-              {{ issue.message }}
-            </li>
-          </ul>
         </UFormField>
-
-        <div class="grid grid-cols-2 gap-3">
-          <UFormField label="Теги">
-            <UInputTags
-              v-model="form.tags"
-              class="w-full"
-              placeholder="Enter — добавить"
-            />
-          </UFormField>
-          <UFormField label="Лимит длины">
-            <UInput
-              v-model="form.maxLength"
-              type="number"
-              min="1"
-              class="w-full"
-              placeholder="без лимита"
-            />
-          </UFormField>
-        </div>
 
         <section>
           <h3 class="mb-1 text-xs font-semibold text-muted">
@@ -376,7 +630,7 @@ const onKeydown = (event: KeyboardEvent) => {
             v-if="!similar.length"
             class="text-xs text-muted"
           >
-            {{ form.en || form.key ? 'Похожих нет' : 'Появятся, когда начнёте вводить ключ или текст' }}
+            {{ form.key ? 'Похожих нет' : 'Появятся, когда начнёте вводить ключ' }}
           </p>
           <ul
             v-else

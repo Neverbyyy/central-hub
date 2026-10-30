@@ -70,9 +70,21 @@ describe('newKeyError', () => {
     expect(newKeyError(key, ctx)).toContain('только импортом')
   })
 
-  it('обычный ключ — без ошибки, ошибки keyError сохраняются', () => {
+  it('«legacy» без продолжения — тоже про импорт, а не «короткий ключ»', () => {
+    expect(newKeyError('legacy', ctx)).toContain('только импортом')
+    expect(newKeyError('legacy.inapp', ctx)).toContain('только импортом')
+  })
+
+  it('неизвестное начало: в списке допустимых нет legacy', () => {
+    const error = newKeyError('App.title.x', ctx)
+    expect(error).toContain('Ключ начинается с common.')
+    expect(error).not.toContain('legacy')
+  })
+
+  it('обычный ключ — без ошибки, остальные ошибки keyError сохраняются', () => {
     expect(newKeyError('common.button.continue.default', ctx)).toBeNull()
-    expect(newKeyError('App.title.x', ctx)).toBe(keyError('App.title.x', ctx))
+    expect(newKeyError('common.Button.x', ctx)).toBe(keyError('common.Button.x', ctx))
+    expect(newKeyError('app.cars2', ctx)).toBe(keyError('app.cars2', ctx))
   })
 })
 

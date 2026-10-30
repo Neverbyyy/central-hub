@@ -1,10 +1,21 @@
-import { beforeAll, describe, expect, it } from 'vitest'
-import { ANCHOR, ensureAnchor, readAnchor, service } from './clients'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { ACTOR, ANCHOR, ensureAnchor, readAnchor, service } from './clients'
 
 // Здесь только записи, которые база обязана отклонить. Если правило сломается,
 // мусорная строка останется навсегда — удалять строки нельзя никому.
 
-beforeAll(ensureAnchor)
+const restore = (keys: string[]) => service.rpc('restore_keys', { p_keys: keys, p_actor: ACTOR, p_source: 'test' })
+const deprecate = (keys: string[]) => service.rpc('deprecate_keys', { p_keys: keys, p_actor: ACTOR, p_source: 'test' })
+
+// Начало ключа проверяется только среди действующих: якорь должен быть действующим
+beforeAll(async () => {
+  await ensureAnchor()
+  await restore([ANCHOR])
+})
+
+afterAll(async () => {
+  await deprecate([ANCHOR])
+})
 
 const insert = (row: Record<string, unknown>) =>
   service.from('localizations').insert({ description: 'Автотест правил', ...row })
@@ -36,6 +47,29 @@ describe('правила имени ключа в базе', () => {
   ])('ключ не может быть началом другого: %s (%s)', async (key) => {
     const { error } = await insert({ technical_key: key })
     expect(error?.message).toContain('один ключ не может быть началом другого')
+  })
+
+  // Пара служебных ключей создаётся при первом прогоне и дальше лежит: строка (устаревшая) и ключ внутри неё
+  const LEAF = 'common.selftest.freed_name'
+  const INSIDE = `${LEAF}.inside`
+
+  it('устаревший ключ не занимает имя: внутри него можно создать ключ', async () => {
+    const { data: leaf } = await service.from('localizations').select('technical_key').eq('technical_key', LEAF).maybeSingle()
+    if (!leaf) expect((await insert({ technical_key: LEAF })).error).toBeNull()
+    await deprecate([LEAF])
+    // Повторный прогон: строка уже есть — upsert всё равно проходит проверку начала ключа в триггере
+    const { error } = await service.from('localizations').upsert(
+      { technical_key: INSIDE, description: 'Автотест правил: ключ внутри устаревшей строки', translations: { en: 'Selftest' } },
+      { onConflict: 'technical_key', ignoreDuplicates: true }
+    )
+    expect(error).toBeNull()
+  })
+
+  it('устаревший ключ не вернуть, если его место занял новый', async () => {
+    const { error } = await restore([LEAF])
+    expect(error?.message).toContain(`Ключ «${LEAF}» не вернуть: его место занял «${INSIDE}»`)
+    const { data } = await service.from('localizations').select('deprecated_at').eq('technical_key', LEAF).single()
+    expect(data!.deprecated_at).not.toBeNull()
   })
 
   it('переводы только на известных языках и только строками', async () => {
