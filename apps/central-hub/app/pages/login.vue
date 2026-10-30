@@ -1,6 +1,6 @@
 <script setup lang="ts">
 definePageMeta({ layout: false })
-useSeoMeta({ title: 'Вход — Central Hub' })
+useSeoMeta({ title: 'Вход — Amaya Central Hub' })
 
 const route = useRoute()
 const user = useHubUser()
@@ -20,6 +20,7 @@ if (user.value.authed && user.value.name && !changingName.value) {
 }
 
 const password = ref('')
+const showPassword = ref(false)
 const name = ref(user.value.name ?? '')
 const error = ref('')
 const pending = ref(false)
@@ -48,31 +49,32 @@ const submit = async () => {
 </script>
 
 <template>
-  <div class="flex min-h-dvh items-center justify-center bg-gray-50 p-4 text-gray-900">
+  <div class="flex min-h-dvh items-center justify-center bg-muted p-4 text-highlighted">
     <form
-      class="w-full max-w-sm rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+      class="w-full max-w-sm rounded-2xl border border-default bg-default p-6 shadow-sm"
       @submit.prevent="submit"
     >
       <div class="mb-6 flex items-center gap-2 text-sm font-bold">
-        <div class="flex items-center justify-center rounded-xl bg-gray-900 p-1 text-gray-50">
+        <div class="flex items-center justify-center rounded-xl bg-inverted p-1 text-inverted">
           <UIcon
             name="i-lucide-languages"
             class="size-6"
           />
         </div>
-        Central Hub
+        Amaya Central Hub
       </div>
 
       <template v-if="step === 'password'">
         <h1 class="mb-1 text-lg font-semibold">
           Вход
         </h1>
-        <p class="mb-4 text-sm text-gray-500">
+        <p class="mb-4 text-sm text-muted">
           Сервис закрыт общим паролем команды.
         </p>
         <UInput
+          id="password"
           v-model="password"
-          type="password"
+          :type="showPassword ? 'text' : 'password'"
           placeholder="Пароль"
           autocomplete="current-password"
           autofocus
@@ -80,14 +82,31 @@ const submit = async () => {
           class="w-full"
           :color="error ? 'error' : 'primary'"
           :highlight="!!error"
-        />
+          :ui="{ trailing: 'pe-1' }"
+        >
+          <template #trailing>
+            <!-- mousedown.prevent: фокус и курсор остаются в поле, можно сразу печатать дальше -->
+            <UButton
+              type="button"
+              color="neutral"
+              variant="link"
+              size="sm"
+              :icon="showPassword ? 'i-lucide-eye-off' : 'i-lucide-eye'"
+              :aria-label="showPassword ? 'Скрыть пароль' : 'Показать пароль'"
+              :aria-pressed="showPassword"
+              aria-controls="password"
+              @mousedown.prevent
+              @click="showPassword = !showPassword"
+            />
+          </template>
+        </UInput>
       </template>
 
       <template v-else>
         <h1 class="mb-1 text-lg font-semibold">
           Как вас зовут?
         </h1>
-        <p class="mb-4 text-sm text-gray-500">
+        <p class="mb-4 text-sm text-muted">
           Имя подписывает ваши правки в истории строк.
         </p>
         <UInput
@@ -103,7 +122,7 @@ const submit = async () => {
 
       <p
         v-if="error"
-        class="mt-2 text-sm text-red-600"
+        class="mt-2 text-sm text-red-600 dark:text-red-400"
         role="alert"
       >
         {{ error }}

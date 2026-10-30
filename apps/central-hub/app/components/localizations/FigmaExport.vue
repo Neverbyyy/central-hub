@@ -153,13 +153,13 @@ const onKeydown = (event: KeyboardEvent) => {
         class="space-y-4 text-sm"
         @keydown="onKeydown"
       >
-        <section class="rounded-lg border border-gray-200 p-3">
+        <section class="rounded-lg border border-default p-3">
           <div class="flex items-start justify-between gap-3">
             <div>
-              <h3 class="font-semibold text-gray-900">
+              <h3 class="font-semibold text-highlighted">
                 Amaya Hub — Локализация
               </h3>
-              <p class="mt-0.5 text-xs text-gray-500">
+              <p class="mt-0.5 text-xs text-muted">
                 Разделы и языки выбираются в плагине. Тексты правятся здесь в сервисе.
               </p>
             </div>
@@ -175,25 +175,25 @@ const onKeydown = (event: KeyboardEvent) => {
               Скачать плагин
             </UButton>
           </div>
-          <ol class="mt-2 list-decimal space-y-0.5 pl-4 text-xs text-gray-600">
+          <ol class="mt-2 list-decimal space-y-0.5 pl-4 text-xs text-toned">
             <li>Распакуйте архив.</li>
             <li>В приложении Figma для компьютера: Plugins → Development → Import plugin from manifest → <code>manifest.json</code>.</li>
             <li>Запустите плагин и вставьте токен — его выдаёт владелец сервиса.</li>
           </ol>
         </section>
 
-        <p class="text-xs text-gray-500">
+        <p class="text-xs text-muted">
           Без плагина — архив для встроенного импорта: файл на каждый язык. Перетащите все файлы в окно Variables:
           каждый станет режимом, имена через / — деревом групп.
         </p>
 
         <section>
-          <h3 class="mb-1.5 text-xs font-semibold text-gray-500">
+          <h3 class="mb-1.5 text-xs font-semibold text-muted">
             Разделы
           </h3>
           <div
             v-if="!tree"
-            class="text-xs text-gray-400"
+            class="text-xs text-muted"
           >
             Загрузка разделов…
           </div>
@@ -210,7 +210,7 @@ const onKeydown = (event: KeyboardEvent) => {
               <button
                 v-if="row.hasChildren"
                 type="button"
-                class="flex size-6 shrink-0 items-center justify-center rounded text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                class="flex size-6 shrink-0 items-center justify-center rounded text-muted hover:bg-elevated hover:text-default"
                 :aria-expanded="expanded.has(row.path)"
                 :aria-label="`${expanded.has(row.path) ? 'Свернуть' : 'Развернуть'} ${row.label}`"
                 @click="toggleExpanded(row.path)"
@@ -234,7 +234,7 @@ const onKeydown = (event: KeyboardEvent) => {
                   <span class="font-mono text-xs">{{ row.label }}</span>
                   <span
                     v-if="row.keys"
-                    class="ml-2 text-[10px] tabular-nums text-gray-400"
+                    class="ml-2 text-[10px] tabular-nums text-muted"
                   >{{ row.keys }}</span>
                 </template>
               </UCheckbox>
@@ -243,7 +243,7 @@ const onKeydown = (event: KeyboardEvent) => {
         </section>
 
         <section>
-          <h3 class="mb-1.5 text-xs font-semibold text-gray-500">
+          <h3 class="mb-1.5 text-xs font-semibold text-muted">
             Языки — режимы
           </h3>
           <div class="flex flex-wrap gap-1">
@@ -265,7 +265,7 @@ const onKeydown = (event: KeyboardEvent) => {
 
     <template #footer>
       <div class="flex w-full items-center justify-between gap-3">
-        <span class="text-xs text-gray-500">
+        <span class="text-xs text-muted">
           {{ total }} {{ plural(total, ['ключ', 'ключа', 'ключей']) }} · {{ chosenLanguages.length }} {{ plural(chosenLanguages.length, ['режим', 'режима', 'режимов']) }}
         </span>
         <UButton

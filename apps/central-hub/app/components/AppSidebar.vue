@@ -14,29 +14,29 @@ const logout = async () => {
 </script>
 
 <template>
-  <div class="flex flex-col justify-between w-64 p-2 bg-mist-50 border-r border-gray-200 flex flex-col">
+  <div class="flex flex-col justify-between w-64 p-2 bg-mist-50 dark:bg-gray-950 border-r border-default flex flex-col">
     <section class="flex flex-col mx-2">
       <ULink
         raw
         to="/"
         class="flex text-sm font-bold px-4 py-2 mb-4 rounded-lg flex gap-2 items-center"
       >
-        <div class="bg-gray-900 p-1 rounded-xl text-gray-50 flex items-center justify-center">
+        <div class="bg-inverted p-1 rounded-xl text-inverted flex items-center justify-center">
           <UIcon
-            name="glyphs:road-duo"
+            name="i-lucide-languages"
             class="size-6"
           />
         </div>
 
-        Central Hub Avenue
+        Amaya Central Hub
       </ULink>
 
       <div class="d-flex">
         <ULink
           raw
           to="/"
-          class="flex px-4 py-2 mb-1 rounded-lg text-sm text-gray-900 hover:bg-mist-100"
-          active-class="bg-mist-100 font-bold"
+          class="flex px-4 py-2 mb-1 rounded-lg text-sm text-highlighted hover:bg-mist-100 dark:hover:bg-gray-800"
+          active-class="bg-mist-100 dark:bg-gray-800 font-bold"
           inactive-class=""
         >
           <UIcon
@@ -49,8 +49,8 @@ const logout = async () => {
         <ULink
           raw
           to="/localizations"
-          class="flex px-4 py-2 rounded-lg text-sm text-gray-900 hover:bg-mist-100"
-          active-class="bg-mist-100 font-bold"
+          class="flex px-4 py-2 rounded-lg text-sm text-highlighted hover:bg-mist-100 dark:hover:bg-gray-800"
+          active-class="bg-mist-100 dark:bg-gray-800 font-bold"
           inactive-class=""
         >
           <UIcon
@@ -62,7 +62,7 @@ const logout = async () => {
 
         <!-- A/B-тестов в сервисе пока нет: пункт виден, но не ведёт на страницу прототипа -->
         <span
-          class="flex items-center px-4 py-2 rounded-lg text-sm text-gray-400 cursor-not-allowed select-none"
+          class="flex items-center px-4 py-2 rounded-lg text-sm text-muted cursor-not-allowed select-none"
           aria-disabled="true"
           title="A/B-тесты появятся позже"
         >
@@ -77,16 +77,31 @@ const logout = async () => {
     </section>
 
     <footer>
+      <!-- Настройки — внизу, над именем: нужны редко и не мешают разделам -->
+      <ULink
+        raw
+        to="/settings"
+        class="flex mx-2 mb-2 px-4 py-2 rounded-lg text-sm text-highlighted hover:bg-mist-100 dark:hover:bg-gray-800"
+        active-class="bg-mist-100 dark:bg-gray-800 font-bold"
+        inactive-class=""
+      >
+        <UIcon
+          name="ri:settings-3-line"
+          class="size-5 mr-2"
+        />
+        Настройки
+      </ULink>
+
       <div
         v-if="user.name"
-        class="flex items-center gap-1 pt-2 px-2 border-t border-gray-200"
+        class="flex items-center gap-1 pt-2 px-2 border-t border-default"
       >
         <UIcon
           name="i-lucide-user-round"
-          class="size-4 shrink-0 text-gray-500"
+          class="size-4 shrink-0 text-muted"
         />
         <span
-          class="flex-1 min-w-0 px-1 truncate text-sm text-gray-700"
+          class="flex-1 min-w-0 px-1 truncate text-sm text-default"
           :title="`Правки подписаны именем «${user.name}»`"
         >{{ user.name }}</span>
         <UButton

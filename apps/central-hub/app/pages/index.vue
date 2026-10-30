@@ -4,7 +4,7 @@
 onMounted(async () => {
   // // Пытаемся просто постучаться в таблицу (даже если она пустая)
   // const { data, error } = await supabase.from('localizations').select('technical_key')
-  
+
   // if (error) {
   //   console.error('Ошибка подключения:', error.message)
   // } else {
@@ -15,13 +15,15 @@ onMounted(async () => {
 
 <template>
   <div class="flex flex-col gap-4 p-4">
-    <h2 class="font-bold">Ссылки</h2>
+    <h2 class="font-bold">
+      Ссылки
+    </h2>
 
     <div class="flex gap-4 mb-4">
       <UCard
         title="Локализации"
         description="Управление всеми локализациями с возможностью выгрузки."
-        class="w-xs hover:cursor-pointer transition-all shadow-xl shadow-amber-50 hover:bg-gray-100 rounded-xl"
+        class="w-xs hover:cursor-pointer transition-all shadow-xl shadow-amber-50 dark:shadow-black/40 hover:bg-elevated hover:ring-accented dark:hover:bg-gray-700/60 dark:hover:ring-gray-600 rounded-xl"
         @click="navigateTo('/localizations')"
       />
 
@@ -33,12 +35,14 @@ onMounted(async () => {
         <UCard
           title="WebViews"
           description="Все варианты WebView используемые в тестах и не только."
-          class="w-xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 hover:bg-gray-100 rounded-xl"
+          class="w-xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 dark:shadow-black/40 hover:bg-elevated hover:ring-accented dark:hover:bg-gray-700/60 dark:hover:ring-gray-600 rounded-xl"
         />
       </NuxtLink>
     </div>
 
-    <h2 class="font-bold">Сервисы</h2>
+    <h2 class="font-bold">
+      Сервисы
+    </h2>
 
     <div class="flex gap-4 mb-4">
       <NuxtLink
@@ -48,7 +52,7 @@ onMounted(async () => {
       >
         <UCard
           title="Notion"
-          class="w-3xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 hover:bg-gray-100 rounded-xl"
+          class="w-3xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 dark:shadow-black/40 hover:bg-elevated hover:ring-accented dark:hover:bg-gray-700/60 dark:hover:ring-gray-600 rounded-xl"
         />
       </NuxtLink>
 
@@ -59,7 +63,7 @@ onMounted(async () => {
       >
         <UCard
           title="Rive"
-          class="w-3xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 hover:bg-gray-100 rounded-xl"
+          class="w-3xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 dark:shadow-black/40 hover:bg-elevated hover:ring-accented dark:hover:bg-gray-700/60 dark:hover:ring-gray-600 rounded-xl"
         />
       </NuxtLink>
 
@@ -70,7 +74,7 @@ onMounted(async () => {
       >
         <UCard
           title="Vercel"
-          class="w-3xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 hover:bg-gray-100 rounded-xl"
+          class="w-3xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 dark:shadow-black/40 hover:bg-elevated hover:ring-accented dark:hover:bg-gray-700/60 dark:hover:ring-gray-600 rounded-xl"
         />
       </NuxtLink>
 
@@ -81,7 +85,7 @@ onMounted(async () => {
       >
         <UCard
           title="Sanity"
-          class="w-3xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 hover:bg-gray-100 rounded-xl"
+          class="w-3xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 dark:shadow-black/40 hover:bg-elevated hover:ring-accented dark:hover:bg-gray-700/60 dark:hover:ring-gray-600 rounded-xl"
         />
       </NuxtLink>
     </div>

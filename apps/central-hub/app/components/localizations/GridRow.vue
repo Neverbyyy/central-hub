@@ -61,8 +61,8 @@ const cellTitle = (lang: string) => {
     </div>
 
     <div
-      class="loc-cell loc-sticky left-[40px] border-r border-gray-200 px-3 font-mono text-[11px] font-semibold"
-      :class="[isNew ? 'text-green-600' : 'text-blue-600', { 'is-active': activeCol === 0 }]"
+      class="loc-cell loc-sticky left-[40px] border-r border-default px-3 font-mono text-[11px] font-semibold"
+      :class="[isNew ? 'text-green-600 dark:text-green-400' : 'text-blue-600 dark:text-blue-400', { 'is-active': activeCol === 0 }]"
       @mousedown="emit('cellDown', index, 0)"
       @dblclick="emit('cellDblclick', index, 0)"
     >
@@ -87,7 +87,7 @@ const cellTitle = (lang: string) => {
       >{{ row.translations[lang] }}</span>
       <span
         v-else
-        class="text-gray-300"
+        class="text-gray-300 dark:text-gray-600"
       >—</span>
 
       <span
@@ -120,10 +120,10 @@ const cellTitle = (lang: string) => {
       />
     </div>
 
-    <div class="loc-cell px-3 text-[10px] text-gray-400">
+    <div class="loc-cell px-3 text-[10px] text-muted">
       {{ formatDate(row.created_at) }}
     </div>
-    <div class="loc-cell px-3 text-[10px] text-gray-400">
+    <div class="loc-cell px-3 text-[10px] text-muted">
       {{ formatDate(row.updated_at) }}
     </div>
   </div>

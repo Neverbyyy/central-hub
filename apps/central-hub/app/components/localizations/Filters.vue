@@ -22,6 +22,7 @@ const ALL = 'all'
 const statusItems = [
   { label: 'Все статусы', value: ALL },
   { label: '✦ От ИИ', value: 'ai' },
+  { label: 'Не утверждённые', value: 'pending' },
   { label: 'Черновики', value: 'draft' },
   { label: 'Утверждённые', value: 'approved' }
 ]
@@ -45,6 +46,13 @@ const missingModel = computed({
   }
 })
 
+// Раздел — хлебными крошками: клик по части пути переводит фильтр на этот уровень, × снимает его целиком.
+// Любой уровень — один клик, сколько бы ни было вложенности
+const crumbs = computed(() => {
+  const parts = prefix.value.replace(/\.$/, '').split('.')
+  return parts.map((label, i) => ({ label, prefix: `${parts.slice(0, i + 1).join('.')}.` }))
+})
+
 const toast = useToast()
 
 const copyLink = async () => {
@@ -58,7 +66,7 @@ const copyLink = async () => {
 </script>
 
 <template>
-  <div class="flex shrink-0 flex-wrap items-center gap-2 border-b border-gray-200 px-4 py-2">
+  <div class="flex shrink-0 flex-wrap items-center gap-2 border-b border-default px-4 py-2">
     <USelect
       v-model="statusModel"
       :items="statusItems"
@@ -107,11 +115,40 @@ const copyLink = async () => {
       size="lg"
       class="gap-1 font-mono"
     >
-      {{ prefix }}
+      <nav
+        aria-label="Раздел"
+        class="flex items-center gap-0.5"
+      >
+        <template
+          v-for="(crumb, i) in crumbs"
+          :key="crumb.prefix"
+        >
+          <span
+            v-if="i"
+            class="text-gray-300 dark:text-gray-600"
+            aria-hidden="true"
+          >›</span>
+          <button
+            v-if="i < crumbs.length - 1"
+            type="button"
+            class="text-muted underline-offset-2 hover:text-highlighted hover:underline"
+            :title="`Перейти к ${crumb.prefix}`"
+            @click="prefix = crumb.prefix"
+          >
+            {{ crumb.label }}
+          </button>
+          <span
+            v-else
+            class="text-highlighted"
+            aria-current="location"
+          >{{ crumb.label }}</span>
+        </template>
+      </nav>
       <button
         type="button"
-        class="ml-1 text-gray-400 hover:text-gray-700"
+        class="ml-1 text-muted hover:text-default"
         aria-label="Убрать раздел"
+        title="Убрать раздел"
         @click="prefix = ''"
       >
         <UIcon

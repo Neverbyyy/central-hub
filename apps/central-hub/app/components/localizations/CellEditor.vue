@@ -55,7 +55,7 @@ const onKeydown = (e: KeyboardEvent) => {
     v-model="value"
     rows="1"
     spellcheck="false"
-    class="absolute left-0 top-0 z-40 block w-[max(100%,320px)] min-h-full resize-none bg-white px-3 py-[9px] text-xs leading-[18px] text-gray-900 shadow-lg ring-2 ring-inset ring-blue-500 outline-none"
+    class="absolute left-0 top-0 z-40 block w-[max(100%,320px)] min-h-full resize-none bg-default px-3 py-[9px] text-xs leading-[18px] text-highlighted shadow-lg ring-2 ring-inset ring-blue-500 outline-none"
     @input="autosize"
     @keydown="onKeydown"
     @blur="finish('blur')"

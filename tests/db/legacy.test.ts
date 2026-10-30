@@ -43,13 +43,18 @@ describe('правка в сервисе', () => {
   const setTranslation = (value: string) =>
     service.rpc('set_translation', { p_key: KEY, p_lang: 'de', p_value: value, p_actor: ACTOR, p_source: 'test' })
 
-  it('меняет в выгрузке ровно одну строку одного файла', async () => {
+  it('без утверждения не меняет выгрузку, после — ровно одну строку одного файла', async () => {
     const before = await exportSet(service, 'pages_hub')
     const { data: row } = await service.from('localizations').select('translations, status').eq('technical_key', KEY).single()
     const original = row!.translations.de as string
 
     try {
       expect((await setTranslation(`${original} (тест)`)).error).toBeNull()
+      // Черновик в проект не уходит
+      expect((await exportSet(service, 'pages_hub')).revision).toBe(before.revision)
+
+      const approved = await service.rpc('approve_translations', { p_key: KEY, p_langs: ['de'], p_actor: ACTOR })
+      expect(approved.error).toBeNull()
       const after = await exportSet(service, 'pages_hub')
       expect(after.revision).not.toBe(before.revision)
 

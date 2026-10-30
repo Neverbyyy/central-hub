@@ -64,6 +64,25 @@ watch([items, () => props.prefix], ([list, prefix]) => {
   if (open.size !== expanded.value.length) expanded.value = [...open]
 }, { immediate: true })
 
+// Фильтр сняли (×, «Все ключи», повторный клик) — сворачивается только раздел, из которого ушли.
+// Поднялись выше по хлебным крошкам — ещё и разделы между ними: новый уровень выглядит так же,
+// как если бы его выбрали в дереве. Верхний уровень остаётся раскрытым
+watch(() => props.prefix, (prefix, previous) => {
+  if (!previous || prefix === previous || !previous.startsWith(prefix)) return
+  const left = previous.replace(/\.$/, '')
+  const close = new Set(prefix ? [...ancestors(left), left].filter(path => path.startsWith(prefix)) : [left])
+  for (const item of items.value) close.delete(item.value)
+  expanded.value = expanded.value.filter(path => !close.has(path))
+})
+
+// Клик по раскрытой, но не выбранной папке выбирает её и не сворачивает — иначе выбор прятал бы содержимое.
+// Клик по выбранной снимает выбор и сворачивает; стрелки клавиатуры работают как обычно
+const onToggle = (event: { detail: { originalEvent: Event, isExpanded: boolean }, preventDefault: () => void }, item: Item) => {
+  if (event.detail.originalEvent.type !== 'click') return
+  const wasSelected = props.prefix.replace(/\.$/, '') === item.value
+  if (!wasSelected && event.detail.isExpanded) event.preventDefault()
+}
+
 const findItem = (list: Item[], value: string): Item | undefined => {
   for (const item of list) {
     if (item.value === value) return item
@@ -81,11 +100,11 @@ const onSelect = (item: Item | undefined) => {
 </script>
 
 <template>
-  <aside class="flex w-60 shrink-0 flex-col overflow-hidden border-r border-gray-200 bg-white">
+  <aside class="flex w-60 shrink-0 flex-col overflow-hidden border-r border-default bg-default">
     <button
       type="button"
-      class="mx-2 mt-2 mb-1 flex items-center justify-between rounded-md px-2 py-1.5 text-left text-sm hover:bg-gray-50"
-      :class="!prefix ? 'font-semibold text-gray-900' : 'text-gray-600'"
+      class="mx-2 mt-2 mb-1 flex items-center justify-between rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted"
+      :class="!prefix ? 'font-semibold text-highlighted' : 'text-toned'"
       @click="emit('select', '')"
     >
       Все ключи
@@ -93,12 +112,12 @@ const onSelect = (item: Item | undefined) => {
     <div class="flex-1 overflow-auto px-1 pb-3">
       <div
         v-if="status === 'error' && !data"
-        class="px-2 py-1 text-xs text-gray-500"
+        class="px-2 py-1 text-xs text-muted"
       >
         Разделы не загрузились.
         <button
           type="button"
-          class="font-medium text-gray-700 underline underline-offset-2"
+          class="font-medium text-default underline underline-offset-2"
           @click="refresh()"
         >
           Повторить
@@ -118,12 +137,12 @@ const onSelect = (item: Item | undefined) => {
           :style="{ paddingLeft: `${row.level * 16}px` }"
         >
           <!-- Тон как у полосок скелетона в гриде, иначе на белом фоне их не видно -->
-          <USkeleton class="size-4 rounded bg-gray-200" />
+          <USkeleton class="size-4 rounded bg-accented" />
           <USkeleton
-            class="h-3 rounded bg-gray-200"
+            class="h-3 rounded bg-accented"
             :style="{ width: `${row.width}px` }"
           />
-          <USkeleton class="ml-auto h-2.5 w-6 rounded bg-gray-100" />
+          <USkeleton class="ml-auto h-2.5 w-6 rounded bg-elevated" />
         </div>
       </div>
       <UTree
@@ -134,13 +153,14 @@ const onSelect = (item: Item | undefined) => {
         :get-key="(item: Item) => item.value"
         size="sm"
         @update:model-value="onSelect"
+        @toggle="onToggle"
       >
         <template #item-label="{ item }">
           <span class="font-mono text-xs">{{ item.label }}</span>
         </template>
         <!-- Свой хвост пункта: число ключей и стрелка, которую иначе рисует сам UTree -->
         <template #item-trailing="{ item, ui }">
-          <span class="text-[10px] tabular-nums text-gray-400">{{ item.keys }}</span>
+          <span class="text-[10px] tabular-nums text-muted">{{ item.keys }}</span>
           <UIcon
             v-if="item.children?.length"
             name="i-lucide-chevron-down"

@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import type { DropdownMenuItem } from '@nuxt/ui'
 import JSZip from 'jszip'
+import type { Localization } from '~/composables/useLocalizations'
 
 definePageMeta({ title: 'Локализации' })
 
 const toast = useToast()
+const authRedirect = useAuthRedirect()
 
 const {
   languages,
@@ -164,6 +166,51 @@ const restoreSelected = async () => {
   deprecating.value = false
 }
 
+// Выделенные ключи целиком: все языки с текстом становятся утверждёнными и уходят в выгрузку в проекты
+const approving = ref(false)
+
+// Есть что утверждать: язык с текстом не утверждён или его перевод устарел — то же правило, что в панели ключа и на сервере
+const canApprove = (row: Localization) => Object.entries(row.translations ?? {})
+  .some(([lang, text]) => !!text && (row.status?.[lang] !== 'approved' || row.stale_langs?.includes(lang)))
+
+// Статусы строк приходят в реальном времени — кнопка сама прячется, если всё выделенное утвердили
+const keysToApprove = computed(() => rows.value
+  .filter(row => selectedKeys.value.has(row.technical_key) && canApprove(row))
+  .map(row => row.technical_key))
+
+const approveSelected = async () => {
+  const keys = keysToApprove.value
+  if (!keys.length) return
+
+  approving.value = true
+  try {
+    const { count } = await $fetch<{ count: number }>('/api/keys/approve', { method: 'POST', body: { keys } })
+    toast.add(count
+      ? { title: `Утверждено: ${count} ${plural(count, ['перевод', 'перевода', 'переводов'])}`, color: 'success' }
+      : { title: 'Всё выделенное уже утверждено', color: 'neutral' })
+    selectedKeys.value = new Set()
+  } catch (error) {
+    if (!(await authRedirect(error))) toast.add({ title: 'Не утвердилось', description: errorMessage(error), color: 'error' })
+  } finally {
+    approving.value = false
+  }
+}
+
+// --- «Выгрузить в код»: PR с утверждёнными текстами в репозитории InApp и Pages Hub ---
+const projectsOpen = ref(false)
+
+// Строка из окна изменений: путь в файле проекта входит в ключ сервиса — ищем его без фильтров
+const findKey = (key: string) => {
+  resetFilters()
+  q.value = key
+}
+
+// «Ждут утверждения → Показать»: черновики и тексты от ИИ вместе, без других фильтров — как в счётчике
+const showPending = () => {
+  resetFilters()
+  filters.status = 'pending'
+}
+
 // --- Очередь перевода: меню по языкам; сколько строк ждёт, считаем при открытии — с учётом раздела ---
 const queueCounts = ref<Record<string, number> | null>(null)
 
@@ -217,8 +264,8 @@ const exportZip = async () => {
 </script>
 
 <template>
-  <div class="flex h-[calc(100dvh-64px)] flex-col overflow-hidden bg-white text-gray-900">
-    <div class="flex shrink-0 items-center justify-between gap-4 border-b border-gray-200 p-4">
+  <div class="flex h-[calc(100dvh-64px)] flex-col overflow-hidden bg-default text-highlighted">
+    <div class="flex shrink-0 items-center justify-between gap-4 border-b border-default p-4">
       <div class="flex w-full min-w-0 max-w-2xl items-center gap-3">
         <UButton
           :icon="treeOpen ? 'i-lucide-panel-left-close' : 'i-lucide-panel-left-open'"
@@ -242,7 +289,7 @@ const exportZip = async () => {
           class="w-48 shrink-0"
         >
           <template #empty="{ searchTerm }">
-            <p class="text-center text-sm text-gray-500">
+            <p class="text-center text-sm text-muted">
               <template v-if="searchTerm">
                 Тега «{{ searchTerm }}» нет
               </template>
@@ -261,28 +308,7 @@ const exportZip = async () => {
       </div>
 
       <div class="flex shrink-0 items-center gap-3 whitespace-nowrap">
-        <UButton
-          v-if="selectedKeys.size && filters.deprecated"
-          icon="i-lucide-archive-restore"
-          color="warning"
-          variant="soft"
-          :loading="deprecating"
-          @click="restoreSelected"
-        >
-          Вернуть ({{ selectedKeys.size }})
-        </UButton>
-        <UButton
-          v-else-if="selectedKeys.size"
-          icon="i-lucide-archive"
-          color="warning"
-          variant="soft"
-          :loading="deprecating"
-          @click="deprecateSelected"
-        >
-          Пометить устаревшими ({{ selectedKeys.size }})
-        </UButton>
-
-        <span class="whitespace-nowrap text-xs text-gray-400">
+        <span class="whitespace-nowrap text-xs text-muted">
           {{ total === null ? '…' : `${total} ${plural(total, ['ключ', 'ключа', 'ключей'])}` }}
         </span>
 
@@ -295,36 +321,51 @@ const exportZip = async () => {
             icon="i-lucide-list-todo"
             color="neutral"
             variant="soft"
+            title="Очередь перевода"
           >
-            Очередь перевода
+            <span class="max-[1365px]:sr-only">Очередь перевода</span>
           </UButton>
           <template #item-trailing="{ item }">
             <span
               v-if="item.type !== 'label'"
-              class="text-xs tabular-nums text-gray-400"
+              class="text-xs tabular-nums text-muted"
             >
               {{ item.count === undefined ? '…' : item.count || '✓' }}
             </span>
           </template>
         </UDropdownMenu>
 
-        <UButton
-          icon="i-lucide-figma"
-          color="neutral"
-          variant="soft"
-          @click="figmaOpen = true"
-        >
-          Export Figma
-        </UButton>
-
+        <!-- Иначе поиск и теги наезжают на кнопки: уже 1536px у экспортов только значки,
+             уже 1366px — и у очереди; подпись остаётся в подсказке и для скринридеров -->
         <UButton
           icon="i-lucide-download"
           color="neutral"
+          variant="soft"
+          title="Export ZIP"
           :loading="exporting"
           :disabled="exporting"
           @click="exportZip"
         >
-          Export ZIP
+          <span class="max-[1535px]:sr-only">Export ZIP</span>
+        </UButton>
+
+        <UButton
+          icon="i-lucide-figma"
+          color="neutral"
+          variant="soft"
+          title="Export Figma"
+          @click="figmaOpen = true"
+        >
+          <span class="max-[1535px]:sr-only">Export Figma</span>
+        </UButton>
+
+        <!-- Главное действие сервиса — выделено -->
+        <UButton
+          icon="i-lucide-git-pull-request"
+          color="neutral"
+          @click="projectsOpen = true"
+        >
+          Выгрузить в код
         </UButton>
 
         <UButton
@@ -340,6 +381,12 @@ const exportZip = async () => {
       v-model:open="figmaOpen"
       :prefix="filters.prefix"
       :languages="languageCodes"
+    />
+
+    <LocalizationsProjectExport
+      v-model:open="projectsOpen"
+      @show-pending="showPending"
+      @find-key="findKey"
     />
 
     <LocalizationsCreateKey
@@ -363,7 +410,62 @@ const exportZip = async () => {
       @reset="resetFilters"
     />
 
-    <div class="flex min-h-0 flex-1">
+    <div class="relative flex min-h-0 flex-1">
+      <!-- Действия с выделенными строками — плашкой над гридом: в шапке им не хватает места -->
+      <div
+        v-if="selectedKeys.size"
+        class="pointer-events-none absolute inset-x-0 bottom-4 z-20 flex justify-center"
+      >
+        <div class="pointer-events-auto flex items-center gap-2 whitespace-nowrap rounded-xl border border-default bg-default py-1.5 pl-4 pr-1.5 shadow-lg">
+          <span class="mr-1 text-sm text-toned">
+            Выбрано: {{ selectedKeys.size }} {{ plural(selectedKeys.size, ['ключ', 'ключа', 'ключей']) }}
+          </span>
+          <UButton
+            v-if="filters.deprecated"
+            icon="i-lucide-archive-restore"
+            color="warning"
+            variant="soft"
+            :loading="deprecating"
+            @click="restoreSelected"
+          >
+            Вернуть
+          </UButton>
+          <template v-else>
+            <!-- Нечего утверждать — кнопки нет. Число — только если утверждать нужно не все выделенные: «Выбрано: 5 · Утвердить (2)» -->
+            <UButton
+              v-if="keysToApprove.length"
+              icon="i-lucide-check-check"
+              color="success"
+              variant="soft"
+              :loading="approving"
+              :disabled="deprecating"
+              @click="approveSelected"
+            >
+              Утвердить<template v-if="keysToApprove.length !== selectedKeys.size">
+                ({{ keysToApprove.length }})
+              </template>
+            </UButton>
+            <UButton
+              icon="i-lucide-archive"
+              color="warning"
+              variant="soft"
+              :loading="deprecating"
+              :disabled="approving"
+              @click="deprecateSelected"
+            >
+              Пометить устаревшими
+            </UButton>
+          </template>
+          <UButton
+            icon="i-lucide-x"
+            color="neutral"
+            variant="ghost"
+            aria-label="Снять выделение"
+            @click="selectedKeys = new Set()"
+          />
+        </div>
+      </div>
+
       <LocalizationsKeyTree
         v-if="treeOpen"
         :prefix="filters.prefix"
@@ -404,7 +506,7 @@ const exportZip = async () => {
     </div>
 
     <!-- Одна строка: что не влезло, прячется, а не переносится -->
-    <div class="flex shrink-0 items-center gap-4 overflow-hidden whitespace-nowrap border-t border-gray-200 px-4 py-1.5 text-[11px] text-gray-400">
+    <div class="hotkeys flex shrink-0 items-center gap-4 overflow-hidden whitespace-nowrap border-t border-default px-4 py-1.5 text-[11px] text-muted">
       <span><kbd>↑↓←→</kbd> навигация</span>
       <span><kbd>Enter</kbd> / печатай — правка · <kbd>Shift+Enter</kbd> перенос · <kbd>Esc</kbd> отмена</span>
       <span><kbd>⌘C</kbd> / <kbd>⌘V</kbd> · <kbd>Del</kbd> очистить · <kbd>⌘Z</kbd> отменить</span>
@@ -413,14 +515,3 @@ const exportZip = async () => {
     </div>
   </div>
 </template>
-
-<style scoped>
-kbd {
-  font-family: inherit;
-  padding: 0 4px;
-  border: 1px solid #e5e7eb;
-  border-radius: 4px;
-  background: #f9fafb;
-  color: #6b7280;
-}
-</style>

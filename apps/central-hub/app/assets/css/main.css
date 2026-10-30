@@ -17,6 +17,38 @@
   --color-green-950: #052E16;
 }
 
+/* Текст предупреждений на тон темнее (700 вместо 500): в мягких кнопках и бейджах фон — тот же цвет
+   с прозрачностью, и светлый текст на нём сливался. Вне слоёв — сильнее @layer theme из Nuxt UI */
+:root {
+  --ui-warning: var(--ui-color-warning-700);
+}
+
+/* В тёмной теме наоборот — светлый оттенок на тёмной подложке */
+.dark {
+  --ui-warning: var(--ui-color-warning-400);
+}
+
+/* Клавиши в полосах подсказок грида и очереди. Только внутри .hotkeys — <kbd> у компонентов Nuxt UI свои */
+.hotkeys kbd {
+  font-family: inherit;
+  padding: 0 4px;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  background: #f9fafb;
+  color: #6b7280;
+}
+
+.dark .hotkeys kbd {
+  border-color: var(--ui-color-neutral-700);
+  background: var(--ui-color-neutral-800);
+  color: var(--ui-color-neutral-400);
+}
+
+/* Свой «глаз» у пароля на входе — встроенный Edge не показываем, иначе их два */
+::-ms-reveal {
+  display: none;
+}
+
 /* Tailwind 4 оставляет кнопкам курсор браузера, а Nuxt UI его не задаёт */
 @layer base {
   button:not(:disabled),

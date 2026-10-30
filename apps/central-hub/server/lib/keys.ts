@@ -30,8 +30,8 @@ interface KeyRow {
   technical_key: string
   translations: Record<string, string | null>
   status: Record<string, KeyStatus>
-  based_on: Record<string, number>
-  source_rev: number
+  // Переводы, устаревшие после правки английского — считает база (английский сейчас другой, чем при переводе)
+  stale_langs: string[]
   description: string | null
   tags: string[]
   max_length: number | null
@@ -192,16 +192,11 @@ export async function searchStrings(
   }))
 }
 
-const staleLanguages = (row: Pick<KeyRow, 'translations' | 'based_on' | 'source_rev'>) =>
-  Object.entries(row.based_on)
-    .filter(([lang, rev]) => rev < row.source_rev && row.translations[lang])
-    .map(([lang]) => lang)
-
 /** Всё о строке: тексты, статусы, что не переведено и что устарело после правки английского. */
 export async function getString(db: SupabaseClient, key: string) {
   const [row, context] = await Promise.all([
     db.from('localizations')
-      .select('technical_key, translations, status, based_on, source_rev, description, tags, max_length, deprecated_at, updated_at, updated_by')
+      .select('technical_key, translations, status, stale_langs, description, tags, max_length, deprecated_at, updated_at, updated_by')
       .eq('technical_key', key)
       .maybeSingle(),
     loadKeyContext(db)
@@ -218,7 +213,7 @@ export async function getString(db: SupabaseClient, key: string) {
     translations: data.translations,
     status: data.status,
     missing: context.languages.filter(lang => !data.translations[lang]),
-    stale: staleLanguages(data),
+    stale: data.stale_langs,
     updated_at: data.updated_at,
     updated_by: data.updated_by
   }
@@ -331,11 +326,11 @@ export async function translationQueue(
   if (!context.languages.includes(lang)) throw new HubError(`Неизвестный язык «${lang}»`)
   if (lang === 'en') throw new HubError('Английский — исходный язык, его не переводят')
 
-  const rows = await allKeys<KeyRow>(db, 'technical_key, translations, based_on, source_rev, description, max_length', prefix)
+  const rows = await allKeys<KeyRow>(db, 'technical_key, translations, stale_langs, description, max_length', prefix)
   const items: QueueItem[] = []
   for (const row of rows) {
     if (!row.translations.en) continue
-    const reason = !row.translations[lang] ? 'missing' : staleLanguages(row).includes(lang) ? 'stale' : null
+    const reason = !row.translations[lang] ? 'missing' : row.stale_langs.includes(lang) ? 'stale' : null
     if (!reason) continue
     items.push({
       key: row.technical_key,
@@ -355,13 +350,12 @@ export async function queueCounts(db: SupabaseClient, { prefix }: { prefix?: str
   const langs = context.languages.filter(lang => lang !== 'en')
   const counts = Object.fromEntries(langs.map(lang => [lang, { lang, missing: 0, stale: 0 }]))
 
-  const rows = await allKeys<KeyRow>(db, 'technical_key, translations, based_on, source_rev', prefix)
+  const rows = await allKeys<KeyRow>(db, 'technical_key, translations, stale_langs', prefix)
   for (const row of rows) {
     if (!row.translations.en) continue
-    const stale = staleLanguages(row)
     for (const lang of langs) {
       if (!row.translations[lang]) counts[lang]!.missing++
-      else if (stale.includes(lang)) counts[lang]!.stale++
+      else if (row.stale_langs.includes(lang)) counts[lang]!.stale++
     }
   }
   return langs.map(lang => counts[lang]!)

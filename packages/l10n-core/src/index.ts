@@ -1,5 +1,6 @@
 export * from './keys'
 export * from './json-cst'
 export * from './locale-file'
+export * from './locale-diff'
 export * from './text-checks'
 export * from './figma'

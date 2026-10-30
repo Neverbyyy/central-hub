@@ -15,7 +15,7 @@ useHead({
 
 // Внутренний сервис: поисковикам не показываем (плюс X-Robots-Tag и robots.txt)
 useSeoMeta({
-  title: 'Central Hub — Amaya',
+  title: 'Amaya Central Hub',
   robots: 'noindex, nofollow'
 })
 </script>

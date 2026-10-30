@@ -270,7 +270,7 @@ const onKeydown = (event: KeyboardEvent) => {
 
         <div
           v-if="missingCode"
-          class="flex flex-col gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900"
+          class="flex flex-col gap-2 rounded-lg border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 p-3 text-sm text-amber-900 dark:text-amber-200"
         >
           <span>Кода «{{ missingCode.code }}» нет в справочнике.</span>
           <div
@@ -342,7 +342,7 @@ const onKeydown = (event: KeyboardEvent) => {
             <li
               v-for="issue in textIssues"
               :key="issue.message"
-              :class="issue.level === 'error' ? 'text-red-600' : 'text-amber-600'"
+              :class="issue.level === 'error' ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400'"
             >
               {{ issue.message }}
             </li>
@@ -369,18 +369,18 @@ const onKeydown = (event: KeyboardEvent) => {
         </div>
 
         <section>
-          <h3 class="mb-1 text-xs font-semibold text-gray-500">
+          <h3 class="mb-1 text-xs font-semibold text-muted">
             Похожие строки
           </h3>
           <p
             v-if="!similar.length"
-            class="text-xs text-gray-400"
+            class="text-xs text-muted"
           >
             {{ form.en || form.key ? 'Похожих нет' : 'Появятся, когда начнёте вводить ключ или текст' }}
           </p>
           <ul
             v-else
-            class="divide-y divide-gray-100 rounded-lg border border-gray-200"
+            class="divide-y divide-gray-100 dark:divide-gray-800 rounded-lg border border-default"
           >
             <li
               v-for="item in similar"
@@ -388,15 +388,15 @@ const onKeydown = (event: KeyboardEvent) => {
             >
               <button
                 type="button"
-                class="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-gray-50"
+                class="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-muted"
                 :title="`Скопировать ${item.technical_key}`"
                 @click="copyKey(item.technical_key)"
               >
                 <span class="min-w-0 flex-1">
-                  <span class="block truncate font-mono text-[11px] text-blue-600">{{ item.technical_key }}</span>
-                  <span class="block truncate text-xs text-gray-700">{{ item.en ?? '—' }}</span>
+                  <span class="block truncate font-mono text-[11px] text-blue-600 dark:text-blue-400">{{ item.technical_key }}</span>
+                  <span class="block truncate text-xs text-default">{{ item.en ?? '—' }}</span>
                 </span>
-                <span class="shrink-0 text-[11px] tabular-nums text-gray-400">{{ Math.round(item.score * 100) }}%</span>
+                <span class="shrink-0 text-[11px] tabular-nums text-muted">{{ Math.round(item.score * 100) }}%</span>
               </button>
             </li>
           </ul>
@@ -409,21 +409,21 @@ const onKeydown = (event: KeyboardEvent) => {
       <div class="flex w-full items-center justify-between gap-3">
         <span
           v-if="serverError"
-          class="text-xs text-red-600"
+          class="text-xs text-red-600 dark:text-red-400"
           role="alert"
         >
           {{ serverError }}
         </span>
         <span
           v-else-if="blockers.length"
-          class="text-xs text-amber-700"
+          class="text-xs text-amber-700 dark:text-amber-400"
           role="status"
         >
           Чтобы создать, нужно: {{ blockers.join(', ') }}
         </span>
         <span
           v-else
-          class="text-xs text-gray-400"
+          class="text-xs text-muted"
         >
           <UKbd>Ctrl</UKbd> + <UKbd>Enter</UKbd> создать · <UKbd>Esc</UKbd> закрыть
         </span>

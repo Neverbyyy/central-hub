@@ -15,13 +15,23 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
-  // Только сервер: NUXT_HUB_PASSWORD, NUXT_SESSION_PASSWORD, NUXT_CLI_TOKEN, NUXT_MCP_TOKEN и NUXT_FIGMA_TOKEN
+  // Тема — в «Настройках»: светлая или тёмная, без выбора — светлая. Выбор хранится в браузере,
+  // класс ставится до отрисовки, поэтому страница не мигает
+  colorMode: {
+    preference: 'light',
+    fallback: 'light'
+  },
+
+  // Только сервер: NUXT_HUB_PASSWORD, NUXT_SESSION_PASSWORD, NUXT_CLI_TOKEN, NUXT_MCP_TOKEN, NUXT_FIGMA_TOKEN,
+  // NUXT_GITHUB_TOKEN и NUXT_EXPORT_REPOS (куда кнопка «Выгрузить в код» открывает PR)
   runtimeConfig: {
     hubPassword: '',
     sessionPassword: '',
     cliToken: '',
     mcpToken: '',
-    figmaToken: ''
+    figmaToken: '',
+    githubToken: '',
+    exportRepos: ''
   },
 
   // l10n-core — TypeScript-исходники из workspace без сборки: их нужно встроить в бандл,
@@ -43,7 +53,11 @@ export default defineNuxtConfig({
       inline: ['@amaya/l10n-core']
     },
     // Исходники плагина Figma: сервис отдаёт их архивом со своим адресом (/api/figma/plugin.zip)
-    serverAssets: [{ baseName: 'figma-plugin', dir: fileURLToPath(new URL('../../packages/figma-plugin/src', import.meta.url)) }]
+    serverAssets: [{ baseName: 'figma-plugin', dir: fileURLToPath(new URL('../../packages/figma-plugin/src', import.meta.url)) }],
+    // Выгрузка в проекты — это сборка файлов плюс около десятка запросов к GitHub: даём функции запас
+    vercel: {
+      functions: { maxDuration: 60 }
+    }
   },
 
   // CJS-зависимости собираем заранее, иначе dev-сервер перезагружает страницу при первом открытии грида.

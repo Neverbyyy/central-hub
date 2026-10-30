@@ -141,7 +141,7 @@ const onKeydown = (event: KeyboardEvent) => {
 
     <p
       v-if="serverError"
-      class="text-red-600"
+      class="text-red-600 dark:text-red-400"
       role="alert"
     >
       {{ serverError }}
@@ -164,7 +164,7 @@ const onKeydown = (event: KeyboardEvent) => {
       >
         Отмена
       </UButton>
-      <span class="ml-auto text-[10px] text-gray-400">Ctrl+Enter — сохранить · Esc — отмена</span>
+      <span class="ml-auto text-[10px] text-muted">Ctrl+Enter — сохранить · Esc — отмена</span>
     </div>
   </form>
 </template>

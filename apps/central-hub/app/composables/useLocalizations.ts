@@ -35,7 +35,8 @@ export interface Localization {
 // Куда сдвинуть курсор после сохранения ячейки; 'blur' — фокус ушёл наружу
 export type CommitMove = 'down' | 'right' | 'left' | 'stay' | 'blur'
 
-export type StatusFilter = '' | TranslationStatus
+// pending — не утверждённые: черновики и тексты от ИИ вместе, то, что не уходит в выгрузку в код
+export type StatusFilter = '' | TranslationStatus | 'pending'
 
 const PAGE_SIZE = 100
 const SELECT = 'technical_key, translations, status, based_on, source_rev, stale_langs, deprecated_at, created_at, updated_at'
@@ -109,7 +110,7 @@ export function useLocalizations() {
     q.value = asString(query.q)
     selectedTags.value = asString(query.tags).split(',').filter(Boolean)
     const status = asString(query.status)
-    filters.status = (['ai', 'draft', 'approved'].includes(status) ? status : '') as StatusFilter
+    filters.status = (['ai', 'draft', 'approved', 'pending'].includes(status) ? status : '') as StatusFilter
     filters.stale = query.stale === '1'
     const missing = asString(query.missing)
     filters.missing = /^[a-z]{2,3}(-[A-Za-z0-9]{2,4})?$/.test(missing) ? missing : ''
@@ -161,6 +162,7 @@ export function useLocalizations() {
     ilike: (column: string, pattern: string) => T
     like: (column: string, pattern: string) => T
     contains: (column: string, value: string[]) => T
+    overlaps: (column: string, value: string[]) => T
     neq: (column: string, value: string) => T
     gte: (column: string, value: string) => T
   }
@@ -173,7 +175,8 @@ export function useLocalizations() {
       query = query.ilike('search_text', `%${escapeLike(term)}%`)
     }
     if (selectedTags.value.length) query = query.contains('tags', selectedTags.value)
-    if (filters.status) query = query.contains('status_values', [filters.status])
+    if (filters.status === 'pending') query = query.overlaps('status_values', ['draft', 'ai'])
+    else if (filters.status) query = query.contains('status_values', [filters.status])
     if (filters.stale) query = query.neq('stale_langs', '{}')
     if (filters.missing) query = query.is(`translations->>${filters.missing}`, null)
     if (filters.recent) query = query.gte('updated_at', new Date(Date.now() - WEEK).toISOString())

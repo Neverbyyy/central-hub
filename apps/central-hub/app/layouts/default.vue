@@ -15,19 +15,22 @@ const breadcrumbs = computed(() => {
 </script>
 
 <template>
-  <div class="flex h-screen bg-gray-50 overflow-hidden">
+  <div class="flex h-screen bg-muted overflow-hidden">
     <AppSidebar />
 
     <div class="flex-1 flex flex-col overflow-hidden">
-      <header class="h-16 shrink-0 border-b border-gray-200 bg-white flex items-center px-4 justify-between">
+      <header class="h-16 shrink-0 border-b border-default bg-default flex items-center px-4 justify-between">
         <div class="flex items-center gap-3">
           <UBreadcrumb :items="breadcrumbs">
             <template #separator>
-              <span class="mx-2 text-gray-400">/</span>
+              <span class="mx-2 text-muted">/</span>
             </template>
 
             <template #item="{ item, active }">
-              <div :class="['bg-gray-0 color-blue text-gray-400 font-normal rounded-lg', { 'text-gray-900': active }]">{{ item.label }}</div>
+              <!-- Один из двух цветов, а не оба сразу: иначе побеждает тот, что позже в CSS -->
+              <div :class="['bg-gray-0 color-blue font-normal rounded-lg', active ? 'text-highlighted' : 'text-muted']">
+                {{ item.label }}
+              </div>
             </template>
           </UBreadcrumb>
         </div>

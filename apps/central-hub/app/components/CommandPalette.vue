@@ -23,6 +23,13 @@ const go = (to: Parameters<typeof navigateTo>[0]) => {
   return navigateTo(to)
 }
 
+const colorMode = useColorMode()
+
+const setTheme = (theme: 'light' | 'dark') => {
+  open.value = false
+  colorMode.preference = theme
+}
+
 // --- Ключи: ищем в базе, а не в загруженных строках грида ---
 interface Found {
   technical_key: string
@@ -85,14 +92,18 @@ const groups = computed<CommandPaletteGroup<CommandPaletteItem>[]>(() => {
       icon: 'i-lucide-list-todo',
       onSelect: () => go({ path: '/localizations/queue', query: { lang: lang.code } })
     })),
+    { label: 'Показать: не утверждённые', icon: 'i-lucide-circle-dashed', onSelect: () => go({ path: '/localizations', query: { status: 'pending' } }) },
     { label: 'Показать: от ИИ', icon: 'i-lucide-sparkles', onSelect: () => go({ path: '/localizations', query: { status: 'ai' } }) },
     { label: 'Показать: устаревшие переводы', icon: 'i-lucide-history', onSelect: () => go({ path: '/localizations', query: { stale: '1' } }) },
-    { label: 'Показать: изменённые за неделю', icon: 'i-lucide-calendar-clock', onSelect: () => go({ path: '/localizations', query: { recent: '1' } }) }
+    { label: 'Показать: изменённые за неделю', icon: 'i-lucide-calendar-clock', onSelect: () => go({ path: '/localizations', query: { recent: '1' } }) },
+    { label: 'Тема: светлая', icon: 'i-lucide-sun', onSelect: () => setTheme('light') },
+    { label: 'Тема: тёмная', icon: 'i-lucide-moon', onSelect: () => setTheme('dark') }
   ]
 
   const pages: CommandPaletteItem[] = [
     { label: 'Главная', icon: 'i-lucide-house', onSelect: () => go('/') },
-    { label: 'Локализации', icon: 'i-lucide-languages', onSelect: () => go('/localizations') }
+    { label: 'Локализации', icon: 'i-lucide-languages', onSelect: () => go('/localizations') },
+    { label: 'Настройки', icon: 'i-lucide-settings', onSelect: () => go('/settings') }
   ]
 
   return [

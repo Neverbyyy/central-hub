@@ -52,6 +52,42 @@ describe('утверждение', () => {
   })
 })
 
+describe('правку вернули как было', () => {
+  const run = Date.now()
+
+  it('английский вернули — переводы не устарели, английский снова утверждён', async () => {
+    await set('en', `Revert ${run}`)
+    await set('de', `Revert DE ${run}`)
+    await approve(['en', 'de'])
+
+    await set('en', `Revert ${run} v2`)
+    let row = await readAnchor()
+    expect(row.stale_langs).toContain('de')
+    expect(row.status.en).toBe('draft')
+
+    await set('en', `Revert ${run}`)
+    row = await readAnchor()
+    expect(row.stale_langs).not.toContain('de')
+    expect(row.status.en).toBe('approved')
+  })
+
+  it('перевод вернули — снова утверждён', async () => {
+    await set('de', `Revert DE ${run}!`)
+    expect((await readAnchor()).status.de).toBe('draft')
+    await set('de', `Revert DE ${run}`)
+    expect((await readAnchor()).status.de).toBe('approved')
+  })
+
+  it('перевод сделан по другой версии английского — после отката английского он устарел', async () => {
+    await set('en', `Revert ${run} v3`)
+    await set('de', `Revert DE ${run} v3`)
+    await set('en', `Revert ${run}`)
+    const row = await readAnchor()
+    expect(row.stale_langs).toContain('de')
+    expect(row.status.en).toBe('approved')
+  })
+})
+
 describe('одновременная правка одной ячейки', () => {
   it('другое ожидаемое значение → HB409 с текущим текстом и автором', async () => {
     const current = (await readAnchor()).translations.de

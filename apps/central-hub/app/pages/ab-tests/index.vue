@@ -323,7 +323,7 @@ const columns = computed<TableColumn<Localization>[]>(() => [
     },
     cell: ({ row }) => {
       if (row.original._isSkeleton) return h('div', { class: 'flex items-center w-full h-full min-h-[40px] px-4' }, [ h('div', { class: 'h-3 bg-gray-200 rounded animate-pulse w-20' }) ])
-      return h('div', { class: 'flex items-center px-4 w-full h-full min-h-[40px] text-gray-400 text-[10px]' }, formatDate(row.getValue('created_at')))
+      return h('div', { class: 'flex items-center px-4 w-full h-full min-h-[40px] text-gray-500 text-[10px]' }, formatDate(row.getValue('created_at')))
     }
   },
   {
@@ -337,7 +337,7 @@ const columns = computed<TableColumn<Localization>[]>(() => [
     },
     cell: ({ row }) => {
       if (row.original._isSkeleton) return h('div', { class: 'flex items-center w-full h-full min-h-[40px] px-4' }, [ h('div', { class: 'h-3 bg-gray-200 rounded animate-pulse w-20' }) ])
-      return h('div', { class: 'flex items-center px-4 w-full h-full min-h-[40px] text-gray-400 text-[10px]' }, formatDate(row.getValue('updated_at')))
+      return h('div', { class: 'flex items-center px-4 w-full h-full min-h-[40px] text-gray-500 text-[10px]' }, formatDate(row.getValue('updated_at')))
     }
   },
   {
@@ -629,7 +629,7 @@ onMounted(() => {
           Удалить выбранные ({{ selectedKeys.size }})
         </UButton>
 
-        <span class="text-xs text-gray-400">
+        <span class="text-xs text-gray-500">
           На экране: {{ localizations.filter(l => !l._isSkeleton).length }}
         </span>
         
@@ -664,12 +664,12 @@ onMounted(() => {
         style="height: 100%"
       >
         <template #empty-state>
-          <div v-if="!pending" class="py-20 text-center text-sm text-gray-400">Пусто</div>
+          <div v-if="!pending" class="py-20 text-center text-sm text-gray-500">Пусто</div>
         </template>
       </UTable>
 
       <div v-if="pending && currentPage > 0" class="flex justify-center py-4 bg-white border-t border-gray-100">
-        <UIcon name="i-heroicons-arrow-path" class="animate-spin text-gray-400 w-5 h-5" />
+        <UIcon name="i-heroicons-arrow-path" class="animate-spin text-gray-500 w-5 h-5" />
       </div>
     </div>
   </div>

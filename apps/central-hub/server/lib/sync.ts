@@ -45,7 +45,8 @@ export interface ExportResult {
 
 interface KeyRow {
   technical_key: string
-  translations: Record<string, string | null>
+  // Последний утверждённый текст по языкам: черновики в проекты не уходят
+  approved: Record<string, string | null>
   legacy_path: string[] | null
 }
 
@@ -127,7 +128,7 @@ async function loadKeys(db: SupabaseClient, set: ExportSet, legacyOnly: boolean)
     for (let from = 0; ; from += PAGE) {
       const { data, error } = await db
         .from('localizations')
-        .select('technical_key, translations, legacy_path')
+        .select('technical_key, approved, legacy_path')
         .is('deprecated_at', null)
         .like('technical_key', `${escapeLike(prefix)}%`)
         .order('technical_key')
@@ -143,8 +144,29 @@ async function loadKeys(db: SupabaseClient, set: ExportSet, legacyOnly: boolean)
   return [...rows.values()]
 }
 
+/** Сколько действующих ключей набора ждут утверждения хотя бы на одном языке: их правки в выгрузку не попадут. */
+export async function pendingApproval(db: SupabaseClient, setName: string): Promise<number> {
+  const set = await loadSet(db, setName)
+  const prefixes = [...new Set([set.legacy_prefix, ...set.include_prefixes].filter((p): p is string => !!p))]
+  const count = async (prefix: string) => {
+    const { count, error } = await db
+      .from('localizations')
+      .select('technical_key', { count: 'exact', head: true })
+      .is('deprecated_at', null)
+      .like('technical_key', `${escapeLike(prefix)}%`)
+      .overlaps('status_values', ['draft', 'ai'])
+    if (error) throw error
+    return count ?? 0
+  }
+  // Исключённые префиксы лежат внутри включённых — вычитаем
+  const excluded = set.exclude_prefixes.filter(e => prefixes.some(p => e.startsWith(p)))
+  const [included, skipped] = await Promise.all([Promise.all(prefixes.map(count)), Promise.all(excluded.map(count))])
+  return included.reduce((a, b) => a + b, 0) - skipped.reduce((a, b) => a + b, 0)
+}
+
 /**
  * Файлы набора: шаблоны с изменившимися строками; без шаблона — собранные заново.
+ * Берутся только утверждённые тексты (`approved`): правка без утверждения в проект не попадает.
  * legacyOnly — только строки самого проекта, без новых ключей (так автотест сверяет выгрузку с исходными файлами).
  */
 export async function exportSet(db: SupabaseClient, setName: string, { legacyOnly = false } = {}): Promise<ExportResult> {
@@ -158,8 +180,8 @@ export async function exportSet(db: SupabaseClient, setName: string, { legacyOnl
 
   const files = set.languages.map((lang) => {
     const entries: LocaleEntry[] = keys
-      .filter(row => lang in row.translations)
-      .map(row => ({ path: filePath(row.technical_key, set.format, row.legacy_path), value: row.translations[lang]! }))
+      .filter(row => lang in row.approved)
+      .map(row => ({ path: filePath(row.technical_key, set.format, row.legacy_path), value: row.approved[lang]! }))
 
     const path = set.path_template.replaceAll('{lang}', lang)
     let content: string

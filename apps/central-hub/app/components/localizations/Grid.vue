@@ -275,7 +275,7 @@ defineExpose({ reset })
   <div
     ref="scrollEl"
     tabindex="0"
-    class="loc-grid relative flex-1 overflow-auto overscroll-none bg-white text-gray-900 outline-none"
+    class="loc-grid relative flex-1 overflow-auto overscroll-none bg-default text-highlighted outline-none"
     :style="{ '--loc-cols': columns }"
     @scroll.passive="onScroll"
     @keydown="onKeydown"
@@ -292,7 +292,7 @@ defineExpose({ reset })
           @change="emit('toggleAll', ($event.target as HTMLInputElement).checked)"
         >
       </div>
-      <div class="loc-cell loc-sticky left-[40px] border-r border-gray-200 px-3">
+      <div class="loc-cell loc-sticky left-[40px] border-r border-default px-3">
         Ключ
       </div>
       <div
@@ -319,15 +319,15 @@ defineExpose({ reset })
         :class="{ 'is-odd': i % 2 === 0 }"
       >
         <div class="loc-cell loc-sticky left-0" />
-        <div class="loc-cell loc-sticky left-[40px] border-r border-gray-200 px-3">
-          <div class="h-3 w-40 animate-pulse rounded bg-gray-200" />
+        <div class="loc-cell loc-sticky left-[40px] border-r border-default px-3">
+          <div class="h-3 w-40 animate-pulse rounded bg-accented" />
         </div>
         <div
           v-for="lang in languages"
           :key="lang"
           class="loc-cell px-3"
         >
-          <div class="h-2.5 w-full animate-pulse rounded bg-gray-100" />
+          <div class="h-2.5 w-full animate-pulse rounded bg-elevated" />
         </div>
         <div class="loc-cell" />
         <div class="loc-cell" />
@@ -336,7 +336,7 @@ defineExpose({ reset })
 
     <div
       v-else-if="!rows.length"
-      class="sticky left-0 py-20 text-center text-sm text-gray-400"
+      class="sticky left-0 py-20 text-center text-sm text-muted"
       :style="{ width: `${viewportW}px` }"
     >
       {{ loading ? 'Загрузка…' : 'Ничего не найдено' }}
@@ -371,7 +371,7 @@ defineExpose({ reset })
       >
         <UIcon
           name="i-lucide-loader-circle"
-          class="size-4 animate-spin text-gray-400"
+          class="size-4 animate-spin text-muted"
         />
       </div>
     </template>
@@ -379,36 +379,67 @@ defineExpose({ reset })
 </template>
 
 <style>
+/* Цвета грида: светлые — прежние, тёмные — из нейтральной шкалы Nuxt UI */
+:root {
+  --loc-bg: #fff;
+  --loc-bg-odd: #f9fafb;
+  --loc-bg-hover: #f3f4f6;
+  --loc-bg-selected: #eff6ff;
+  --loc-header-text: #6b7280;
+  --loc-header-line: #e5e7eb;
+  --loc-line: #f3f4f6;
+  --loc-active: #3b82f6;
+  --loc-active-blur: #93c5fd;
+  --loc-scroll-track: #f9fafb;
+  --loc-scroll-thumb: #d1d5db;
+  --loc-scroll-thumb-hover: #9ca3af;
+}
+
+.dark {
+  --loc-bg: var(--ui-bg);
+  --loc-bg-odd: color-mix(in oklab, var(--ui-color-neutral-800) 40%, var(--ui-bg));
+  --loc-bg-hover: var(--ui-color-neutral-800);
+  --loc-bg-selected: color-mix(in oklab, #3b82f6 20%, var(--ui-bg));
+  --loc-header-text: var(--ui-color-neutral-400);
+  --loc-header-line: var(--ui-color-neutral-700);
+  --loc-line: var(--ui-color-neutral-800);
+  --loc-active: #3b82f6;
+  --loc-active-blur: #1e40af;
+  --loc-scroll-track: var(--ui-bg);
+  --loc-scroll-thumb: var(--ui-color-neutral-700);
+  --loc-scroll-thumb-hover: var(--ui-color-neutral-600);
+}
+
 .loc-row {
   display: grid;
   grid-template-columns: var(--loc-cols);
   width: max-content;
   min-width: 100%;
   height: 36px;
-  background: #fff;
+  background: var(--loc-bg);
 }
 
 .loc-row.is-odd {
-  background: #f9fafb;
+  background: var(--loc-bg-odd);
 }
 
 .loc-row:not(.loc-header):hover {
-  background: #f3f4f6;
+  background: var(--loc-bg-hover);
 }
 
 .loc-row.is-selected {
-  background: #eff6ff;
+  background: var(--loc-bg-selected);
 }
 
 .loc-header {
   font-size: 11px;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--loc-header-text);
   text-transform: none;
 }
 
 .loc-header .loc-cell {
-  border-bottom-color: #e5e7eb;
+  border-bottom-color: var(--loc-header-line);
 }
 
 .loc-cell {
@@ -417,8 +448,8 @@ defineExpose({ reset })
   align-items: center;
   min-width: 0;
   height: 36px;
-  border-bottom: 1px solid #f3f4f6;
-  border-right: 1px solid #f3f4f6;
+  border-bottom: 1px solid var(--loc-line);
+  border-right: 1px solid var(--loc-line);
   user-select: none;
   cursor: default;
 }
@@ -430,7 +461,7 @@ defineExpose({ reset })
 }
 
 .loc-cell.is-active {
-  box-shadow: inset 0 0 0 2px #3b82f6;
+  box-shadow: inset 0 0 0 2px var(--loc-active);
   z-index: 1;
 }
 
@@ -439,7 +470,7 @@ defineExpose({ reset })
 }
 
 .loc-grid:not(:focus-within) .loc-cell.is-active {
-  box-shadow: inset 0 0 0 2px #93c5fd;
+  box-shadow: inset 0 0 0 2px var(--loc-active-blur);
 }
 
 .loc-grid::-webkit-scrollbar {
@@ -448,16 +479,16 @@ defineExpose({ reset })
 }
 
 .loc-grid::-webkit-scrollbar-track {
-  background: #f9fafb;
+  background: var(--loc-scroll-track);
 }
 
 .loc-grid::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border: 2px solid #f9fafb;
+  background: var(--loc-scroll-thumb);
+  border: 2px solid var(--loc-scroll-track);
   border-radius: 5px;
 }
 
 .loc-grid::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+  background: var(--loc-scroll-thumb-hover);
 }
 </style>
