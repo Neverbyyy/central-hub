@@ -206,7 +206,8 @@ const push = async (set: ExportSetInfo) => {
         title: OUTCOME_TITLE[result.outcome]!(result.pr.number),
         description: `${PROJECTS[set.name] ?? set.name}: в основную ветку тексты попадут после мержа`,
         color: 'success',
-        actions: result.outcome === 'closed' ? [] : [{ label: 'Открыть на GitHub', color: 'neutral', variant: 'outline', onClick: () => { window.open(result.pr!.url, '_blank', 'noopener') } }]
+        // Ссылка, а не onClick с window.open: обёртка действия в тосте перехватывает клик, ссылку открывает сам браузер
+        actions: result.outcome === 'closed' ? [] : [{ label: 'Открыть на GitHub', color: 'neutral', variant: 'outline', to: result.pr.url, target: '_blank' }]
       })
     }
     await loadSets()
@@ -237,7 +238,7 @@ const pushAll = async () => {
       title: `Выгружено: ${done.length} ${plural(done.length, ['проект', 'проекта', 'проектов'])}`,
       description: `${done.map(d => `${d.project} — ${OUTCOME_TITLE[d.result.outcome]!(d.pr.number)}`).join(' · ')}. В основные ветки тексты попадут после мержа`,
       color: 'success',
-      actions: done.map(d => ({ label: `${d.project} #${d.pr.number}`, color: 'neutral' as const, variant: 'outline' as const, onClick: () => { window.open(d.pr.url, '_blank', 'noopener') } }))
+      actions: done.map(d => ({ label: `${d.project} #${d.pr.number}`, color: 'neutral' as const, variant: 'outline' as const, to: d.pr.url, target: '_blank' as const }))
     })
   }
   for (const [i, r] of settled.entries()) {
