@@ -208,6 +208,8 @@ const approveSelected = async () => {
 
 // --- «Выгрузить в код»: PR с утверждёнными текстами в репозитории InApp и Pages Hub ---
 const projectsOpen = ref(false)
+// Открытые PR — бадж на кнопке: видно, что кто-то выгрузил и PR ждёт мержа
+const { openPrs } = useOpenPrs()
 
 // Строка из окна изменений: путь в файле проекта входит в ключ сервиса — ищем его без фильтров
 const findKey = (key: string) => {
@@ -393,14 +395,43 @@ const exportZip = async () => {
           <span class="max-[1535px]:sr-only">Export Figma</span>
         </UButton>
 
-        <!-- Главное действие сервиса — выделено -->
-        <UButton
-          icon="i-lucide-git-pull-request"
-          color="neutral"
-          @click="projectsOpen = true"
+        <!-- Главное действие сервиса — выделено. Бадж — сколько PR выгрузки открыто и ждёт мержа, у всех сразу -->
+        <UTooltip
+          :disabled="!openPrs.length"
+          :content="{ side: 'bottom' }"
         >
-          Выгрузить в код
-        </UButton>
+          <UButton
+            icon="i-lucide-git-pull-request"
+            color="neutral"
+            @click="projectsOpen = true"
+          >
+            Выгрузить в код
+            <template
+              v-if="openPrs.length"
+              #trailing
+            >
+              <span
+                class="min-w-4 rounded-full bg-primary px-1 text-center text-[11px] font-semibold leading-4 text-inverted"
+                :aria-label="`открыто PR: ${openPrs.length}`"
+              >{{ openPrs.length }}</span>
+            </template>
+          </UButton>
+          <template #content>
+            <div class="space-y-0.5 py-0.5 text-xs">
+              <p class="font-medium">
+                {{ openPrs.length === 1 ? 'Открыт PR — ждёт мержа' : 'Открыты PR — ждут мержа' }}
+              </p>
+              <p
+                v-for="pr in openPrs"
+                :key="pr.set"
+              >
+                {{ exportProjectName(pr.set) }} #{{ pr.number }}<template v-if="pr.actor">
+                  · {{ pr.actor }}, {{ formatDateTime(pr.at, { year: false }) }}
+                </template>
+              </p>
+            </div>
+          </template>
+        </UTooltip>
 
         <UButton
           icon="i-lucide-plus"

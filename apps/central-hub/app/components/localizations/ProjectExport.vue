@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { RealtimeChannel } from '@supabase/supabase-js'
 import type { FileChange } from '~/utils/exportChanges'
 
 // Выгрузка в код: утверждённые тексты набора уходят PR в репозиторий проекта на GitHub.
@@ -107,29 +106,15 @@ const refreshChanged = useDebounceFn(() => {
   refresh(names)
 }, 200)
 
-const supabase = useSupabaseClient()
-let channel: RealtimeChannel | null = null
-
-const unsubscribe = () => {
-  if (channel) supabase.removeChannel(channel)
-  channel = null
-}
-
-watch(open, (value) => {
-  if (!value) return unsubscribe()
-  if (channel) return
-  channel = supabase
-    .channel(EXPORT_PR_CHANNEL)
-    .on('broadcast', { event: 'pr' }, ({ payload }) => {
-      const set = (payload as { set?: unknown } | undefined)?.set
-      if (typeof set !== 'string') return
-      changedSets.add(set)
-      refreshChanged()
-    })
-    .subscribe()
+// Подписка общая с баджем на кнопке (useExportPrEvents): окно слушает, только пока открыто
+const { listen, stop } = useExportPrEvents((set) => {
+  changedSets.add(set)
+  refreshChanged()
 })
 
-onBeforeUnmount(unsubscribe)
+watch(open, value => (value ? listen() : stop()))
+
+onBeforeUnmount(stop)
 
 const visibility = useDocumentVisibility()
 watch(visibility, (value) => {
