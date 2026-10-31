@@ -182,8 +182,8 @@ const length = computed(() => [...value.value].length)
 </script>
 
 <template>
-  <div class="flex h-[calc(100dvh-64px)] flex-col overflow-hidden bg-default text-highlighted">
-    <div class="flex shrink-0 flex-wrap items-center gap-3 border-b border-default px-4 py-3">
+  <div class="flex h-full flex-col overflow-hidden bg-default text-highlighted">
+    <div class="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-default px-3 py-3 md:px-4">
       <UButton
         icon="i-lucide-arrow-left"
         color="neutral"
@@ -215,7 +215,7 @@ const length = computed(() => [...value.value].length)
     </div>
 
     <div class="flex-1 overflow-y-auto">
-      <div class="mx-auto max-w-2xl px-6 py-8">
+      <div class="mx-auto max-w-2xl px-4 py-6 sm:px-6 sm:py-8">
         <div
           v-if="!item && loading"
           class="text-sm text-muted"
@@ -339,7 +339,8 @@ const length = computed(() => [...value.value].length)
       </div>
     </div>
 
-    <div class="hotkeys flex shrink-0 items-center gap-4 border-t border-default px-4 py-1.5 text-[11px] text-muted">
+    <!-- Уже 1024 px клавиатуры обычно нет — и полосы с клавишами тоже -->
+    <div class="hotkeys hidden shrink-0 items-center gap-4 border-t border-default px-4 py-1.5 text-[11px] text-muted lg:flex">
       <span><kbd>Enter</kbd> сохранить и дальше</span>
       <span><kbd>Shift+Enter</kbd> перенос строки</span>
       <span><kbd>Alt+→</kbd> пропустить</span>

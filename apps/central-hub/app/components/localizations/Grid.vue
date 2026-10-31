@@ -25,20 +25,35 @@ const emit = defineEmits<{
   // Активная строка сменилась — открытая панель следует за ней
   focusRow: [key: string]
   escape: []
+  // На касании правка — в шторке страницы, а не в ячейке
+  edit: [key: string, lang: string]
 }>()
 
 const toast = useToast()
+const { touch } = useScreen()
 
-// Размеры должны совпадать с columns ниже
-const ROW_H = 36
 const HEADER_H = 36
-const STICKY_W = 40 + 260
-const LANG_W = 220
+const CHECK_W = 40
 const OVERSCAN = 10
 
 const scrollEl = ref<HTMLElement>()
 const scrollTop = ref(0)
 const { width: viewportW, height: viewportH } = useElementSize(scrollEl)
+
+// Высота строки и ширины колонок — из CSS-переменных грида (стили внизу): на телефоне колонки уже, на касании
+// строки выше. CSS видит ширину и касание сразу, ещё до скриптов, а виртуализация берёт числа оттуда же
+const sizes = reactive({ rowH: 36, keyW: 260, langW: 220 })
+const readSizes = () => {
+  if (!scrollEl.value) return
+  const css = getComputedStyle(scrollEl.value)
+  const px = (name: string, fallback: number) => Number.parseFloat(css.getPropertyValue(name)) || fallback
+  sizes.rowH = px('--loc-row-h', 36)
+  sizes.keyW = px('--loc-key-w', 260)
+  sizes.langW = px('--loc-lang-w', 220)
+}
+onMounted(readSizes)
+// Поменялась ширина — мог смениться брейкпоинт
+watch([viewportW, touch], readSizes)
 
 const onScroll = () => {
   scrollTop.value = scrollEl.value?.scrollTop ?? 0
@@ -46,8 +61,8 @@ const onScroll = () => {
 
 // --- Виртуализация: рендерим только видимые строки ---
 const windowRange = computed(() => {
-  const first = Math.max(0, Math.floor(scrollTop.value / ROW_H) - OVERSCAN)
-  const last = Math.min(props.rows.length, Math.ceil((scrollTop.value + viewportH.value) / ROW_H) + OVERSCAN)
+  const first = Math.max(0, Math.floor(scrollTop.value / sizes.rowH) - OVERSCAN)
+  const last = Math.min(props.rows.length, Math.ceil((scrollTop.value + viewportH.value) / sizes.rowH) + OVERSCAN)
   return { first, last }
 })
 const visibleRows = computed(() => props.rows.slice(windowRange.value.first, windowRange.value.last))
@@ -76,7 +91,7 @@ const maxCol = computed(() => props.languages.length)
 
 // Колонки: чекбокс, ключ, языки, даты. Собираем строкой, а не repeat(var(...)) в CSS:
 // пока языки не загрузились, repeat(0, …) — недопустимое значение, и шапка разваливается в столбик
-const columns = computed(() => ['40px', '260px', ...props.languages.map(() => '220px'), '110px', '110px'].join(' '))
+const columns = computed(() => [`${CHECK_W}px`, 'var(--loc-key-w)', ...props.languages.map(() => 'var(--loc-lang-w)'), '110px', '110px'].join(' '))
 
 const valueAt = (row: number, col: number) => {
   const r = props.rows[row]
@@ -89,14 +104,16 @@ const focusGrid = () => scrollEl.value?.focus({ preventScroll: true })
 const ensureVisible = (row: number, col: number) => {
   const el = scrollEl.value
   if (!el) return
-  const top = HEADER_H + row * ROW_H
+  const { rowH, langW } = sizes
+  const top = HEADER_H + row * rowH
   if (top < el.scrollTop + HEADER_H) el.scrollTop = top - HEADER_H
-  else if (top + ROW_H > el.scrollTop + el.clientHeight) el.scrollTop = top + ROW_H - el.clientHeight
+  else if (top + rowH > el.scrollTop + el.clientHeight) el.scrollTop = top + rowH - el.clientHeight
 
   if (col >= 1) {
-    const left = STICKY_W + (col - 1) * LANG_W
-    if (left < el.scrollLeft + STICKY_W) el.scrollLeft = left - STICKY_W
-    else if (left + LANG_W > el.scrollLeft + el.clientWidth) el.scrollLeft = left + LANG_W - el.clientWidth
+    const sticky = CHECK_W + sizes.keyW
+    const left = sticky + (col - 1) * langW
+    if (left < el.scrollLeft + sticky) el.scrollLeft = left - sticky
+    else if (left + langW > el.scrollLeft + el.clientWidth) el.scrollLeft = left + langW - el.clientWidth
   }
 }
 
@@ -122,6 +139,11 @@ const startEdit = (initial?: string) => {
   const row = props.rows[a.row]
   if (!row) return
   ensureVisible(a.row, a.col)
+  // Пальцем в узкой ячейке не попечатаешь — правка в шторке снизу
+  if (touch.value) {
+    emit('edit', row.technical_key, props.languages[a.col - 1]!)
+    return
+  }
   editing.value = {
     key: row.technical_key,
     col: a.col,
@@ -154,10 +176,16 @@ const onCancel = () => {
 const { copy, notifyCopied } = useCopy()
 
 const onCellDown = (row: number, col: number) => {
+  // Пальцем: первый тап выделяет ячейку, второй — правка, как в таблицах на телефоне. Двойного тапа
+  // для этого мало: в iOS он не всегда доходит как dblclick
+  const again = touch.value && active.value?.row === row && active.value?.col === col
   active.value = { row, col }
   focusGrid()
   const key = props.rows[row]?.technical_key
-  if (col === 0 && key) emit('open', key)
+  // Панель и правку — после нажатия целиком: сразу после mousedown браузер ставит фокус на грид, и только что
+  // открытая шторка (панель уже 1280 px, правка на касании) приняла бы это за уход фокуса и закрылась
+  if (col === 0 && key) setTimeout(() => emit('open', key))
+  else if (again) setTimeout(startEdit)
 }
 
 const onCellDblclick = (row: number, col: number) => {
@@ -166,7 +194,7 @@ const onCellDblclick = (row: number, col: number) => {
   else startEdit()
 }
 
-const pageRows = () => Math.max(1, Math.floor((viewportH.value - HEADER_H) / ROW_H) - 1)
+const pageRows = () => Math.max(1, Math.floor((viewportH.value - HEADER_H) / sizes.rowH) - 1)
 
 const onKeydown = (e: KeyboardEvent) => {
   if (editing.value || e.isComposing) return
@@ -270,16 +298,18 @@ defineExpose({ reset })
   >
     <!-- Шапка -->
     <div class="loc-row loc-header sticky top-0 z-20">
-      <div class="loc-cell loc-sticky left-0 justify-center">
+      <!-- Вся ячейка — label: пальцем в квадратик 14 px не попасть -->
+      <label class="loc-cell loc-sticky left-0 justify-center">
         <input
           type="checkbox"
           class="size-3.5 cursor-pointer accent-gray-900"
+          aria-label="Выделить все"
           :checked="allSelected"
           :indeterminate="selectedCount > 0 && !allSelected"
           :disabled="!rows.length"
           @change="emit('toggleAll', ($event.target as HTMLInputElement).checked)"
         >
-      </div>
+      </label>
       <div class="loc-cell loc-sticky left-[40px] border-r border-default px-3">
         Ключ
       </div>
@@ -331,7 +361,7 @@ defineExpose({ reset })
     </div>
 
     <template v-else>
-      <div :style="{ height: `${windowRange.first * ROW_H}px` }" />
+      <div :style="{ height: `${windowRange.first * sizes.rowH}px` }" />
 
       <LocalizationsGridRow
         v-for="(row, i) in visibleRows"
@@ -350,7 +380,7 @@ defineExpose({ reset })
         @cancel="onCancel"
       />
 
-      <div :style="{ height: `${(rows.length - windowRange.last) * ROW_H}px` }" />
+      <div :style="{ height: `${(rows.length - windowRange.last) * sizes.rowH}px` }" />
 
       <div
         v-if="loading"
@@ -398,12 +428,36 @@ defineExpose({ reset })
   --loc-scroll-thumb-hover: var(--ui-color-neutral-600);
 }
 
+/* Размеры грида; скрипт виртуализации читает их отсюда же */
+.loc-grid {
+  --loc-row-h: 36px;
+  --loc-key-w: 260px;
+  --loc-lang-w: 220px;
+  /* Без зума по двойному тапу в iOS: второй тап по ячейке — правка */
+  touch-action: manipulation;
+}
+
+/* Пальцем — строка не ниже 44 px, иначе промахиваешься мимо строки */
+@media (pointer: coarse) {
+  .loc-grid {
+    --loc-row-h: 44px;
+  }
+}
+
+/* Телефон: ключ уже, чтобы рядом был виден хотя бы один язык */
+@media (max-width: 639px) {
+  .loc-grid {
+    --loc-key-w: 150px;
+    --loc-lang-w: 200px;
+  }
+}
+
 .loc-row {
   display: grid;
   grid-template-columns: var(--loc-cols);
   width: max-content;
   min-width: 100%;
-  height: 36px;
+  height: var(--loc-row-h);
   background: var(--loc-bg);
 }
 
@@ -411,8 +465,11 @@ defineExpose({ reset })
   background: var(--loc-bg-odd);
 }
 
-.loc-row:not(.loc-header):hover {
-  background: var(--loc-bg-hover);
+/* Только для мыши: после тапа на телефоне подсветка «залипает» на строке */
+@media (hover: hover) {
+  .loc-row:not(.loc-header):hover {
+    background: var(--loc-bg-hover);
+  }
 }
 
 .loc-row.is-selected {
@@ -430,16 +487,27 @@ defineExpose({ reset })
   border-bottom-color: var(--loc-header-line);
 }
 
+/* Шапка всегда 36 px — её нажимают редко */
+.loc-header,
+.loc-header .loc-cell {
+  height: 36px;
+}
+
 .loc-cell {
   position: relative;
   display: flex;
   align-items: center;
   min-width: 0;
-  height: 36px;
+  height: var(--loc-row-h);
   border-bottom: 1px solid var(--loc-line);
   border-right: 1px solid var(--loc-line);
   user-select: none;
   cursor: default;
+}
+
+/* Ячейка с чекбоксом нажимается целиком */
+label.loc-cell {
+  cursor: pointer;
 }
 
 .loc-sticky {

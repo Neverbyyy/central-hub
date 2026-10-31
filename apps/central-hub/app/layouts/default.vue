@@ -12,31 +12,63 @@ const breadcrumbs = computed(() => {
 
   return items
 })
+
+// Меню на узком экране — шторка с тем же сайдбаром; переход по ссылке её закрывает
+const menuOpen = ref(false)
+watch(() => route.fullPath, () => {
+  menuOpen.value = false
+})
 </script>
 
 <template>
-  <div class="flex h-screen bg-muted overflow-hidden">
-    <AppSidebar />
+  <!-- dvh, а не vh: в мобильном Safari 100vh выше видимой части, и низ уходил под панель браузера -->
+  <div class="flex h-dvh bg-muted overflow-hidden">
+    <!-- От 1024 px сайдбар — колонкой, уже — в шторке по кнопке меню. Через CSS: сервер ширины экрана не знает -->
+    <div class="hidden shrink-0 lg:flex">
+      <AppSidebar class="w-64 border-r border-default" />
+    </div>
 
-    <div class="flex-1 flex flex-col overflow-hidden">
-      <header class="h-16 shrink-0 border-b border-default bg-default flex items-center px-4 justify-between">
-        <div class="flex items-center gap-3">
-          <UBreadcrumb :items="breadcrumbs">
-            <template #separator>
-              <span class="mx-2 text-muted">/</span>
-            </template>
+    <USlideover
+      v-model:open="menuOpen"
+      side="left"
+      title="Меню"
+      :ui="{ content: 'max-w-72' }"
+    >
+      <template #content>
+        <AppSidebar class="h-full" />
+      </template>
+    </USlideover>
 
-            <template #item="{ item, active }">
-              <!-- Один из двух цветов, а не оба сразу: иначе побеждает тот, что позже в CSS -->
-              <div :class="['bg-gray-0 color-blue font-normal rounded-lg', active ? 'text-highlighted' : 'text-muted']">
-                {{ item.label }}
-              </div>
-            </template>
-          </UBreadcrumb>
-        </div>
+    <div class="flex-1 min-w-0 flex flex-col overflow-hidden">
+      <header class="h-14 lg:h-16 shrink-0 border-b border-default bg-default flex items-center gap-1 px-2 lg:px-4">
+        <UButton
+          icon="i-lucide-menu"
+          color="neutral"
+          variant="ghost"
+          class="lg:hidden"
+          aria-label="Меню"
+          @click="menuOpen = true"
+        />
+
+        <UBreadcrumb
+          :items="breadcrumbs"
+          class="min-w-0"
+        >
+          <template #separator>
+            <span class="mx-2 text-muted">/</span>
+          </template>
+
+          <template #item="{ item, active }">
+            <!-- Один из двух цветов, а не оба сразу: иначе побеждает тот, что позже в CSS -->
+            <div :class="['bg-gray-0 color-blue font-normal rounded-lg', active ? 'text-highlighted' : 'text-muted']">
+              {{ item.label }}
+            </div>
+          </template>
+        </UBreadcrumb>
       </header>
 
-      <main class="flex-1 overflow-y-auto">
+      <!-- Страницы с гридом занимают её высоту целиком (h-full), остальные прокручиваются здесь -->
+      <main class="flex-1 min-h-0 overflow-y-auto">
         <slot />
       </main>
     </div>

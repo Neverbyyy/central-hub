@@ -14,7 +14,8 @@ const logout = async () => {
 </script>
 
 <template>
-  <div class="flex flex-col justify-between w-64 p-2 bg-mist-50 dark:bg-gray-950 border-r border-default flex flex-col">
+  <!-- Ширину и рамку задаёт место: в лейауте — колонка 256 px, в шторке меню — во всю шторку -->
+  <div class="flex flex-col justify-between p-2 bg-mist-50 dark:bg-gray-950">
     <section class="flex flex-col mx-2">
       <ULink
         raw

@@ -19,11 +19,12 @@ onMounted(async () => {
       Ссылки
     </h2>
 
-    <div class="flex gap-4 mb-4">
+    <!-- На телефоне карточки во всю ширину, с 640 px — в ряд с переносом -->
+    <div class="grid gap-4 mb-4 sm:flex sm:flex-wrap">
       <UCard
         title="Локализации"
         description="Управление всеми локализациями с возможностью выгрузки."
-        class="w-xs hover:cursor-pointer transition-all shadow-xl shadow-amber-50 dark:shadow-black/40 hover:bg-elevated hover:ring-accented dark:hover:bg-gray-700/60 dark:hover:ring-gray-600 rounded-xl"
+        class="w-full sm:w-xs hover:cursor-pointer transition-all shadow-xl shadow-amber-50 dark:shadow-black/40 hover:bg-elevated hover:ring-accented dark:hover:bg-gray-700/60 dark:hover:ring-gray-600 rounded-xl"
         @click="navigateTo('/localizations')"
       />
 
@@ -35,7 +36,7 @@ onMounted(async () => {
         <UCard
           title="WebViews"
           description="Все варианты WebView используемые в тестах и не только."
-          class="w-xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 dark:shadow-black/40 hover:bg-elevated hover:ring-accented dark:hover:bg-gray-700/60 dark:hover:ring-gray-600 rounded-xl"
+          class="w-full sm:w-xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 dark:shadow-black/40 hover:bg-elevated hover:ring-accented dark:hover:bg-gray-700/60 dark:hover:ring-gray-600 rounded-xl"
         />
       </NuxtLink>
     </div>
@@ -44,7 +45,8 @@ onMounted(async () => {
       Сервисы
     </h2>
 
-    <div class="flex gap-4 mb-4">
+    <!-- Маленькие карточки на телефоне — по две в ряд -->
+    <div class="grid grid-cols-2 gap-4 mb-4 sm:flex sm:flex-wrap">
       <NuxtLink
         to="https://www.notion.so/34bf40329b8d804382c2f3b9e2271017?v=34bf40329b8d80b8868a000c921008dc&pvs=13"
         target="_blank"
@@ -52,7 +54,7 @@ onMounted(async () => {
       >
         <UCard
           title="Notion"
-          class="w-3xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 dark:shadow-black/40 hover:bg-elevated hover:ring-accented dark:hover:bg-gray-700/60 dark:hover:ring-gray-600 rounded-xl"
+          class="w-full sm:w-3xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 dark:shadow-black/40 hover:bg-elevated hover:ring-accented dark:hover:bg-gray-700/60 dark:hover:ring-gray-600 rounded-xl"
         />
       </NuxtLink>
 
@@ -63,7 +65,7 @@ onMounted(async () => {
       >
         <UCard
           title="Rive"
-          class="w-3xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 dark:shadow-black/40 hover:bg-elevated hover:ring-accented dark:hover:bg-gray-700/60 dark:hover:ring-gray-600 rounded-xl"
+          class="w-full sm:w-3xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 dark:shadow-black/40 hover:bg-elevated hover:ring-accented dark:hover:bg-gray-700/60 dark:hover:ring-gray-600 rounded-xl"
         />
       </NuxtLink>
 
@@ -74,7 +76,7 @@ onMounted(async () => {
       >
         <UCard
           title="Vercel"
-          class="w-3xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 dark:shadow-black/40 hover:bg-elevated hover:ring-accented dark:hover:bg-gray-700/60 dark:hover:ring-gray-600 rounded-xl"
+          class="w-full sm:w-3xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 dark:shadow-black/40 hover:bg-elevated hover:ring-accented dark:hover:bg-gray-700/60 dark:hover:ring-gray-600 rounded-xl"
         />
       </NuxtLink>
 
@@ -85,7 +87,7 @@ onMounted(async () => {
       >
         <UCard
           title="Sanity"
-          class="w-3xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 dark:shadow-black/40 hover:bg-elevated hover:ring-accented dark:hover:bg-gray-700/60 dark:hover:ring-gray-600 rounded-xl"
+          class="w-full sm:w-3xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 dark:shadow-black/40 hover:bg-elevated hover:ring-accented dark:hover:bg-gray-700/60 dark:hover:ring-gray-600 rounded-xl"
         />
       </NuxtLink>
     </div>

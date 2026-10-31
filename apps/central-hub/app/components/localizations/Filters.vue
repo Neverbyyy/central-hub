@@ -59,7 +59,12 @@ const copyLink = () => copy(window.location.href, 'Ссылка на выбор�
 </script>
 
 <template>
-  <div class="flex shrink-0 flex-wrap items-center gap-2 border-b border-default px-4 py-2">
+  <!-- Уже 768 px — одна строка с прокруткой вбок, а не три строки кнопок над таблицей.
+       relative обязателен: скрытые поля внутри USelect спозиционированы absolute, и без него прокрутка
+       их не обрезает — мобильный браузер растягивал страницу вбок под них -->
+  <div class="relative flex shrink-0 items-center gap-2 overflow-x-auto border-b border-default px-3 py-2 [scrollbar-width:none] *:shrink-0 md:flex-wrap md:overflow-visible md:px-4 [&::-webkit-scrollbar]:hidden">
+    <!-- Теги, когда им нет места в тулбаре страницы -->
+    <slot name="leading" />
     <USelect
       v-model="statusModel"
       :items="statusItems"
@@ -152,24 +157,28 @@ const copyLink = () => copy(window.location.href, 'Ссылка на выбор�
     </UBadge>
 
     <div class="ml-auto flex items-center gap-1">
+      <!-- Счётчик ключей, когда ему нет места в тулбаре страницы -->
+      <slot name="trailing" />
       <UButton
         v-if="hasFilters"
         size="sm"
         variant="ghost"
         color="neutral"
         icon="i-lucide-x"
+        title="Сбросить"
         @click="emit('reset')"
       >
-        Сбросить
+        <span class="max-md:sr-only">Сбросить</span>
       </UButton>
       <UButton
         size="sm"
         variant="ghost"
         color="neutral"
         icon="i-lucide-link"
+        title="Ссылка на выборку"
         @click="copyLink"
       >
-        Ссылка на выборку
+        <span class="max-md:sr-only">Ссылка на выборку</span>
       </UButton>
     </div>
   </div>

@@ -41,17 +41,19 @@ const cellTitle = (lang: string) => {
     class="loc-row"
     :class="{ 'is-odd': index % 2 === 1, 'is-selected': selected }"
   >
-    <div
+    <!-- Вся ячейка — label: пальцем в квадратик 14 px не попасть -->
+    <label
       class="loc-cell loc-sticky left-0 justify-center"
       @mousedown.stop
     >
       <input
         type="checkbox"
         class="size-3.5 cursor-pointer accent-gray-900"
+        :aria-label="`Выделить ${row.technical_key}`"
         :checked="selected"
         @change="emit('toggle', row.technical_key, ($event.target as HTMLInputElement).checked)"
       >
-    </div>
+    </label>
 
     <div
       class="loc-cell loc-sticky left-[40px] border-r border-default px-3 font-mono text-[11px] font-semibold text-green-600 dark:text-green-400"

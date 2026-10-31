@@ -15,9 +15,13 @@ const props = defineProps<{
   prefix: string
   // Меняется — дерево перечитывается (после создания ключа)
   version: number
+  // В шторке узкого экрана: пункты крупнее — под палец
+  drawer?: boolean
 }>()
 
-const emit = defineEmits<{ select: [prefix: string] }>()
+// done — выбор окончательный: раздел без вложенных или «Все ключи». Папку с вложенными выбирают и по пути
+// глубже — шторка на ней не закрывается
+const emit = defineEmits<{ select: [prefix: string, done: boolean] }>()
 
 // Те же данные читает форма «Новый ключ» для подсказок — один запрос на страницу
 const { tree: data, status, refresh } = useKeyTree()
@@ -91,17 +95,18 @@ const selected = computed(() => findItem(items.value, props.prefix.replace(/\.$/
 
 // Повторный клик по выбранному разделу снимает выбор — вместе с ним снимается и фильтр
 const onSelect = (item: Item | undefined) => {
-  emit('select', item ? `${item.value}.` : '')
+  emit('select', item ? `${item.value}.` : '', !!item && !item.children?.length)
 }
 </script>
 
 <template>
-  <aside class="flex w-60 shrink-0 flex-col overflow-hidden border-r border-default bg-default">
+  <!-- Ширину и рамку задаёт место: колонка слева от грида или шторка на узком экране -->
+  <aside class="flex shrink-0 flex-col overflow-hidden bg-default">
     <button
       type="button"
-      class="mx-2 mt-2 mb-1 flex items-center justify-between rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted"
-      :class="!prefix ? 'font-semibold text-highlighted' : 'text-toned'"
-      @click="emit('select', '')"
+      class="mx-2 mt-2 mb-1 flex items-center justify-between rounded-md px-2 text-left text-sm hover:bg-muted"
+      :class="[!prefix ? 'font-semibold text-highlighted' : 'text-toned', drawer ? 'py-3' : 'py-1.5']"
+      @click="emit('select', '', true)"
     >
       Все ключи
     </button>
@@ -147,16 +152,23 @@ const onSelect = (item: Item | undefined) => {
         :items="items"
         :model-value="selected"
         :get-key="(item: Item) => item.value"
-        size="sm"
+        :size="drawer ? 'lg' : 'sm'"
+        :ui="drawer ? { link: 'py-3' } : undefined"
         @update:model-value="onSelect"
         @toggle="onToggle"
       >
         <template #item-label="{ item }">
-          <span class="font-mono text-xs">{{ item.label }}</span>
+          <span
+            class="font-mono"
+            :class="drawer ? 'text-sm' : 'text-xs'"
+          >{{ item.label }}</span>
         </template>
         <!-- Свой хвост пункта: число ключей и стрелка, которую иначе рисует сам UTree -->
         <template #item-trailing="{ item, ui }">
-          <span class="text-[10px] tabular-nums text-muted">{{ item.keys }}</span>
+          <span
+            class="tabular-nums text-muted"
+            :class="drawer ? 'text-xs' : 'text-[10px]'"
+          >{{ item.keys }}</span>
           <UIcon
             v-if="item.children?.length"
             name="i-lucide-chevron-down"

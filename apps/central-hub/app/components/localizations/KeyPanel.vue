@@ -9,6 +9,8 @@ const props = defineProps<{
   languages: string[]
   // Строка из грида: по её updated_at панель понимает, что ключ поменяли, и перечитывает себя
   row?: Localization
+  // На касании язык можно поправить прямо отсюда — в шторке страницы
+  editable?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -18,6 +20,8 @@ const emit = defineEmits<{
   restored: [key: string]
   // Поменялись свойства ключа — у страницы мог поменяться список тегов
   changed: [key: string]
+  // Поправить текст языка (editable)
+  edit: [lang: string]
 }>()
 
 interface KeyDetails extends Localization {
@@ -157,6 +161,9 @@ const languageRows = computed(() => props.languages.map((lang) => {
 
 const toApprove = computed(() => languageRows.value.filter(l => l.canApprove).map(l => l.lang))
 
+// Устаревший ключ сначала возвращают — как и в гриде
+const canEdit = computed(() => !!props.editable && !!details.value && !details.value.deprecated_at)
+
 const approve = async (langs: string[]) => {
   if (!langs.length) return
   approving.value = langs.length === 1 ? langs[0]! : '*'
@@ -199,8 +206,9 @@ const [DefineEntry, ReuseEntry] = createReusableTemplate<{ entry: HistoryEntry }
 </script>
 
 <template>
+  <!-- Ширину и рамку задаёт место: колонка справа от грида или шторка на узком экране -->
   <aside
-    class="flex w-[380px] shrink-0 flex-col overflow-hidden border-l border-default bg-default"
+    class="flex shrink-0 flex-col overflow-hidden bg-default"
     aria-label="Ключ"
   >
     <div class="flex items-start gap-2 border-b border-default px-4 py-3">
@@ -371,7 +379,11 @@ const [DefineEntry, ReuseEntry] = createReusableTemplate<{ entry: HistoryEntry }
             class="flex items-start gap-2 py-1.5"
           >
             <span class="w-6 shrink-0 pt-0.5 font-mono text-[10px] font-semibold uppercase text-muted">{{ item.lang }}</span>
-            <div class="min-w-0 flex-1">
+            <!-- На касании тап по тексту — правка; для клавиатуры и скринридера есть кнопка с карандашом справа -->
+            <div
+              class="min-w-0 flex-1"
+              @click="canEdit && emit('edit', item.lang)"
+            >
               <p
                 class="whitespace-pre-line break-words"
                 :class="item.text ? 'text-gray-800 dark:text-gray-100' : 'text-muted'"
@@ -431,6 +443,15 @@ const [DefineEntry, ReuseEntry] = createReusableTemplate<{ entry: HistoryEntry }
               :loading="approving === item.lang"
               :disabled="!!approving"
               @click="approve([item.lang])"
+            />
+            <UButton
+              v-if="canEdit"
+              size="sm"
+              color="neutral"
+              variant="ghost"
+              icon="i-lucide-pencil"
+              :aria-label="`Изменить ${item.lang.toUpperCase()}`"
+              @click="emit('edit', item.lang)"
             />
           </li>
         </ul>

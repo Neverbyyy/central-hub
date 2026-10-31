@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import type { DropdownMenuItem } from '@nuxt/ui'
+import { createReusableTemplate } from '@vueuse/core'
 import type { Localization } from '~/composables/useLocalizations'
 
 definePageMeta({ title: 'Локализации' })
 
 const toast = useToast()
 const notifyError = useNotifyError()
+// Узкий экран: дерево и панель ключа — шторками, правка на касании — в шторке снизу
+const screen = useScreen()
 
 const {
   languages,
@@ -67,10 +70,29 @@ watch([q, filtersKey], () => {
   selectedKeys.value = new Set()
 })
 
-// --- Дерево разделов слева; свёрнуто или нет — помним в браузере ---
+// --- Дерево разделов: от 1024 px колонкой слева (свёрнута или нет — помним в браузере), уже — шторкой ---
 const treeOpen = useLocalStorage('hub.localizations.tree', true, { initOnMounted: true })
+const treeDrawer = ref(false)
 // Растёт после создания ключа — дерево перечитывает счётчики
 const treeVersion = ref(0)
+const treeShown = computed(() => screen.lg.value && treeOpen.value)
+
+const toggleTree = () => {
+  if (screen.lg.value) treeOpen.value = !treeOpen.value
+  else treeDrawer.value = true
+}
+
+// В шторке: папка с вложенными выбирается и раскрывается, а шторка остаётся — можно пойти глубже.
+// Раздел без вложенных и «Все ключи» — выбор окончательный, шторка закрывается; иначе — кнопкой «Показать»
+const selectSection = (prefix: string, done: boolean) => {
+  filters.prefix = prefix
+  if (done) treeDrawer.value = false
+}
+
+// Планшет повернули, и дереву хватает места колонкой — шторка не нужна
+watch(screen.lg, (lg) => {
+  if (lg) treeDrawer.value = false
+})
 
 // --- Панель ключа справа: ?key= в адресе, чтобы ссылкой можно было открыть конкретный ключ ---
 const panelKey = ref<string | null>(null)
@@ -97,6 +119,18 @@ const closePanel = () => {
   panelKey.value = null
   setKeyParam(null)
 }
+
+// От 1280 px панель — колонкой справа, уже — шторкой поверх грида (на телефоне — на весь экран)
+const panelSheetOpen = computed({
+  get: () => !!panelKey.value && !screen.xl.value,
+  set: (open) => {
+    if (!open) closePanel()
+  }
+})
+// Одна разметка панели на оба места
+const [DefinePanel, ReusePanel] = createReusableTemplate<{ inSheet: boolean }>()
+// Теги и счётчик — в тулбаре от 1280 px, уже — в строке фильтров: в тулбаре они наезжали на поиск и кнопки
+const [DefineTags, ReuseTags] = createReusableTemplate<{ inFilters: boolean }>()
 
 // Открытая панель следует за активной строкой
 const focusedKey = ref<string | null>(null)
@@ -244,12 +278,21 @@ const queueItems = computed<DropdownMenuItem[][]>(() => [
   [{ type: 'label', label: filters.prefix ? `Раздел ${filters.prefix}` : 'Все ключи' }],
   languages.value.filter(l => !l.is_source).map(l => ({
     label: `${l.code.toUpperCase()} — ${l.name}`,
+    // Свой хвост со счётчиком (#queue-trailing) — и в кнопке очереди, и в подменю «Ещё»
+    slot: 'queue',
     count: queueCounts.value ? (queueCounts.value[l.code] ?? 0) : undefined,
     onSelect: () => {
       navigateTo({ path: '/localizations/queue', query: { lang: l.code, ...(filters.prefix ? { prefix: filters.prefix } : {}) } })
     }
   }))
 ])
+
+// Хвост пункта языка: сколько ждёт перевода. unknown — тип пункта в своём слоте Nuxt UI выводит только для
+// литерала slot, а у пунктов, собранных в computed, он string
+const queueCount = (item: unknown) => {
+  const count = (item as { count?: number }).count
+  return count === undefined ? '…' : count || '✓'
+}
 
 // --- Экспорт: ZIP — всё под текущими фильтрами, Figma — выборка разделов в отдельном окне ---
 const figmaOpen = ref(false)
@@ -275,18 +318,101 @@ const exportZip = async () => {
     exporting.value = false
   }
 }
+
+// --- Меню «Ещё» уже 768 px: то, чему не хватило места в тулбаре ---
+const moreItems = computed<DropdownMenuItem[][]>(() => [
+  [{ label: 'Очередь перевода', icon: 'i-lucide-list-todo', children: queueItems.value }],
+  [
+    { label: 'Export ZIP', icon: 'i-lucide-download', disabled: exporting.value, onSelect: exportZip },
+    { label: 'Export Figma', icon: 'i-lucide-figma', onSelect: () => { figmaOpen.value = true } }
+  ]
+])
+
+const keysTotal = computed(() => (total.value === null ? '…' : keysCount(total.value)))
+
+// --- Правка в шторке снизу: на касании вместо редактора в ячейке ---
+const sheet = ref<{ key: string, lang: string, initial: string } | null>(null)
+const sheetOpen = ref(false)
+const sourceLang = computed(() => languages.value.find(l => l.is_source)?.code ?? 'en')
+// Английский рядом с полем перевода; у самого английского — нет
+const sheetSource = computed(() => {
+  if (!sheet.value || sheet.value.lang === sourceLang.value) return undefined
+  return rows.value.find(r => r.technical_key === sheet.value!.key)?.translations?.[sourceLang.value] ?? ''
+})
+
+const openSheet = (key: string, lang: string) => {
+  const row = rows.value.find(r => r.technical_key === key)
+  // Ключа нет среди загруженных строк (панель открыта по ссылке) — сохранить правку было бы некуда
+  if (!row) return
+  sheet.value = { key, lang, initial: row.translations?.[lang] ?? '' }
+  sheetOpen.value = true
+}
+
+const editFromPanel = (lang: string) => {
+  if (panelKey.value) openSheet(panelKey.value, lang)
+}
+
+// Тем же путём, что и ячейка: отмена ⌘Z, проверка, не поправил ли текст коллега
+const saveSheet = (value: string) => {
+  if (sheet.value) setTranslation(sheet.value.key, sheet.value.lang, value, sheet.value.initial)
+}
 </script>
 
 <template>
-  <div class="flex h-[calc(100dvh-64px)] flex-col overflow-hidden bg-default text-highlighted">
-    <div class="flex shrink-0 items-center justify-between gap-4 border-b border-default p-4">
-      <div class="flex w-full min-w-0 max-w-2xl items-center gap-3">
+  <div class="flex h-full flex-col overflow-hidden bg-default text-highlighted">
+    <DefineTags v-slot="{ inFilters }">
+      <USelectMenu
+        v-model="selectedTags"
+        :items="availableTags"
+        multiple
+        placeholder="Все теги"
+        :search-input="{ placeholder: 'Найти тег…' }"
+        :size="inFilters ? 'sm' : 'md'"
+        :class="inFilters ? 'w-40 xl:hidden' : 'hidden w-48 shrink-0 xl:inline-flex'"
+      >
+        <template #empty="{ searchTerm }">
+          <p class="text-center text-sm text-muted">
+            <template v-if="searchTerm">
+              Тега «{{ searchTerm }}» нет
+            </template>
+            <template v-else-if="tagsState === 'loading'">
+              Загружаю теги…
+            </template>
+            <template v-else-if="tagsState === 'error'">
+              Теги не загрузились — обновите страницу
+            </template>
+            <template v-else>
+              Тегов нет
+            </template>
+          </p>
+        </template>
+      </USelectMenu>
+    </DefineTags>
+
+    <DefinePanel v-slot="{ inSheet }">
+      <LocalizationsKeyPanel
+        v-if="panelKey"
+        :class="inSheet ? 'h-full w-full' : 'w-[380px] border-l border-default'"
+        :technical-key="panelKey"
+        :languages="languageCodes"
+        :row="panelRow"
+        :editable="screen.touch.value && !!panelRow && !filters.deprecated"
+        @close="closePanel"
+        @deprecate="deprecateFromPanel"
+        @restored="onRestored"
+        @changed="fetchTags"
+        @edit="editFromPanel"
+      />
+    </DefinePanel>
+
+    <div class="flex shrink-0 items-center justify-between gap-2 border-b border-default px-3 py-2 md:gap-4 md:p-4">
+      <div class="flex w-full min-w-0 max-w-2xl items-center gap-2 md:gap-3">
         <UButton
-          :icon="treeOpen ? 'i-lucide-panel-left-close' : 'i-lucide-panel-left-open'"
+          :icon="treeShown ? 'i-lucide-panel-left-close' : 'i-lucide-panel-left-open'"
           color="neutral"
           variant="ghost"
-          :aria-label="treeOpen ? 'Скрыть разделы' : 'Показать разделы'"
-          @click="treeOpen = !treeOpen"
+          :aria-label="treeShown ? 'Скрыть разделы' : 'Показать разделы'"
+          @click="toggleTree"
         />
         <UInput
           ref="searchInput"
@@ -316,38 +442,16 @@ const exportZip = async () => {
             </button>
           </template>
         </UInput>
-        <USelectMenu
-          v-model="selectedTags"
-          :items="availableTags"
-          multiple
-          placeholder="Все теги"
-          :search-input="{ placeholder: 'Найти тег…' }"
-          class="w-48 shrink-0"
-        >
-          <template #empty="{ searchTerm }">
-            <p class="text-center text-sm text-muted">
-              <template v-if="searchTerm">
-                Тега «{{ searchTerm }}» нет
-              </template>
-              <template v-else-if="tagsState === 'loading'">
-                Загружаю теги…
-              </template>
-              <template v-else-if="tagsState === 'error'">
-                Теги не загрузились — обновите страницу
-              </template>
-              <template v-else>
-                Тегов нет
-              </template>
-            </p>
-          </template>
-        </USelectMenu>
+        <ReuseTags :in-filters="false" />
       </div>
 
-      <div class="flex shrink-0 items-center gap-3 whitespace-nowrap">
-        <span class="whitespace-nowrap text-xs text-muted">
-          {{ total === null ? '…' : keysCount(total) }}
+      <div class="flex shrink-0 items-center gap-2 whitespace-nowrap md:gap-3">
+        <!-- Уже 1280 px — в строке фильтров, вместе с тегами -->
+        <span class="hidden whitespace-nowrap text-xs text-muted xl:inline">
+          {{ keysTotal }}
         </span>
 
+        <!-- Уже 768 px очередь и экспорты уходят в меню «Ещё» -->
         <UDropdownMenu
           :items="queueItems"
           :content="{ align: 'end' }"
@@ -358,15 +462,13 @@ const exportZip = async () => {
             color="neutral"
             variant="soft"
             title="Очередь перевода"
+            class="hidden md:inline-flex"
           >
             <span class="max-[1365px]:sr-only">Очередь перевода</span>
           </UButton>
-          <template #item-trailing="{ item }">
-            <span
-              v-if="item.type !== 'label'"
-              class="text-xs tabular-nums text-muted"
-            >
-              {{ item.count === undefined ? '…' : item.count || '✓' }}
+          <template #queue-trailing="{ item }">
+            <span class="text-xs tabular-nums text-muted">
+              {{ queueCount(item) }}
             </span>
           </template>
         </UDropdownMenu>
@@ -378,6 +480,7 @@ const exportZip = async () => {
           color="neutral"
           variant="soft"
           title="Export ZIP"
+          class="hidden md:inline-flex"
           :loading="exporting"
           :disabled="exporting"
           @click="exportZip"
@@ -390,6 +493,7 @@ const exportZip = async () => {
           color="neutral"
           variant="soft"
           title="Export Figma"
+          class="hidden md:inline-flex"
           @click="figmaOpen = true"
         >
           <span class="max-[1535px]:sr-only">Export Figma</span>
@@ -406,9 +510,11 @@ const exportZip = async () => {
             icon="i-lucide-git-pull-request"
             color="neutral"
             class="relative"
+            title="Выгрузить в код"
             @click="projectsOpen = true"
           >
-            Выгрузить в код
+            <!-- Главное действие видно всегда; уже 768 px — значком с баджем -->
+            <span class="max-md:sr-only">Выгрузить в код</span>
             <template
               v-if="openPrs.length"
               #trailing
@@ -439,10 +545,30 @@ const exportZip = async () => {
 
         <UButton
           icon="i-lucide-plus"
+          title="Новый ключ"
           @click="creating = true"
         >
-          Новый ключ
+          <span class="max-sm:sr-only">Новый ключ</span>
         </UButton>
+
+        <UDropdownMenu
+          :items="moreItems"
+          :content="{ align: 'end' }"
+          @update:open="loadQueueCounts"
+        >
+          <UButton
+            icon="i-lucide-ellipsis"
+            color="neutral"
+            variant="soft"
+            class="md:hidden"
+            aria-label="Ещё"
+          />
+          <template #queue-trailing="{ item }">
+            <span class="text-xs tabular-nums text-muted">
+              {{ queueCount(item) }}
+            </span>
+          </template>
+        </UDropdownMenu>
       </div>
     </div>
 
@@ -478,17 +604,25 @@ const exportZip = async () => {
       :languages="languageCodes"
       :has-filters="hasFilters"
       @reset="resetFilters"
-    />
+    >
+      <template #leading>
+        <ReuseTags :in-filters="true" />
+      </template>
+      <template #trailing>
+        <span class="whitespace-nowrap px-1 text-xs text-muted xl:hidden">{{ keysTotal }}</span>
+      </template>
+    </LocalizationsFilters>
 
     <div class="relative flex min-h-0 flex-1">
       <!-- Действия с выделенными строками — плашкой над гридом: в шапке им не хватает места -->
       <div
         v-if="selectedKeys.size"
-        class="pointer-events-none absolute inset-x-0 bottom-4 z-20 flex justify-center"
+        class="pointer-events-none absolute inset-x-0 bottom-4 z-20 flex justify-center px-3"
       >
-        <div class="pointer-events-auto flex items-center gap-2 whitespace-nowrap rounded-xl border border-default bg-default py-1.5 pl-4 pr-1.5 shadow-lg">
+        <div class="pointer-events-auto flex items-center gap-2 whitespace-nowrap rounded-xl border border-default bg-default py-1.5 pl-3 pr-1.5 shadow-lg sm:pl-4">
+          <!-- На телефоне подписи короче, иначе плашка шире экрана -->
           <span class="mr-1 text-sm text-toned">
-            Выбрано: {{ keysCount(selectedKeys.size) }}
+            <span class="max-sm:hidden">Выбрано: </span>{{ keysCount(selectedKeys.size) }}
           </span>
           <UButton
             v-if="filters.deprecated"
@@ -521,9 +655,10 @@ const exportZip = async () => {
               variant="soft"
               :loading="deprecating"
               :disabled="approving"
+              title="Пометить устаревшими"
               @click="deprecateSelected"
             >
-              Пометить устаревшими
+              <span class="max-sm:sr-only">Пометить устаревшими</span>
             </UButton>
           </template>
           <UButton
@@ -536,12 +671,18 @@ const exportZip = async () => {
         </div>
       </div>
 
-      <LocalizationsKeyTree
-        v-if="treeOpen"
-        :prefix="filters.prefix"
-        :version="treeVersion"
-        @select="filters.prefix = $event"
-      />
+      <!-- Колонки дерева и панели — от 1024 и 1280 px. Классы прячут их уже и в HTML с сервера, до скриптов -->
+      <div
+        v-if="treeShown"
+        class="hidden lg:flex"
+      >
+        <LocalizationsKeyTree
+          class="w-60 border-r border-default"
+          :prefix="filters.prefix"
+          :version="treeVersion"
+          @select="filters.prefix = $event"
+        />
+      </div>
 
       <LocalizationsGrid
         ref="grid"
@@ -561,22 +702,68 @@ const exportZip = async () => {
         @open="openPanel"
         @focus-row="focusedKey = $event"
         @escape="closePanel"
+        @edit="openSheet"
       />
 
-      <LocalizationsKeyPanel
-        v-if="panelKey"
-        :technical-key="panelKey"
-        :languages="languageCodes"
-        :row="panelRow"
-        @close="closePanel"
-        @deprecate="deprecateFromPanel"
-        @restored="onRestored"
-        @changed="fetchTags"
-      />
+      <div
+        v-if="panelKey && screen.xl.value"
+        class="hidden xl:flex"
+      >
+        <ReusePanel :in-sheet="false" />
+      </div>
     </div>
 
-    <!-- Одна строка: что не влезло, прячется, а не переносится -->
-    <div class="hotkeys flex shrink-0 items-center gap-4 overflow-hidden whitespace-nowrap border-t border-default px-4 py-1.5 text-[11px] text-muted">
+    <USlideover
+      v-model:open="treeDrawer"
+      side="left"
+      title="Разделы"
+      :ui="{ content: 'max-w-xs' }"
+    >
+      <template #content>
+        <div class="flex h-full flex-col">
+          <LocalizationsKeyTree
+            class="min-h-0 w-full flex-1"
+            drawer
+            :prefix="filters.prefix"
+            :version="treeVersion"
+            @select="selectSection"
+          />
+          <!-- Закрыть на любом уровне; число — сколько ключей в выбранном разделе, видно ещё до закрытия -->
+          <div class="border-t border-default p-3">
+            <UButton
+              block
+              size="lg"
+              @click="treeDrawer = false"
+            >
+              Показать {{ keysTotal }}
+            </UButton>
+          </div>
+        </div>
+      </template>
+    </USlideover>
+
+    <USlideover
+      v-model:open="panelSheetOpen"
+      side="right"
+      title="Ключ"
+    >
+      <template #content>
+        <ReusePanel :in-sheet="true" />
+      </template>
+    </USlideover>
+
+    <LocalizationsEditSheet
+      v-if="sheet"
+      v-model:open="sheetOpen"
+      :technical-key="sheet.key"
+      :lang="sheet.lang"
+      :initial="sheet.initial"
+      :source="sheetSource"
+      @save="saveSheet"
+    />
+
+    <!-- Одна строка: что не влезло, прячется, а не переносится. Уже 1024 px клавиатуры обычно нет — полосы тоже -->
+    <div class="hotkeys hidden shrink-0 items-center gap-4 overflow-hidden whitespace-nowrap border-t border-default px-4 py-1.5 text-[11px] text-muted lg:flex">
       <span><kbd>↑↓←→</kbd> навигация</span>
       <span><kbd>Enter</kbd> / печатай — правка · <kbd>Shift+Enter</kbd> перенос · <kbd>Esc</kbd> отмена</span>
       <span><kbd>⌘C</kbd> / <kbd>⌘V</kbd> · <kbd>Del</kbd> очистить · <kbd>⌘Z</kbd> отменить</span>
