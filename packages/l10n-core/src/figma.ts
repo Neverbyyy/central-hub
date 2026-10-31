@@ -77,8 +77,9 @@ export function figmaText(value: string): string {
     // После тегов: &lt;b&gt; — это текст «<b>», а не тег
     .replace(ENTITY, decodeEntity)
     .replace(I18N_LITERAL, '$1')
-    // «ОТКРЫТЬ <br />ВСЕ» — строка не должна кончаться пробелом
-    .replace(/[ \t]*\n[ \t]*/g, '\n')
+    // Перед переносом — ровно один пробел: таблица Variables рисует значение в одну строку и без него
+    // склеивает строки («appsin»). Следующая строка с пробела не начинается
+    .replace(/[ \t]*\n[ \t]*/g, ' \n')
 }
 
 /**

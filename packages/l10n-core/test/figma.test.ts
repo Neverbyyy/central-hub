@@ -87,27 +87,32 @@ describe('figmaVariables', () => {
     const [variable] = figmaVariables([
       { technical_key: 'legacy.inapp.title', translations: { en: 'Open<br/>the world', ru: 'Откройте <b>мир</b>' } }
     ], { languages: ['en', 'ru'] })
-    expect(variable!.values).toEqual({ en: 'Open\nthe world', ru: 'Откройте мир' })
+    expect(variable!.values).toEqual({ en: 'Open \nthe world', ru: 'Откройте мир' })
   })
 })
 
 describe('figmaText — разметку Figma не понимает, в переменную уходит чистый текст', () => {
   const NBSP = ' '
 
-  it('примеры из макетов Антона: <br> — перенос строки, span убирается вместе с пробелом перед переносом', () => {
-    expect(figmaText('ОТКРОЙТЕ МИР<br />МОДЫ И ТВОРЧЕСТВА!')).toBe('ОТКРОЙТЕ МИР\nМОДЫ И ТВОРЧЕСТВА!')
+  // Перед переносом всегда один пробел: таблица Variables рисует значение в одну строку и без пробела
+  // склеивала бы строки («appsin»). Новая строка на холсте с пробела не начинается
+  it('примеры из макетов Антона: <br> — перенос строки, span убирается', () => {
+    expect(figmaText('ОТКРОЙТЕ МИР<br />МОДЫ И ТВОРЧЕСТВА!')).toBe('ОТКРОЙТЕ МИР \nМОДЫ И ТВОРЧЕСТВА!')
     expect(figmaText('ХОТИТЕ ОТКРЫТЬ <span style="color: #EC0053;"><br />ВСЕ МАШИНКИ БЕСПЛАТНО</span> НА 7 ДНЕЙ?'))
-      .toBe('ХОТИТЕ ОТКРЫТЬ\nВСЕ МАШИНКИ БЕСПЛАТНО НА 7 ДНЕЙ?')
-    expect(figmaText('Откройте полный доступ<br/>и отключите рекламу навсегда')).toBe('Откройте полный доступ\nи отключите рекламу навсегда')
+      .toBe('ХОТИТЕ ОТКРЫТЬ \nВСЕ МАШИНКИ БЕСПЛАТНО НА 7 ДНЕЙ?')
+    expect(figmaText('Откройте полный доступ<br/>и отключите рекламу навсегда')).toBe('Откройте полный доступ \nи отключите рекламу навсегда')
   })
 
-  it('все виды <br> в любом регистре', () => {
-    expect(figmaText('a<br>b<br/>c<br />d<BR>e<Br  />f')).toBe('a\nb\nc\nd\ne\nf')
+  it('все виды <br> в любом регистре; пробел перед переносом — ровно один, после — ни одного', () => {
+    expect(figmaText('a<br>b<br/>c<br />d<BR>e<Br  />f')).toBe('a \nb \nc \nd \ne \nf')
+    expect(figmaText('a   <br/>   b')).toBe('a \nb')
+    // Перенос, который уже был в тексте, — по тому же правилу
+    expect(figmaText('a\nb')).toBe('a \nb')
   })
 
   it('оформление HTML убирается, текст остаётся', () => {
     expect(figmaText('All dinosaurs and <strong>20+</strong> fun apps <br><span>in ONE subscription!</span>'))
-      .toBe('All dinosaurs and 20+ fun apps\nin ONE subscription!')
+      .toBe('All dinosaurs and 20+ fun apps \nin ONE subscription!')
     expect(figmaText('<b>Bold</b>, <u>underline</u>, <span style="font-weight: 700;">weight</span>')).toBe('Bold, underline, weight')
     // Кавычки «ёлочки» вместо прямых — так тоже встречается в данных
     expect(figmaText('<span style=“color: #0054B3”>Blue</span>')).toBe('Blue')
