@@ -396,9 +396,11 @@ const exportZip = async () => {
         </UButton>
 
         <!-- Главное действие сервиса — выделено. Бадж — сколько PR выгрузки открыто и ждёт мержа, у всех сразу -->
+        <!-- У тултипа Nuxt UI высота в одну строку (h-6): список PR вылезал бы за фон -->
         <UTooltip
           :disabled="!openPrs.length"
           :content="{ side: 'bottom' }"
+          :ui="{ content: 'h-auto px-3 py-2' }"
         >
           <UButton
             icon="i-lucide-git-pull-request"
@@ -418,18 +420,19 @@ const exportZip = async () => {
             </template>
           </UButton>
           <template #content>
-            <div class="space-y-0.5 py-0.5 text-xs">
-              <p class="font-medium">
+            <div class="text-xs">
+              <p class="mb-1.5 text-muted">
                 {{ openPrs.length === 1 ? 'Открыт PR — ждёт мержа' : 'Открыты PR — ждут мержа' }}
               </p>
-              <p
-                v-for="pr in openPrs"
-                :key="pr.set"
-              >
-                {{ exportProjectName(pr.set) }} #{{ pr.number }}<template v-if="pr.actor">
-                  · {{ pr.actor }}, {{ formatDateTime(pr.at, { year: false }) }}
+              <div class="grid grid-cols-[auto_auto] gap-x-4 gap-y-1">
+                <template
+                  v-for="pr in openPrs"
+                  :key="pr.set"
+                >
+                  <span class="font-medium">{{ exportProjectName(pr.set) }} #{{ pr.number }}</span>
+                  <span class="text-muted">{{ pr.actor ? `${pr.actor} · ${formatDateTime(pr.at, { year: false })}` : '' }}</span>
                 </template>
-              </p>
+              </div>
             </div>
           </template>
         </UTooltip>
