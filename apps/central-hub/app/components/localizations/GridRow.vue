@@ -22,9 +22,6 @@ const emit = defineEmits<{
   cancel: []
 }>()
 
-const THREE_DAYS = 3 * 24 * 60 * 60 * 1000
-const isNew = computed(() => !!props.row.created_at && Date.now() - new Date(props.row.created_at).getTime() <= THREE_DAYS)
-
 // Утверждённые без отметки — их большинство, отметки только у того, что требует внимания
 const STATUS_LABEL = { ai: 'Черновой перевод нейросети', draft: 'Черновик — ещё не утверждён' } as const
 
@@ -57,8 +54,8 @@ const cellTitle = (lang: string) => {
     </div>
 
     <div
-      class="loc-cell loc-sticky left-[40px] border-r border-default px-3 font-mono text-[11px] font-semibold"
-      :class="[isNew ? 'text-green-600 dark:text-green-400' : 'text-blue-600 dark:text-blue-400', { 'is-active': activeCol === 0 }]"
+      class="loc-cell loc-sticky left-[40px] border-r border-default px-3 font-mono text-[11px] font-semibold text-green-600 dark:text-green-400"
+      :class="{ 'is-active': activeCol === 0 }"
       @mousedown="emit('cellDown', index, 0)"
       @dblclick="emit('cellDblclick', index, 0)"
     >

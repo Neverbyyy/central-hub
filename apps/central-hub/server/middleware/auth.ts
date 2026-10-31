@@ -1,9 +1,11 @@
 // Весь сервис закрыт общим паролем. Без входа открыто только то, без чего не нарисовать
-// страницу входа, и маршруты CLI, MCP и плагина Figma — там обработчик требует токен.
+// страницу входа, и маршруты CLI, MCP и плагина Figma — там обработчик требует токен — и вебхук GitHub (подпись).
 const PUBLIC_PREFIXES = [
   '/api/auth/',
   '/api/cli/',
   '/api/figma/plugin/',
+  // Вебхук GitHub — без пароля, но с подписью секретом NUXT_GITHUB_WEBHOOK_SECRET
+  '/api/github/webhook',
   '/mcp',
   '/api/_nuxt_icon/',
   '/_nuxt/',

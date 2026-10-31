@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { RealtimeChannel } from '@supabase/supabase-js'
 import type { FileChange } from '~/utils/exportChanges'
 
 // Выгрузка в код: утверждённые тексты набора уходят PR в репозиторий проекта на GitHub.
@@ -13,6 +14,8 @@ interface ExportSetInfo {
   lastRun: { outcome: string, pr_number: number | null, pr_url: string | null, actor: string, created_at: string } | null
   // Открытый PR — приходит сразу, раньше медленного предпросмотра
   openPr: { number: number, url: string } | null
+  // Что стало с PR последней выгрузки — после мержа на GitHub окно пишет «PR #7 смержен»
+  lastPr: { number: number, url: string, state: 'open' | 'merged' | 'closed' } | null
 }
 
 interface SyncResult {
@@ -56,22 +59,24 @@ const setPushing = (names: string[], value: boolean) => {
   pushing.value = next
 }
 
-const loadPreview = async (name: string) => {
-  previews.value = { ...previews.value, [name]: undefined }
+// silent — перечитать без «Сравниваю…»: старый предпросмотр на месте, пока не придёт новый
+const loadPreview = async (name: string, { silent = false } = {}) => {
+  if (!silent) previews.value = { ...previews.value, [name]: undefined }
   try {
     const preview = await $fetch<SyncResult>(`/api/export/${name}/preview`)
     previews.value = { ...previews.value, [name]: preview }
   } catch (error) {
-    if (!(await authRedirect(error))) previews.value = { ...previews.value, [name]: { error: errorMessage(error) } }
+    // Тихое обновление не сбилось — остаётся прежний предпросмотр, а не ошибка
+    if (!(await authRedirect(error)) && !silent) previews.value = { ...previews.value, [name]: { error: errorMessage(error) } }
   }
 }
 
-const loadSets = async (): Promise<ExportSetInfo[]> => {
+const loadSets = async ({ silent = false } = {}): Promise<ExportSetInfo[]> => {
   try {
     sets.value = await $fetch<ExportSetInfo[]>('/api/export/sets')
     return sets.value
   } catch (error) {
-    if (!(await authRedirect(error))) setsError.value = errorMessage(error)
+    if (!(await authRedirect(error)) && !silent) setsError.value = errorMessage(error)
     return []
   }
 }
@@ -85,6 +90,53 @@ watch(open, async (value) => {
   results.value = {}
   changesOpen.value = false
   for (const set of await loadSets()) if (set.connected) loadPreview(set.name)
+})
+
+// --- Статус без переоткрытия окна ---
+// PR смержили или закрыли на GitHub — вебхук (/api/github/webhook) сообщает в канал Realtime, окно тихо
+// перечитывает наборы и предпросмотр этого набора. Без вебхука (локально) — при возврате на вкладку
+const refresh = async (names?: string[]) => {
+  if (!open.value || !sets.value || pushing.value.size) return
+  for (const set of await loadSets({ silent: true })) {
+    if (set.connected && (!names || names.includes(set.name))) loadPreview(set.name, { silent: true })
+  }
+}
+
+// Канал публичный: из события берём только имя набора, статус — с сервера. Пачку событий — одним обновлением
+const changedSets = new Set<string>()
+const refreshChanged = useDebounceFn(() => {
+  const names = [...changedSets]
+  changedSets.clear()
+  refresh(names)
+}, 200)
+
+const supabase = useSupabaseClient()
+let channel: RealtimeChannel | null = null
+
+const unsubscribe = () => {
+  if (channel) supabase.removeChannel(channel)
+  channel = null
+}
+
+watch(open, (value) => {
+  if (!value) return unsubscribe()
+  if (channel) return
+  channel = supabase
+    .channel(EXPORT_PR_CHANNEL)
+    .on('broadcast', { event: 'pr' }, ({ payload }) => {
+      const set = (payload as { set?: unknown } | undefined)?.set
+      if (typeof set !== 'string') return
+      changedSets.add(set)
+      refreshChanged()
+    })
+    .subscribe()
+})
+
+onBeforeUnmount(unsubscribe)
+
+const visibility = useDocumentVisibility()
+watch(visibility, (value) => {
+  if (value === 'visible') refresh()
 })
 
 const previewOf = (name: string): SyncResult | null => {
@@ -367,8 +419,26 @@ const findKey = (key: string) => {
               </button>
             </p>
 
+            <!-- PR смержили или закрыли на GitHub — это важнее того, что окно помнит о своём нажатии -->
             <p
-              v-if="results[set.name]?.pr && results[set.name]!.outcome !== 'closed'"
+              v-if="set.lastPr && set.lastPr.state !== 'open' && !openPrOf(set)"
+              class="mt-2 flex flex-wrap items-center gap-1 text-xs"
+              :class="set.lastPr.state === 'merged' ? 'text-green-700 dark:text-green-400' : 'text-muted'"
+            >
+              <UIcon
+                :name="set.lastPr.state === 'merged' ? 'i-lucide-git-merge' : 'i-lucide-git-pull-request-closed'"
+                class="size-3.5 shrink-0"
+              />
+              {{ set.lastPr.state === 'merged' ? `PR #${set.lastPr.number} смержен` : `PR #${set.lastPr.number} закрыт без мержа` }} —
+              <a
+                :href="set.lastPr.url"
+                target="_blank"
+                rel="noopener"
+                class="font-medium underline underline-offset-2"
+              >открыть на GitHub</a>
+            </p>
+            <p
+              v-else-if="results[set.name]?.pr && results[set.name]!.outcome !== 'closed'"
               class="mt-2 text-xs text-green-700 dark:text-green-400"
             >
               {{ OUTCOME_TITLE[results[set.name]!.outcome]!(results[set.name]!.pr!.number) }} —

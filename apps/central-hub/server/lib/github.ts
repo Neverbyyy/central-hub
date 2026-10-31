@@ -162,6 +162,18 @@ export async function findOpenPr(
   return pr ? { number: pr.number, url: pr.html_url } : null
 }
 
+export type PrState = 'open' | 'merged' | 'closed'
+
+/** Состояние PR по номеру: открыт, смержен или закрыт без мержа — окно пишет «PR #7 смержен». Нет такого — null. */
+export async function findPr(
+  { token, target, number, fetch: fetchFn }: { token: string, target: GithubTarget, number: number, fetch?: typeof fetch }
+): Promise<{ number: number, url: string, state: PrState } | null> {
+  const gh = createClient(token, target.repo, fetchFn ?? fetch)
+  const pr = await gh.find<PullRequest & { state: 'open' | 'closed', merged_at: string | null }>(`/pulls/${number}`)
+  if (!pr) return null
+  return { number: pr.number, url: pr.html_url, state: pr.state === 'open' ? 'open' : pr.merged_at ? 'merged' : 'closed' }
+}
+
 /** Сравнить файлы набора с основной веткой и открыть или обновить PR из своей ветки (без dryRun). */
 export async function syncExportToGithub(options: GithubSyncOptions): Promise<GithubSyncResult> {
   const { token, target, set, files, actor, revision, dryRun = false } = options

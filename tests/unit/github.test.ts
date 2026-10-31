@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
-import { findOpenPr, LINES_LIMIT, parseExportRepos, syncExportToGithub } from '../../apps/central-hub/server/lib/github'
+import { findOpenPr, findPr, LINES_LIMIT, parseExportRepos, syncExportToGithub } from '../../apps/central-hub/server/lib/github'
 import type { ExportedFile } from '../../apps/central-hub/server/lib/sync'
 
 const REPO = 'me/demo'
@@ -21,7 +21,7 @@ function fakeGithub(files: Record<string, string>) {
   const trees = new Map<string, Map<string, string>>()
   const commits = new Map<string, { tree: string, parents: string[], message: string }>()
   const refs = new Map<string, string>()
-  const pulls: { number: number, head: string, base: string, state: string, title: string, body: string }[] = []
+  const pulls: { number: number, head: string, base: string, state: string, merged?: boolean, title: string, body: string }[] = []
   const comments: { issue: number, body: string }[] = []
   const writes: string[] = []
 
@@ -110,6 +110,11 @@ function fakeGithub(files: Record<string, string>) {
     }
 
     m = /^\/pulls\/(\d+)$/.exec(path)
+    if (method === 'GET' && m) {
+      const pr = pulls.find(p => p.number === Number(m![1]))
+      if (!pr) return notFound()
+      return json(200, { number: pr.number, html_url: `https://github.com/${REPO}/pull/${pr.number}`, state: pr.state, merged_at: pr.merged ? '2026-10-31T12:00:00Z' : null })
+    }
     if (method === 'PATCH' && m) {
       const pr = pulls.find(p => p.number === Number(m![1]))!
       Object.assign(pr, body)
@@ -130,6 +135,7 @@ function fakeGithub(files: Record<string, string>) {
     const pr = pulls.find(p => p.number === number)!
     refs.set(MAIN, refs.get(pr.head)!)
     pr.state = 'closed'
+    pr.merged = true
   }
 
   return { fetch: fetch as typeof globalThis.fetch, refs, pulls, comments, writes, commits, trees, filesOf, mainAtStart: first, merge }
@@ -298,6 +304,28 @@ describe('findOpenPr', () => {
 
     github.merge(1)
     expect(await find()).toBeNull()
+  })
+})
+
+describe('findPr', () => {
+  it('состояние PR по номеру: открыт → смержен; закрыт без мержа; нет такого — null; без записи', async () => {
+    const github = fakeGithub(ORIGINAL)
+    const find = (number: number) => findPr({ token: 't', target: { repo: REPO }, number, fetch: github.fetch })
+    const first = { ...ORIGINAL, [RU]: '{\n  "allapps_button": "Скачать"\n}\n' }
+    await sync(github, first)
+    const writes = github.writes.length
+    const url = `https://github.com/${REPO}/pull/1`
+
+    expect(await find(1)).toEqual({ number: 1, url, state: 'open' })
+    github.merge(1)
+    expect(await find(1)).toEqual({ number: 1, url, state: 'merged' })
+    expect(await find(42)).toBeNull()
+    expect(github.writes).toHaveLength(writes)
+
+    // Новая правка — PR 2; её отменили до мержа — наш PR закрыт без мержа
+    await sync(github, { ...first, [EN]: '{\n  "allapps_button": "Download"\n}\n' })
+    expect((await sync(github, first)).outcome).toBe('closed')
+    expect(await find(2)).toMatchObject({ number: 2, state: 'closed' })
   })
 })
 

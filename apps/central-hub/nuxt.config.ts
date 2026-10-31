@@ -23,7 +23,8 @@ export default defineNuxtConfig({
   },
 
   // Только сервер: NUXT_HUB_PASSWORD, NUXT_SESSION_PASSWORD, NUXT_CLI_TOKEN, NUXT_MCP_TOKEN, NUXT_FIGMA_TOKEN,
-  // NUXT_GITHUB_TOKEN и NUXT_EXPORT_REPOS (куда кнопка «Выгрузить в код» открывает PR)
+  // NUXT_GITHUB_TOKEN и NUXT_EXPORT_REPOS (куда кнопка «Выгрузить в код» открывает PR),
+  // NUXT_GITHUB_WEBHOOK_SECRET (подпись вебхука GitHub о событиях PR)
   runtimeConfig: {
     hubPassword: '',
     sessionPassword: '',
@@ -31,7 +32,8 @@ export default defineNuxtConfig({
     mcpToken: '',
     figmaToken: '',
     githubToken: '',
-    exportRepos: ''
+    exportRepos: '',
+    githubWebhookSecret: ''
   },
 
   // l10n-core — TypeScript-исходники из workspace без сборки: их нужно встроить в бандл,

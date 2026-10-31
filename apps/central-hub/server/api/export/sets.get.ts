@@ -1,7 +1,8 @@
-import { findOpenPr } from '../../lib/github'
+import { findOpenPr, findPr, type PrState } from '../../lib/github'
 import { pendingApproval } from '../../lib/sync'
 
-// Наборы для окна «Выгрузка в код»: куда уходят, сколько ждёт утверждения, последняя выгрузка и открытый PR
+// Наборы для окна «Выгрузка в код»: куда уходят, сколько ждёт утверждения, последняя выгрузка, открытый PR
+// и что стало с PR последней выгрузки. Окно перечитывает их и по вебхуку GitHub (см. /api/github/webhook)
 export default defineHubHandler(async (event) => {
   const db = useDb(event)
   const repos = exportRepos(event)
@@ -19,6 +20,21 @@ export default defineHubHandler(async (event) => {
       return await findOpenPr({ token, target, set })
     } catch (error) {
       console.error('[export] открытый PR', set, error)
+      return null
+    }
+  }
+
+  // Что стало с PR последней выгрузки: открыт, смержен или закрыт — окно пишет «PR #7 смержен».
+  // Открытый PR — это он и есть, лишний запрос не нужен
+  const lastPr = async (set: string, run: { pr_number: number | null } | null, open: { number: number, url: string } | null): Promise<{ number: number, url: string, state: PrState } | null> => {
+    if (!run?.pr_number) return null
+    if (open?.number === run.pr_number) return { ...open, state: 'open' }
+    const target = repos.get(set)
+    if (!token || !target) return null
+    try {
+      return await findPr({ token, target, number: run.pr_number })
+    } catch (error) {
+      console.error('[export] последний PR', set, error)
       return null
     }
   }
@@ -44,7 +60,8 @@ export default defineHubHandler(async (event) => {
       connected: !!token && repos.has(set.name),
       pending,
       lastRun: last.data,
-      openPr: pr
+      openPr: pr,
+      lastPr: await lastPr(set.name, last.data, pr)
     }
   }))
 })
