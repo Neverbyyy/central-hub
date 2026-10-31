@@ -403,6 +403,7 @@ const exportZip = async () => {
           <UButton
             icon="i-lucide-git-pull-request"
             color="neutral"
+            class="relative"
             @click="projectsOpen = true"
           >
             Выгрузить в код
@@ -411,7 +412,7 @@ const exportZip = async () => {
               #trailing
             >
               <span
-                class="min-w-4 rounded-full bg-primary px-1 text-center text-[11px] font-semibold leading-4 text-inverted"
+                class="absolute -right-1.5 -top-1.5 min-w-4 rounded-full bg-primary px-1 text-center text-[10px] font-semibold leading-4 text-inverted ring-2 ring-(--ui-bg)"
                 :aria-label="`открыто PR: ${openPrs.length}`"
               >{{ openPrs.length }}</span>
             </template>
