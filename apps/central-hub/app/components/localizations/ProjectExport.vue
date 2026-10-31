@@ -44,8 +44,6 @@ const PROJECTS = EXPORT_PROJECTS
 const sets = ref<ExportSetInfo[] | null>(null)
 const setsError = ref('')
 const previews = ref<Record<string, Preview>>({})
-// Что сделала последняя выгрузка в этом окне — PR и ссылка на него
-const results = ref<Record<string, SyncResult>>({})
 // Наборы, которые сейчас выгружаются: при «Выгрузить во все» — несколько сразу
 const pushing = ref(new Set<string>())
 const pushingAll = ref(false)
@@ -66,7 +64,7 @@ const loadPreview = async (name: string, { silent = false } = {}) => {
     const preview = await $fetch<SyncResult>(`/api/export/${name}/preview`)
     previews.value = { ...previews.value, [name]: preview }
   } catch (error) {
-    // Тихое обновление не сбилось — остаётся прежний предпросмотр, а не ошибка
+    // Тихое обновление сорвалось — остаётся прежний предпросмотр, а не ошибка
     if (!(await authRedirect(error)) && !silent) previews.value = { ...previews.value, [name]: { error: errorMessage(error) } }
   }
 }
@@ -87,7 +85,6 @@ watch(open, async (value) => {
   sets.value = null
   setsError.value = ''
   previews.value = {}
-  results.value = {}
   changesOpen.value = false
   for (const set of await loadSets()) if (set.connected) loadPreview(set.name)
 })
@@ -184,10 +181,14 @@ const OUTCOME_TITLE: Record<string, (pr: number) => string> = {
   closed: pr => `Выгружать нечего — PR #${pr} закрыт`
 }
 
-// Выгрузка одного набора без уведомлений — общая для кнопки в карточке и «Выгрузить во все»
+// Строка последней выгрузки — одинаковая у всех, кто открыл окно: её данные с сервера, а не память окна
+const runTitle = (run: NonNullable<ExportSetInfo['lastRun']>) =>
+  run.pr_number ? OUTCOME_TITLE[run.outcome]?.(run.pr_number) ?? 'Выгрузка' : 'Выгрузка'
+
+// Выгрузка одного набора без уведомлений — общая для кнопки в карточке и «Выгрузить во все».
+// Строку статуса обновит loadSets после выгрузки, коллегам — событие сервера в канале export-pr
 const pushSet = async (set: ExportSetInfo) => {
   const result = await $fetch<SyncResult>(`/api/export/${set.name}/push`, { method: 'POST' })
-  results.value = { ...results.value, [set.name]: result }
   // Изменения теперь в PR: кнопка дальше обновляет его
   previews.value = { ...previews.value, [set.name]: { ...result, outcome: result.outcome === 'closed' ? 'unchanged' : 'ready' } }
   return result
@@ -420,9 +421,10 @@ const findKey = (key: string) => {
               </button>
             </p>
 
-            <!-- PR смержили или закрыли на GitHub — это важнее того, что окно помнит о своём нажатии -->
+            <!-- Что с PR — из данных сервера, одинаково у всех, кто открыл окно. Мерж или закрытие на GitHub
+                 важнее последней выгрузки; закрыл сам сервис («выгружать нечего») — объясняет строка выгрузки -->
             <p
-              v-if="set.lastPr && set.lastPr.state !== 'open' && !openPrOf(set)"
+              v-if="set.lastPr && set.lastPr.state !== 'open' && !openPrOf(set) && set.lastRun?.outcome !== 'closed'"
               class="mt-2 flex flex-wrap items-center gap-1 text-xs"
               :class="set.lastPr.state === 'merged' ? 'text-green-700 dark:text-green-400' : 'text-muted'"
             >
@@ -438,31 +440,26 @@ const findKey = (key: string) => {
                 class="font-medium underline underline-offset-2"
               >открыть на GitHub</a>
             </p>
-            <p
-              v-else-if="results[set.name]?.pr && results[set.name]!.outcome !== 'closed'"
-              class="mt-2 text-xs text-green-700 dark:text-green-400"
-            >
-              {{ OUTCOME_TITLE[results[set.name]!.outcome]!(results[set.name]!.pr!.number) }} —
-              <a
-                :href="results[set.name]!.pr!.url"
-                target="_blank"
-                rel="noopener"
-                class="font-medium underline underline-offset-2"
-              >открыть на GitHub</a>
-            </p>
+            <!-- Последняя выгрузка — кто бы ни нажимал: «PR #11 обновлён · 31.10, 19:47 · Артём» -->
             <p
               v-else-if="set.lastRun"
-              class="mt-2 text-[11px] text-muted"
+              class="mt-2 flex flex-wrap items-center gap-x-1 text-xs"
+              :class="set.lastRun.outcome === 'closed' ? 'text-muted' : 'text-green-700 dark:text-green-400'"
             >
-              Последняя выгрузка: {{ formatDateTime(set.lastRun.created_at, { year: false }) }} · {{ set.lastRun.actor }}
+              <UIcon
+                :name="set.lastRun.outcome === 'closed' ? 'i-lucide-git-pull-request-closed' : 'i-lucide-git-pull-request'"
+                class="size-3.5 shrink-0"
+              />
+              {{ runTitle(set.lastRun) }}
+              <span class="text-muted">· {{ formatDateTime(set.lastRun.created_at, { year: false }) }} · {{ set.lastRun.actor }}</span>
               <template v-if="set.lastRun.pr_url">
-                ·
+                —
                 <a
                   :href="set.lastRun.pr_url"
                   target="_blank"
                   rel="noopener"
-                  class="underline underline-offset-2"
-                >PR #{{ set.lastRun.pr_number }}</a>
+                  class="font-medium underline underline-offset-2"
+                >открыть на GitHub</a>
               </template>
             </p>
           </section>

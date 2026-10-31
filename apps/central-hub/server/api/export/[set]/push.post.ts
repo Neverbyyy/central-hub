@@ -23,6 +23,8 @@ export default defineHubHandler(async (event) => {
     })
     // PR уже открыт — не прячем его из-за журнала
     if (error) console.error('[export_runs]', error)
+    // Окна «Выгрузка в код» у коллег обновятся сразу — без вебхука GitHub и без переоткрытия
+    await notifyExportChanged(event, set)
   }
   return { revision, ...result }
 })

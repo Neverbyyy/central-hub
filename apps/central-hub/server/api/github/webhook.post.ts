@@ -25,15 +25,7 @@ export default defineEventHandler(async (event) => {
   const pr = prEventForSet(name, payload, exportRepos(event))
   if (!pr) return { ok: true, ignored: true }
 
-  // Ответ GitHub не ждёт рассылки по существу: не дошла — в лог, повторять вебхук незачем
-  const db = useDb(event)
-  const channel = db.channel(EXPORT_PR_CHANNEL)
-  try {
-    await channel.httpSend('pr', { set: pr.set })
-  } catch (error) {
-    console.error('[github-webhook] рассылка не дошла', error)
-  } finally {
-    await db.removeChannel(channel)
-  }
+  // Рассылка не дошла — в лог, повторять вебхук незачем: GitHub получает 200
+  await notifyExportChanged(event, pr.set)
   return { ok: true, ...pr }
 })
