@@ -1,12 +1,21 @@
-import { inject, type InjectionKey } from 'vue'
+import { reactive, readonly } from 'vue'
 
-// Состояние окружения из тулбара Storybook: «экран открыт / закрыт», «идёт покупка».
-// Со дня 2 по нему живут пейволлы: заглушка интерфейса окружения берёт состояние отсюда
-export interface StoryEnv {
+// Состояние тулбара Storybook: тема, язык, «экран открыт / закрыт», «идёт покупка».
+// Рендерер Vue при смене переключателя не пересоздаёт уже показанную историю, а только заново вызывает декораторы.
+// Поэтому декоратор пишет состояние сюда, в reactive, и смонтированная история перерисовывается сама
+export interface StoryGlobals {
+  theme: string
+  locale: string
   screen: 'open' | 'closed'
   purchasing: boolean
 }
 
-export const STORY_ENV: InjectionKey<StoryEnv> = Symbol('story-env')
+export const storyGlobals = reactive<StoryGlobals>({
+  theme: 'base',
+  locale: 'en',
+  screen: 'open',
+  purchasing: false
+})
 
-export const useStoryEnv = () => inject(STORY_ENV, { screen: 'open', purchasing: false })
+/** Для историй: «экран открыт / закрыт» и «идёт покупка» из тулбара. Со дня 2 по ним живут пейволлы. */
+export const useStoryEnv = () => readonly(storyGlobals)

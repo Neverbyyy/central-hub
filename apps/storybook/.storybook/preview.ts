@@ -2,9 +2,9 @@ import { messages } from '@amaya/locales'
 import '@amaya/tokens/fonts.css'
 import { DS_THEMES, DsRoot } from '@amaya/ui'
 import { setup, type Decorator, type Preview } from '@storybook/vue3-vite'
-import { provide } from 'vue'
+import { computed } from 'vue'
 import { createI18n } from 'vue-i18n'
-import { STORY_ENV, type StoryEnv } from './env'
+import { storyGlobals } from './env'
 import './preview.css'
 
 // Те же 9 языков, что в сервисе. Утверждённых текстов набора ds на каком-то языке может ещё не быть —
@@ -35,20 +35,19 @@ const VIEWPORTS = {
  * parameters.themes: false — история сама показывает все темы (страницы токенов): один корень base.
  */
 const withDsRoot: Decorator = (story, context) => {
-  const theme = String(context.globals.theme ?? 'base')
-  const locale = String(context.globals.locale ?? 'en')
-  const env: StoryEnv = {
-    screen: context.globals.screen === 'closed' ? 'closed' : 'open',
-    purchasing: context.globals.purchasing === 'pending'
-  }
-  i18n.global.locale.value = locale
-  const themes = context.parameters.themes === false ? ['base'] : theme === 'all' ? [...DS_THEMES] : [theme]
+  // Вызывается и при каждой смене переключателя — обновляем общее реактивное состояние (env.ts)
+  storyGlobals.theme = String(context.globals.theme ?? 'base')
+  storyGlobals.locale = String(context.globals.locale ?? 'en')
+  storyGlobals.screen = context.globals.screen === 'closed' ? 'closed' : 'open'
+  storyGlobals.purchasing = context.globals.purchasing === 'pending'
+  i18n.global.locale.value = storyGlobals.locale
+  const showsAllThemes = context.parameters.themes === false
 
   return {
     components: { story, DsRoot },
     setup() {
-      provide(STORY_ENV, env)
-      return { themes, locale }
+      const themes = computed(() => showsAllThemes ? ['base'] : storyGlobals.theme === 'all' ? [...DS_THEMES] : [storyGlobals.theme])
+      return { themes, globals: storyGlobals }
     },
     template: `
       <div :class="['sb-themes', { 'sb-themes--all': themes.length > 1 }]">
@@ -56,7 +55,7 @@ const withDsRoot: Decorator = (story, context) => {
           v-for="name in themes"
           :key="name"
           :theme="name"
-          :lang="locale"
+          :lang="globals.locale"
           class="sb-theme"
           :data-sb-label="themes.length > 1 ? name : undefined"
         >

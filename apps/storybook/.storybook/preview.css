@@ -53,6 +53,11 @@
   font: 12px/1.4 ui-monospace, monospace;
 }
 
+/* Язык, выбранный в тулбаре, на странице текстов */
+.sb-table .sb-current {
+  background: rgb(30 167 253 / 0.08);
+}
+
 .sb-swatch {
   display: inline-block;
   width: 28px;
