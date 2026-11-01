@@ -1,0 +1,25 @@
+{
+  "common": {
+    "button": {
+      "restore": "Herstel aankopen"
+    },
+    "legal": {
+      "cancel_anytime": "Op ieder moment opzegbaar"
+    },
+    "link": {
+      "privacy_policy": "Privacybeleid",
+      "terms_of_use": "Gebruiksvoorwaarden"
+    }
+  },
+  "app": {
+    "farm": {
+      "banner": {
+        "title": "Bannertitel",
+        "title_1": "Welkom op de boerderij!",
+        "title_2": "Ontmoet alle dieren op de boerderij",
+        "title_3": "Kweek, oogst en speel!",
+        "title_4": "Ontgrendel vandaag de hele boerderij"
+      }
+    }
+  }
+}

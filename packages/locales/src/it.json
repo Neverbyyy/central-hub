@@ -1,0 +1,25 @@
+{
+  "common": {
+    "button": {
+      "restore": "Ripristina gli acquisti"
+    },
+    "legal": {
+      "cancel_anytime": "Disdici quando vuoi"
+    },
+    "link": {
+      "privacy_policy": "Informativa sulla privacy",
+      "terms_of_use": "Termini di utilizzo"
+    }
+  },
+  "app": {
+    "farm": {
+      "banner": {
+        "title": "Titolo del banner",
+        "title_1": "Benvenuto nella fattoria!",
+        "title_2": "Conosci tutti gli animali della fattoria",
+        "title_3": "Coltiva, raccogli e gioca!",
+        "title_4": "Sblocca tutta la fattoria oggi"
+      }
+    }
+  }
+}

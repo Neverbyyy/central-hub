@@ -1,0 +1,28 @@
+{
+  "common": {
+    "button": {
+      "restore": "Restore purchases"
+    },
+    "legal": {
+      "cancel_anytime": "Cancel anytime"
+    },
+    "link": {
+      "privacy_policy": "Privacy Policy",
+      "terms_of_use": "Terms of Use"
+    }
+  },
+  "app": {
+    "farm": {
+      "banner": {
+        "title": "Banner titlekasd",
+        "title_1": "Welcome to the farm!",
+        "title_2": "Meet all the farm animals",
+        "title_3": "Grow, harvest and play!",
+        "title_4": "Unlock the whole farm today"
+      },
+      "onboarding": {
+        "title_1": "onboarding title"
+      }
+    }
+  }
+}

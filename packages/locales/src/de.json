@@ -1,0 +1,25 @@
+{
+  "common": {
+    "button": {
+      "restore": "Käufe wiederherstellen"
+    },
+    "legal": {
+      "cancel_anytime": "Jederzeit kündbar"
+    },
+    "link": {
+      "privacy_policy": "Datenschutzerklärung",
+      "terms_of_use": "Nutzungsbedingungen"
+    }
+  },
+  "app": {
+    "farm": {
+      "banner": {
+        "title": "Banner-Titel",
+        "title_1": "Willkommen auf dem Bauernhof!",
+        "title_2": "Lerne alle Tiere vom Bauernhof kennen",
+        "title_3": "Pflanzen, ernten und spielen!",
+        "title_4": "Schalte heute den ganzen Bauernhof frei"
+      }
+    }
+  }
+}

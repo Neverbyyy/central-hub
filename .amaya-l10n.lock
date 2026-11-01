@@ -1,0 +1,15 @@
+{
+  "set": "ds",
+  "revision": "af9beb175e6b",
+  "files": {
+    "packages/locales/src/en.json": "6e1612e9a4c56af56b13791caeae3030387bb6cdc4295baa8a3838fd56a0edd4",
+    "packages/locales/src/ru.json": "62573bbe9747a6123990554f734aa75dacf5e5b89598a778e8749e1955b9c979",
+    "packages/locales/src/de.json": "339200a7d97bb291332590037fffec2b32057ca7518994d0fe5a38ae3026741c",
+    "packages/locales/src/es.json": "2ea1d4109e187a24e73e3dee1aaa126cd8350f7d629c5b01caefc0098895c9fc",
+    "packages/locales/src/it.json": "d0275f901d2b6520543a26178d20e0ceaeff34b433d58adbbe3f415af8e5271f",
+    "packages/locales/src/pt.json": "76377636112c69b7dc863bde21c4f8a913db8c0505882b2718900ed26ec5e513",
+    "packages/locales/src/fr.json": "30e5f9e2dd8b05150a849224c79bdcf50dce2fe4860bba4809275226d684f523",
+    "packages/locales/src/sv.json": "22062f6a16918b0a46412c1a7bdd7559f2a6648b736c8d4035380ff0368b664e",
+    "packages/locales/src/nl.json": "d44e5929802599e20e24890afcb6029cd3dd58f1bbe726c1d8852e1ec4296c39"
+  }
+}

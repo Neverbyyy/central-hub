@@ -1,0 +1,25 @@
+{
+  "common": {
+    "button": {
+      "restore": "Återställa köp"
+    },
+    "legal": {
+      "cancel_anytime": "Avsluta när som helst"
+    },
+    "link": {
+      "privacy_policy": "Integritetspolicy",
+      "terms_of_use": "Användarvillkor"
+    }
+  },
+  "app": {
+    "farm": {
+      "banner": {
+        "title": "Bannerrubrik",
+        "title_1": "Välkommen till gården!",
+        "title_2": "Möt alla djuren på gården",
+        "title_3": "Odla, skörda och lek!",
+        "title_4": "Lås upp hela gården i dag"
+      }
+    }
+  }
+}

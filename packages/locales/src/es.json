@@ -1,0 +1,25 @@
+{
+  "common": {
+    "button": {
+      "restore": "Restaurar compras"
+    },
+    "legal": {
+      "cancel_anytime": "Cancela en cualquier momento"
+    },
+    "link": {
+      "privacy_policy": "Política de Privacidad",
+      "terms_of_use": "Condiciones de Uso"
+    }
+  },
+  "app": {
+    "farm": {
+      "banner": {
+        "title": "Título del banner",
+        "title_1": "¡Bienvenido a la granja!",
+        "title_2": "Conoce a todos los animales de la granja",
+        "title_3": "¡Cultiva, cosecha y juega!",
+        "title_4": "Desbloquea toda la granja hoy"
+      }
+    }
+  }
+}

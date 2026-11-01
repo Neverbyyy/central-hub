@@ -1,0 +1,25 @@
+{
+  "common": {
+    "button": {
+      "restore": "Restituer les achats"
+    },
+    "legal": {
+      "cancel_anytime": "Annulez à tout moment"
+    },
+    "link": {
+      "privacy_policy": "Politique de confidentialité",
+      "terms_of_use": "Conditions d'utilisation"
+    }
+  },
+  "app": {
+    "farm": {
+      "banner": {
+        "title": "Titre de la bannière",
+        "title_1": "Bienvenue à la ferme !",
+        "title_2": "Découvre tous les animaux de la ferme",
+        "title_3": "Plante, récolte et joue !",
+        "title_4": "Débloque toute la ferme dès aujourd'hui"
+      }
+    }
+  }
+}
