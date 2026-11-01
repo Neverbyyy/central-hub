@@ -3,6 +3,7 @@
   "color": {
     "$type": "color",
     "white": { "$value": "#FFFFFF" },
+    "white-70": { "$value": "#FFFFFFB3", "$description": "Белая подложка крестика поверх арта" },
     "ink": {
       "900": { "$value": "#3D3B4B", "$description": "Основной текст пейволлов Cars 2 и Farm" },
       "500": { "$value": "#9896A9", "$description": "Второстепенный текст, ссылки легала" },
@@ -21,6 +22,15 @@
       "500": { "$value": "#4473B7", "$description": "Акцент Farm" },
       "50": { "$value": "#E8EEF7" }
     }
+  },
+  "size": {
+    "$type": "dimension",
+    "16": { "$value": 16 },
+    "20": { "$value": 20 },
+    "24": { "$value": 24 },
+    "32": { "$value": 32 },
+    "40": { "$value": 40 },
+    "44": { "$value": 44, "$description": "Минимальная зона нажатия — правило ТЗ" }
   },
   "radius": {
     "$type": "dimension",

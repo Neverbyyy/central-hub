@@ -9,6 +9,7 @@ apps/central-hub/      сервис локализации (Nuxt 4, Nuxt UI 4, T
 apps/storybook/        витрина дизайн-системы (Storybook 10): темы, языки, размеры экрана
 packages/tokens/       токены: JSON из Figma → CSS-переменные и тема Tailwind 4
 packages/ui/           компоненты Ds* и пресет Tailwind (префикс ds:, без глобального сброса)
+packages/icons/        иконки дизайн-системы: пути SVG 24×24 для DsIcon
 packages/locales/      тексты набора ds из сервиса — кладёт pnpm l10n pull
 packages/l10n-core/    правила ключей и форматы файлов локалей — общие для сервера, CLI и MCP
 packages/l10n-cli/     CLI amaya-l10n: pull / diff / check / import
@@ -438,6 +439,29 @@ Tailwind (стандартная палитра, шрифты, радиусы и
 
 Тема переключается атрибутом: `<DsRoot theme="farm">` — компоненты внутри не меняются. Новая игра — новый
 файл в `src/theme/`. Шрифты (Nunito, Open Sans, с кириллицей) — `@amaya/tokens/fonts.css`, из fontsource.
+
+**Компоненты** (`@amaya/ui`, у каждого — JSDoc «что это и когда использовать» и истории в Storybook):
+
+| Основа | |
+| --- | --- |
+| `DsRoot` | корень экрана: тема и язык, внутри действует сброс стилей |
+| `DsStack`, `DsBox` | колонка/строка с отступом из шкалы 4 px (margin, не `gap`); блок с отступом и подложкой карточки |
+| `DsText` | текст в стиле токенов: `title-lg`, `title-md`, `button`, `body`, `caption`, `badge` и цвета |
+| `DsGameTitle` | игровой заголовок с обводкой: два слоя текста, обводка снаружи букв во всех вебвью |
+| `DsIcon` | иконка из `@amaya/icons` (временный набор), цвет — `currentColor` |
+| `DsImage`, `DsBackground` | картинка и фон по конвенции `small/medium/large × 1x/2x × png/webp` — `imageSet('/путь/имя')` |
+
+| Действия | |
+| --- | --- |
+| `DsButton` | главная кнопка: «нажато» на касании, ≥ 44×44, двойной тап — одно срабатывание, `loading`, блик `shine` |
+| `DsCloseButton` | крестик: появляется через 3 с после `active`, повторное открытие — снова задержка, круг 32 с зоной 44 |
+| `DsLink`, `DsLegalLinks` | ссылка с зоной нажатия 44; строка Terms · Privacy · Restore — только события, адреса решает экран |
+| `DsStoreBadges` | значки App Store / Google Play: значок, адрес и подпись снаружи, событие `click(store)` |
+| `DsSpinner` | спиннер (кнопка показывает его сама в `loading`) |
+
+Правила для всех: тексты и подписи для скринридера — снаружи, ключами из сервиса; только токены; анимируются только
+`transform` и `opacity`; API Vue 3.3, как в InApp — линтер не пропускает `defineModel`, `useTemplateRef`, `useId` и
+деструктуризацию пропсов в `packages/ui`. Пока неизвестна минимальная iOS вебвью — без `gap`, `:has()` и container queries.
 
 **Тексты** — только ключи из сервиса. Набор выгрузки `ds` (`common.`, `ds.`, `app.cars2.`, `app.farm.`, `web.lp_cars2.`,
 `brand.`) кладёт утверждённые тексты в `packages/locales/src/<язык>.json`: `pnpm l10n pull`, проверить, что файлы

@@ -25,5 +25,11 @@
       "size": { "$type": "dimension", "$value": 12 },
       "line-height": { "$type": "dimension", "$value": 16 }
     }
+  },
+  "spacing": {
+    "button": { "$type": "dimension", "$value": 64 }
+  },
+  "title": {
+    "stroke-width": { "$type": "dimension", "$value": 3 }
   }
 }

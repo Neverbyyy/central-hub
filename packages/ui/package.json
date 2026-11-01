@@ -12,6 +12,7 @@
     "typecheck": "vue-tsc --noEmit"
   },
   "dependencies": {
+    "@amaya/icons": "workspace:*",
     "@amaya/tokens": "workspace:*"
   },
   "peerDependencies": {
@@ -23,6 +24,7 @@
     "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3",
     "vue": "^3.5.33",
+    "vue-i18n": "^11.4.16",
     "vue-tsc": "^3.2.7"
   }
 }

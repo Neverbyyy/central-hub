@@ -1,3 +1,23 @@
 // Компоненты дизайн-системы. Стили — отдельно: @import '@amaya/ui/tailwind.css'
+// Основа
 export { default as DsRoot } from './components/DsRoot.vue'
+export { default as DsStack } from './components/DsStack.vue'
+export { default as DsBox } from './components/DsBox.vue'
+export { default as DsText } from './components/DsText.vue'
+export { default as DsGameTitle } from './components/DsGameTitle.vue'
+export { default as DsIcon } from './components/DsIcon.vue'
+export { default as DsImage } from './components/DsImage.vue'
+export { default as DsBackground } from './components/DsBackground.vue'
+// Действия
+export { default as DsButton } from './components/DsButton.vue'
+export { default as DsCloseButton } from './components/DsCloseButton.vue'
+export { default as DsLink } from './components/DsLink.vue'
+export { default as DsLegalLinks } from './components/DsLegalLinks.vue'
+export { default as DsStoreBadges } from './components/DsStoreBadges.vue'
+export { default as DsSpinner } from './components/DsSpinner.vue'
+
 export { DS_THEMES, type DsTheme } from './themes'
+export { imageSet, imageSources, srcset, IMAGE_MEDIA, type DsImageSet, type DsImageVariant } from './image'
+export { useTapGuard, TAP_COOLDOWN_MS } from './composables/useTapGuard'
+export { usePressed } from './composables/usePressed'
+export type { DsStore, DsStoreBadge, DsTextTone, DsTextVariant } from './types'

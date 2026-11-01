@@ -7,6 +7,8 @@ const config: StorybookConfig = {
     '../../../packages/*/src/**/*.stories.ts'
   ],
   framework: '@storybook/vue3-vite',
+  // Картинки для историй: арт Cars 2 из InApp и значки сторов из Pages Hub — в компоненты они не попадают
+  staticDirs: ['../public'],
   core: {
     disableTelemetry: true
   }

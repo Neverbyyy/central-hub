@@ -1,7 +1,10 @@
-// Линтер дизайн-системы и Storybook (packages/tokens, ui, locales, apps/storybook) — тот же стиль, что у сервиса.
-// У apps/central-hub свой конфиг (@nuxt/eslint). Правила дизайн-системы (hex, классы без ds:, <img>, API Vue новее 3.3)
+// Линтер дизайн-системы и Storybook (packages/tokens, ui, icons, locales, apps/storybook) — тот же стиль, что у сервиса.
+// У apps/central-hub свой конфиг (@nuxt/eslint). Остальные правила дизайн-системы (hex, классы без ds:, <img>)
 // появятся вместе с линтером дизайн-системы
 import { createConfigForNuxt } from '@nuxt/eslint-config/flat'
+
+// Компоненты потом встраивают в InApp, а там Vue 3.3: возможности новее нельзя
+const VUE_33 = 'В InApp Vue 3.3 — этого там нет'
 
 export default createConfigForNuxt({
   features: {
@@ -14,4 +17,16 @@ export default createConfigForNuxt({
   }
 }).append({
   ignores: ['apps/central-hub/**', '**/dist/**', '**/storybook-static/**', '**/.turbo/**']
+}, {
+  files: ['packages/ui/src/**/*.{ts,vue}'],
+  rules: {
+    'no-restricted-imports': ['error', {
+      paths: [{ name: 'vue', importNames: ['useTemplateRef', 'useId', 'onWatcherCleanup', 'useModel', 'useHost', 'useShadowRoot'], message: `${VUE_33} (Vue 3.4–3.5)` }]
+    }],
+    'no-restricted-syntax': ['error',
+      { selector: 'CallExpression[callee.name=\'defineModel\']', message: `defineModel — Vue 3.4. ${VUE_33}: проп modelValue и событие update:modelValue` },
+      { selector: 'VariableDeclarator[id.type=\'ObjectPattern\'] > CallExpression[callee.name=\'defineProps\']', message: `Деструктуризация пропсов — Vue 3.5. ${VUE_33}: const props = defineProps(...)` },
+      { selector: 'VariableDeclarator[id.type=\'ObjectPattern\'] > CallExpression[callee.name=\'withDefaults\']', message: `Деструктуризация пропсов — Vue 3.5. ${VUE_33}: const props = withDefaults(...)` }
+    ]
+  }
 })

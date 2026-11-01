@@ -1,0 +1,12 @@
+{
+  "name": "@amaya/icons",
+  "private": true,
+  "type": "module",
+  "description": "Иконки дизайн-системы: пути SVG 24×24 для DsIcon",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint ."
+  }
+}

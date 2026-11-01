@@ -29,5 +29,11 @@
       "line-height": { "$type": "dimension", "$value": 12 },
       "weight": { "$type": "fontWeight", "$value": 700 }
     }
+  },
+  "spacing": {
+    "button": { "$type": "dimension", "$value": 44, "$description": "Высота главной кнопки (в InApp 36 — подняли до зоны нажатия 44)" }
+  },
+  "title": {
+    "stroke-width": { "$type": "dimension", "$value": 2, "$description": "Толщина обводки игрового заголовка" }
   }
 }

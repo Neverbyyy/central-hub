@@ -26,8 +26,30 @@
       "bg": { "$value": "{color.orange.500}" },
       "text": { "$value": "{color.white}" }
     },
+    "secondary": {
+      "bg": { "$value": "{color.white}" },
+      "text": { "$value": "{color.ink.900}" },
+      "border": { "$value": "{color.ink.200}" }
+    },
+    "title": {
+      "fill": { "$value": "{color.ink.900}", "$description": "Игровой заголовок (DsGameTitle): заливка букв" },
+      "stroke": { "$value": "{color.white}", "$description": "Игровой заголовок: обводка вокруг букв" }
+    },
+    "close": {
+      "bg": { "$value": "{color.white-70}" },
+      "icon": { "$value": "{color.ink.500}" }
+    },
     "accent": { "$value": "{color.orange.500}" },
     "link": { "$value": "{color.ink.500}" }
+  },
+  "spacing": {
+    "$type": "dimension",
+    "touch": { "$value": "{size.44}", "$description": "Зона нажатия не меньше 44×44: ds:min-h-touch, ds:min-w-touch" },
+    "icon-sm": { "$value": "{size.16}" },
+    "icon-md": { "$value": "{size.20}" },
+    "icon-lg": { "$value": "{size.24}" },
+    "close": { "$value": "{size.32}", "$description": "Видимый круг крестика; зона нажатия всё равно 44" },
+    "store-badge": { "$value": "{size.40}", "$description": "Высота значка App Store / Google Play" }
   },
   "radius": {
     "$type": "dimension",

@@ -73,6 +73,19 @@ describe('токены дизайн-системы', () => {
     expect(() => build({ breakpoints: { small, large: { text: { body: { size: { $value: 1 } } } } } })).toThrow('Брейкпоинт «large» задаёт «text.body.size»')
   })
 
+  it('любые группы: именованные отступы (ds:min-h-touch) и размер, который меняется по брейкпоинтам', () => {
+    const { theme, overrides } = build({
+      themes: { base: { ...base, spacing: { touch: { $type: 'dimension', $value: 44 } } } },
+      breakpoints: {
+        small: { ...small, spacing: { button: { $type: 'dimension', $value: 44 } } },
+        large: { spacing: { button: { $type: 'dimension', $value: 64 } } }
+      }
+    })
+    expect(theme).toContain('--spacing-touch: 44px;')
+    expect(theme).toContain('--spacing-button: 44px;')
+    expect(overrides).toContain('--ds-spacing-button: 64px;')
+  })
+
   it('список для Storybook: значения по темам и по брейкпоинтам', () => {
     const { list } = build()
     expect(list.tokens.find(t => t.name === 'color.accent')!.values).toEqual({ base: '#FF8D24', cars2: '#64BF07', farm: '#FF8D24' })
