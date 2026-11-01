@@ -1,0 +1,53 @@
+{
+  "$description": "Тема base: смысловые токены, которые используют компоненты. Темы игр переопределяют только то, что у них отличается. ВРЕМЕННЫЕ значения — до экспорта от Антона.",
+  "color": {
+    "$type": "color",
+    "bg": {
+      "screen": { "$value": "{color.white}" },
+      "card": { "$value": "{color.white}" }
+    },
+    "text": {
+      "primary": { "$value": "{color.ink.900}" },
+      "secondary": { "$value": "{color.ink.500}" },
+      "inverse": { "$value": "{color.white}" }
+    },
+    "cta": {
+      "bg": { "$value": "{color.orange.500}" },
+      "bg-pressed": { "$value": "{color.orange.600}" },
+      "text": { "$value": "{color.white}" }
+    },
+    "plan": {
+      "bg": { "$value": "{color.white}" },
+      "border": { "$value": "{color.ink.200}" },
+      "bg-selected": { "$value": "{color.orange.50}" },
+      "border-selected": { "$value": "{color.orange.500}" }
+    },
+    "badge": {
+      "bg": { "$value": "{color.orange.500}" },
+      "text": { "$value": "{color.white}" }
+    },
+    "accent": { "$value": "{color.orange.500}" },
+    "link": { "$value": "{color.ink.500}" }
+  },
+  "radius": {
+    "$type": "dimension",
+    "card": { "$value": "{radius.16}" },
+    "button": { "$value": "{radius.24}" },
+    "badge": { "$value": "{radius.8}" },
+    "pill": { "$value": "{radius.full}" }
+  },
+  "font": {
+    "$type": "fontFamily",
+    "title": { "$value": "{font.nunito}" },
+    "body": { "$value": "{font.open-sans}" }
+  },
+  "duration": {
+    "$type": "duration",
+    "fast": { "$value": "{duration.fast}" },
+    "base": { "$value": "{duration.base}" }
+  },
+  "ease": {
+    "$type": "cubicBezier",
+    "standard": { "$value": "{ease.standard}" }
+  }
+}

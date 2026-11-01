@@ -7,6 +7,8 @@ node_modules
 .cache
 dist
 .vercel
+.turbo
+storybook-static
 
 # Секреты: в репозиторий попадает только .env.example
 .env

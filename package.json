@@ -8,9 +8,11 @@
   },
   "scripts": {
     "dev": "pnpm --filter central-hub dev",
-    "build": "pnpm --filter central-hub build",
-    "lint": "pnpm --filter central-hub lint",
-    "typecheck": "pnpm --filter central-hub typecheck",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "storybook": "turbo run dev --filter=@amaya/storybook...",
+    "l10n": "node scripts/l10n.mjs",
     "test": "vitest run --project unit",
     "test:db": "vitest run --project db",
     "test:stand": "vitest run --project stand",
@@ -21,8 +23,11 @@
   },
   "devDependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",
+    "@nuxt/eslint-config": "^1.15.2",
     "@supabase/supabase-js": "^2.104.1",
+    "eslint": "^10.2.1",
     "supabase": "2.122.0",
+    "turbo": "^2.11.10",
     "vitest": "5.0.5"
   }
 }

@@ -1,0 +1,14 @@
+{
+  "$description": "Тема Farm: только отличия от base. ВРЕМЕННО: синие акценты, как в InApp farm/tm9.",
+  "color": {
+    "$type": "color",
+    "plan": {
+      "bg-selected": { "$value": "{color.blue.50}" },
+      "border-selected": { "$value": "{color.blue.500}" }
+    },
+    "badge": {
+      "bg": { "$value": "{color.blue.500}" }
+    },
+    "accent": { "$value": "{color.blue.500}" }
+  }
+}

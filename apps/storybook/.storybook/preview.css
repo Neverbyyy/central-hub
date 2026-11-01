@@ -1,0 +1,70 @@
+/* Пресет дизайн-системы и раскладка Storybook вокруг историй (это не стили компонентов) */
+@import '@amaya/ui/tailwind.css';
+
+/* Классы в общих историях — токены, тексты */
+@source '../stories';
+
+.sb-themes {
+  min-height: 100vh;
+}
+
+.sb-themes--all {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.sb-themes--all > .sb-theme {
+  position: relative;
+  padding-top: 24px;
+  border-left: 1px dashed rgb(0 0 0 / 0.15);
+}
+
+/* Подпись колонки: какая это тема */
+.sb-themes--all > .sb-theme::before {
+  content: attr(data-sb-label);
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  font: 11px/1 ui-monospace, monospace;
+  color: rgb(0 0 0 / 0.45);
+}
+
+/* Таблицы на страницах токенов и текстов */
+.sb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font: 13px/1.4 ui-sans-serif, system-ui, sans-serif;
+}
+
+.sb-table th,
+.sb-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid rgb(0 0 0 / 0.08);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.sb-table th {
+  font-weight: 600;
+  color: rgb(0 0 0 / 0.55);
+}
+
+.sb-table code {
+  font: 12px/1.4 ui-monospace, monospace;
+}
+
+.sb-swatch {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  margin-right: 8px;
+  vertical-align: middle;
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.12);
+}
+
+.sb-note {
+  padding: 16px;
+  font: 13px/1.5 ui-sans-serif, system-ui, sans-serif;
+  color: rgb(0 0 0 / 0.6);
+}

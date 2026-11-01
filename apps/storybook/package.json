@@ -1,0 +1,29 @@
+{
+  "name": "@amaya/storybook",
+  "private": true,
+  "type": "module",
+  "description": "Витрина дизайн-системы: компоненты и экраны в любой теме, на любом языке и в любом размере экрана",
+  "scripts": {
+    "dev": "storybook dev -p 6006 --no-open",
+    "build": "storybook build -o storybook-static",
+    "lint": "eslint .",
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "@amaya/locales": "workspace:*",
+    "@amaya/tokens": "workspace:*",
+    "@amaya/ui": "workspace:*",
+    "vue": "^3.5.33",
+    "vue-i18n": "^11.4.16"
+  },
+  "devDependencies": {
+    "@storybook/vue3-vite": "10.6.5",
+    "@tailwindcss/vite": "^4.3.3",
+    "@vitejs/plugin-vue": "^6.0.6",
+    "storybook": "10.6.5",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^6.0.3",
+    "vite": "^7.3.2",
+    "vue-tsc": "^3.2.7"
+  }
+}

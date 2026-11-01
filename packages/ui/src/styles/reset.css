@@ -1,0 +1,57 @@
+/* Сброс стилей только внутри корня дизайн-системы (DsRoot): стили хоста — InApp, Pages Hub — не трогаем.
+   :where — нулевая специфичность: любой класс компонента сильнее сброса */
+@layer base {
+  :where([data-ds-root]) {
+    font-family: var(--ds-font-body);
+    color: var(--ds-color-text-primary);
+    line-height: 1.25;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  :where([data-ds-root], [data-ds-root] *, [data-ds-root] ::before, [data-ds-root] ::after) {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    /* Как в preflight: ds:border-* рисует сплошную рамку без указания стиля */
+    border: 0 solid;
+  }
+
+  :where([data-ds-root]) :where(h1, h2, h3, h4, h5, h6) {
+    font-size: inherit;
+    font-weight: inherit;
+  }
+
+  :where([data-ds-root]) :where(ol, ul) {
+    list-style: none;
+  }
+
+  :where([data-ds-root]) :where(a) {
+    color: inherit;
+    text-decoration: inherit;
+  }
+
+  :where([data-ds-root]) :where(button, input, select, textarea) {
+    font: inherit;
+    color: inherit;
+    letter-spacing: inherit;
+    background: transparent;
+  }
+
+  /* Нажатие без задержки двойного тапа и без системной подсветки */
+  :where([data-ds-root]) :where(button, [role='button'], a) {
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  :where([data-ds-root]) :where(img, svg, video, canvas, picture) {
+    display: block;
+    max-width: 100%;
+  }
+
+  :where([data-ds-root]) :where(img, video) {
+    height: auto;
+  }
+}

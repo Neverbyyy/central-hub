@@ -1,0 +1,11 @@
+{
+  "$description": "Тема Cars 2: только отличия от base. ВРЕМЕННО: выбранный тариф — зелёный, как в InApp cars2/tm11.",
+  "color": {
+    "$type": "color",
+    "plan": {
+      "bg-selected": { "$value": "{color.green.50}" },
+      "border-selected": { "$value": "{color.green.500}" }
+    },
+    "accent": { "$value": "{color.green.500}" }
+  }
+}

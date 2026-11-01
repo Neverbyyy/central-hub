@@ -1,0 +1,47 @@
+{
+  "$description": "Примитивы: палитра, радиусы, шрифты, анимации. Компоненты их не используют — только через смысловые токены тем. ВРЕМЕННЫЕ значения из пейволлов InApp (ios/as/cars2/tm11, farm/tm9) — заменить экспортом переменных Figma от Антона.",
+  "color": {
+    "$type": "color",
+    "white": { "$value": "#FFFFFF" },
+    "ink": {
+      "900": { "$value": "#3D3B4B", "$description": "Основной текст пейволлов Cars 2 и Farm" },
+      "500": { "$value": "#9896A9", "$description": "Второстепенный текст, ссылки легала" },
+      "200": { "$value": "#DBD9ED", "$description": "Рамка карточки тарифа" }
+    },
+    "orange": {
+      "500": { "$value": "#FF8D24", "$description": "Кнопка CTA в Cars 2 и Farm" },
+      "600": { "$value": "#FF7A00", "$description": "Кнопка CTA нажата" },
+      "50": { "$value": "#FFF3E8" }
+    },
+    "green": {
+      "500": { "$value": "#64BF07", "$description": "Рамка выбранного тарифа в Cars 2" },
+      "50": { "$value": "#EDF7E4", "$description": "Фон выбранного тарифа в Cars 2" }
+    },
+    "blue": {
+      "500": { "$value": "#4473B7", "$description": "Акцент Farm" },
+      "50": { "$value": "#E8EEF7" }
+    }
+  },
+  "radius": {
+    "$type": "dimension",
+    "8": { "$value": 8 },
+    "16": { "$value": 16 },
+    "24": { "$value": 24 },
+    "32": { "$value": 32 },
+    "full": { "$value": 999 }
+  },
+  "font": {
+    "$type": "fontFamily",
+    "nunito": { "$value": "'Nunito Variable', 'Nunito', Arial, sans-serif" },
+    "open-sans": { "$value": "'Open Sans Variable', 'Open Sans', Arial, sans-serif" }
+  },
+  "duration": {
+    "$type": "duration",
+    "fast": { "$value": "150ms" },
+    "base": { "$value": "250ms" }
+  },
+  "ease": {
+    "$type": "cubicBezier",
+    "standard": { "$value": "cubic-bezier(0.2, 0, 0, 1)" }
+  }
+}

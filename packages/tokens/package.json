@@ -1,0 +1,21 @@
+{
+  "name": "@amaya/tokens",
+  "private": true,
+  "type": "module",
+  "description": "Токены дизайн-системы: JSON из Figma → CSS-переменные и тема Tailwind 4",
+  "exports": {
+    "./theme.css": "./dist/theme.css",
+    "./overrides.css": "./dist/overrides.css",
+    "./tokens.json": "./dist/tokens.json",
+    "./fonts.css": "./src/fonts.css"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node --watch-path=src --watch-preserve-output scripts/build.mjs",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@fontsource-variable/nunito": "^5.2.0",
+    "@fontsource-variable/open-sans": "^5.2.0"
+  }
+}

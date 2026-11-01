@@ -1,0 +1,18 @@
+/* Пресет Tailwind 4 дизайн-системы. Подключается в приложении одной строкой: @import '@amaya/ui/tailwind.css'.
+   Потом это встраивают в InApp и Pages Hub, где много своих стилей, поэтому:
+   - классы и переменные с префиксом ds: ds:flex, ds:bg-cta-bg, --ds-color-cta-bg;
+   - без глобального сброса (preflight) — стили сбрасываются только внутри [data-ds-root] (styles/reset.css);
+   - стандартные палитра, шрифты, радиусы и размеры Tailwind выключены — только токены из @amaya/tokens. */
+@layer theme, base, components, utilities;
+
+@import 'tailwindcss/theme.css' layer(theme) prefix(ds);
+@import 'tailwindcss/utilities.css' layer(utilities) prefix(ds);
+
+@import '@amaya/tokens/theme.css';
+@import '@amaya/tokens/overrides.css';
+@import './styles/reset.css';
+@import './styles/webview.css';
+
+/* Tailwind не смотрит в node_modules: классы компонентов пакета подключаем явно.
+   Приложение добавляет @source своих файлов само */
+@source './components';

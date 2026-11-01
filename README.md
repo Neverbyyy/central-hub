@@ -1,10 +1,15 @@
 # Amaya Hub
 
-Монорепозиторий веб-инструментов Amaya. Сейчас в нём сервис локализации — единое место,
-где живут все тексты продуктов и откуда они выгружаются в код, в Figma и доступны нейросетям по MCP.
+Монорепозиторий веб-инструментов Amaya (pnpm + Turborepo): сервис локализации — единое место,
+где живут все тексты продуктов и откуда они выгружаются в код, в Figma и доступны нейросетям по MCP, —
+и дизайн-система, из которой собираются пейволлы и лендинги (этап 2, см. «Дизайн-система»).
 
 ```
 apps/central-hub/      сервис локализации (Nuxt 4, Nuxt UI 4, Tailwind 4)
+apps/storybook/        витрина дизайн-системы (Storybook 10): темы, языки, размеры экрана
+packages/tokens/       токены: JSON из Figma → CSS-переменные и тема Tailwind 4
+packages/ui/           компоненты Ds* и пресет Tailwind (префикс ds:, без глобального сброса)
+packages/locales/      тексты набора ds из сервиса — кладёт pnpm l10n pull
 packages/l10n-core/    правила ключей и форматы файлов локалей — общие для сервера, CLI и MCP
 packages/l10n-cli/     CLI amaya-l10n: pull / diff / check / import
 packages/figma-plugin/ плагин Figma «Amaya Hub — локализация»: переменные из сервиса, живое обновление
@@ -50,9 +55,11 @@ cp .env.example .env   # и заполнить значения
 
 ```bash
 pnpm dev          # сервис на http://localhost:3000
-pnpm build        # сборка apps/central-hub
-pnpm lint
-pnpm typecheck
+pnpm storybook    # Storybook на http://localhost:6006 (токены пересобираются при правке JSON)
+pnpm build        # весь монорепо одной командой (turbo): токены → Storybook, сервис; повтор берёт кеш
+pnpm lint         # turbo: у сервиса известные ошибки в прототипных ab-tests и audit-page
+pnpm typecheck    # turbo: то же
+pnpm l10n pull    # тексты набора ds со стенда → packages/locales (нужен AMAYA_L10N_TOKEN в .env)
 pnpm test         # unit-тесты packages/* и tests/unit
 pnpm db:start     # локальный Supabase в Docker: миграции с нуля (нужен запущенный Docker Desktop)
 pnpm test:db      # тесты базы — только на локальном Supabase, строки InApp и Pages Hub берутся из fixtures
@@ -66,8 +73,9 @@ pnpm db:stop      # остановить локальный Supabase и стер
 
 ## CI и бэкапы
 
-- `.github/workflows/ci.yml` — на каждый push в `main` и PR: unit-тесты и тесты базы на свежем
-  локальном Supabase. Секреты не нужны.
+- `.github/workflows/ci.yml` — на каждый push в `main` и PR: unit-тесты, сборка всего монорепо
+  (`pnpm build`), линтер и типы дизайн-системы и Storybook, тесты базы на свежем локальном Supabase.
+  Секреты не нужны.
 - `.github/workflows/db-backup.yml` — дамп основной базы раз в сутки (05:00 МСК) и по кнопке
   Run workflow: роли, схема и данные, артефакт `db-backup-<дата>` хранится 30 дней.
   Нужен секрет `SUPABASE_DB_PASSWORD` — пароль базы, тот же, что в `.env` (Settings → Secrets and
@@ -395,12 +403,69 @@ CLI — один файл без зависимостей (Node.js 18+), его 
 `fixtures/legacy/` и `tests/db/legacy.test.ts` на настоящей базе. Если новый ключ совпадает со старым,
 выгрузка падает с ошибкой, а не перезаписывает молча.
 
+## Дизайн-система
+
+Из неё собираются пейволлы, онбординги и лендинги Cars 2 и Farm (этапы 2 и 3 ТЗ). Потом это встраивают
+в InApp и Pages Hub, поэтому стили не задевают хост.
+
+**Токены** (`packages/tokens`). Источник — JSON в формате W3C Design Tokens: так Figma экспортирует переменные,
+и экспорт Антона ляжет на место временных значений. Раскладка «коллекция → режим»:
+
+```
+src/primitives.json          палитра, радиусы, шрифты, анимации — компоненты их не видят
+src/theme/base.json          смысловые токены: color.cta.bg, color.text.primary, radius.card…
+src/theme/cars2.json, farm   только отличия темы игры от base
+src/breakpoint/small.json    размеры текста: text.title-lg.size / line-height / weight
+src/breakpoint/medium, large только отличия: medium — от 844 px, large — от 1024 px
+```
+
+**Сейчас значения временные** — из пейволлов InApp (`cars2/tm11`, `farm/tm9`): кнопка `#FF8D24`, текст `#3D3B4B`,
+выбранный тариф в Cars 2 зелёный, в Farm синий; размеры по брейкпоинтам 667/844/1024. Заменить экспортом Антона.
+
+`pnpm --filter @amaya/tokens build` (или любой `pnpm build`) собирает `dist/`: `theme.css` — `@theme` для
+Tailwind (стандартная палитра, шрифты, радиусы и размеры выключены, в Tailwind попадают только смысловые
+токены), `overrides.css` — темы `[data-ds-theme="cars2"]` и размеры по `@media`, `tokens.json` — для Storybook.
+Ссылки разрешаются на сборке: битая ссылка или токен темы, которого нет в base, — ошибка с именем токена.
+
+**Пресет Tailwind** — `@import '@amaya/ui/tailwind.css'` в CSS приложения:
+
+- классы с префиксом `ds:` — `ds:flex`, `ds:bg-cta-bg`, `ds:text-title-lg`, `ds:rounded-card`; переменные — `--ds-*`;
+- без глобального сброса: стили сбрасываются только внутри корня `DsRoot` (`[data-ds-root]`);
+- `ds:text-title-lg` сам меняет размер на 844 и 1024 px; брейкпоинты — `ds:medium:` и `ds:large:`;
+- для вебвью: `ds:h-vh` / `ds:min-h-vh` (берут `--vh` хоста, как InApp, иначе `100dvh`), `ds:pt-safe`…`ds:py-safe`
+  (safe area), `ds:phone-landscape:` (телефон в альбомной), `ds:no-select`;
+- Tailwind не смотрит в `node_modules`: пресет сам подключает компоненты пакета (`@source`), приложение — свои файлы.
+
+Тема переключается атрибутом: `<DsRoot theme="farm">` — компоненты внутри не меняются. Новая игра — новый
+файл в `src/theme/`. Шрифты (Nunito, Open Sans, с кириллицей) — `@amaya/tokens/fonts.css`, из fontsource.
+
+**Тексты** — только ключи из сервиса. Набор выгрузки `ds` (`common.`, `ds.`, `app.cars2.`, `app.farm.`, `web.lp_cars2.`,
+`brand.`) кладёт утверждённые тексты в `packages/locales/src/<язык>.json`: `pnpm l10n pull`, проверить, что файлы
+не правили руками, — `pnpm l10n check`. Нужен `AMAYA_L10N_TOKEN` в `.env` — токен CLI стенда
+(`NUXT_CLI_TOKEN` в Vercel; локальный `NUXT_CLI_TOKEN` к стенду не подходит).
+
+**Storybook** (`apps/storybook`, `pnpm storybook`). Тулбар: тема (base / Cars 2 / Farm / все три рядом),
+язык (9 языков, тексты из `@amaya/locales` через vue-i18n), «экран открыт / закрыт», «идёт покупка»
+(`useStoryEnv()` — по нему будут жить пейволлы). Размеры: телефон в альбомной 667×375 и 844×390,
+в портретной 375×667 и 390×844, iPad, десктоп 1440. Разделы «Основа»: токены по всем темам и брейкпоинтам,
+`DsRoot` и смена темы, тексты набора `ds`, состояние тулбара. Истории компонентов лежат рядом с ними в пакетах.
+
 ## Деплой
 
 Vercel: Root Directory — `apps/central-hub`, переменные окружения — как в `.env.example`
 (без `SUPABASE_DB_PASSWORD`; `NUXT_FIGMA_TOKEN`, `NUXT_GITHUB_TOKEN` и `NUXT_EXPORT_REPOS` — и для Production,
 и для Preview), плюс
 `ENABLE_EXPERIMENTAL_COREPACK=1`, чтобы Vercel взял pnpm из `packageManager`.
+
+**Storybook** — отдельный проект Vercel из того же репозитория:
+
+- Root Directory — `apps/storybook`, Framework Preset — Other;
+- Build Command — `cd ../.. && pnpm turbo run build --filter=@amaya/storybook` (turbo сначала собирает токены);
+- Output Directory — `storybook-static`; переменная `ENABLE_EXPERIMENTAL_COREPACK=1`;
+- секреты не нужны: тексты уже лежат в репозитории (`packages/locales`), Storybook их не запрашивает.
+
+Превью на каждый PR Vercel делает сам. Чтобы пуш только в Storybook не пересобирал сервис и наоборот,
+в обоих проектах можно указать Settings → Git → Ignored Build Step: `npx turbo-ignore`.
 
 ## Что не попадает в репозиторий
 

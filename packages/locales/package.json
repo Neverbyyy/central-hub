@@ -1,0 +1,15 @@
+{
+  "name": "@amaya/locales",
+  "private": true,
+  "type": "module",
+  "description": "Тексты набора выгрузки ds из сервиса локализации: файлы кладёт pnpm l10n pull",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "vite": "^7.3.2"
+  }
+}
