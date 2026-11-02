@@ -1,6 +1,9 @@
 {
   "common": {
     "button": {
+      "continue": {
+        "default": "Continue"
+      },
       "restore": "Restore purchases"
     },
     "legal": {
@@ -8,13 +11,33 @@
     },
     "link": {
       "privacy_policy": "Privacy Policy",
-      "terms_of_use": "Terms of Use"
+      "terms_of_use": "Terms of Useasd"
+    }
+  },
+  "ds": {
+    "close_button": {
+      "aria": {
+        "label": "Close"
+      }
+    },
+    "spinner": {
+      "aria": {
+        "label": "Loading"
+      }
+    },
+    "store_badges": {
+      "app_store": {
+        "label": "Download on the App Store"
+      },
+      "google_play": {
+        "label": "Get it on Google Play"
+      }
     }
   },
   "app": {
     "farm": {
       "banner": {
-        "title": "Banner titlekasd",
+        "title": "Banner title",
         "title_1": "Welcome to the farm!",
         "title_2": "Meet all the farm animals",
         "title_3": "Grow, harvest and play!",
