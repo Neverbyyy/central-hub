@@ -1,75 +1,359 @@
 {
-  "$description": "Тема base: смысловые токены, которые используют компоненты. Темы игр переопределяют только то, что у них отличается. ВРЕМЕННЫЕ значения — до экспорта от Антона.",
+  "$description": "Тема base = стиль Amaya Plus, как в макетах Farm (пейволл, онбординг, Cross Promo). Смысловые токены, которые используют компоненты: цвета, заливки, тени, шрифты, регистр, анимации. Темы игр переопределяют только отличия. Размеры — в size/.",
   "color": {
     "$type": "color",
     "bg": {
-      "screen": { "$value": "{color.white}" },
-      "card": { "$value": "{color.white}" }
+      "screen": {
+        "$value": "{color.white}",
+        "$description": "Фон экрана"
+      },
+      "card": {
+        "$value": "{color.white}"
+      },
+      "hero": {
+        "$value": "{color.amaya.sky}",
+        "$description": "Половина экрана с артом"
+      },
+      "backdrop": {
+        "$value": "{color.amaya.backdrop}",
+        "$description": "Затемнение под попапом"
+      }
     },
     "text": {
-      "primary": { "$value": "{color.ink.900}" },
-      "secondary": { "$value": "{color.ink.500}" },
-      "inverse": { "$value": "{color.white}" }
-    },
-    "cta": {
-      "bg": { "$value": "{color.orange.500}" },
-      "bg-pressed": { "$value": "{color.orange.600}" },
-      "text": { "$value": "{color.white}" }
-    },
-    "plan": {
-      "bg": { "$value": "{color.white}" },
-      "border": { "$value": "{color.ink.200}" },
-      "bg-selected": { "$value": "{color.orange.50}" },
-      "border-selected": { "$value": "{color.orange.500}" }
-    },
-    "badge": {
-      "bg": { "$value": "{color.orange.500}" },
-      "text": { "$value": "{color.white}" }
-    },
-    "secondary": {
-      "bg": { "$value": "{color.white}" },
-      "text": { "$value": "{color.ink.900}" },
-      "border": { "$value": "{color.ink.200}" }
+      "primary": {
+        "$value": "{color.amaya.ink-900}"
+      },
+      "secondary": {
+        "$value": "{color.amaya.ink-700}"
+      },
+      "muted": {
+        "$value": "{color.amaya.ink-500}",
+        "$description": "«Cancel anytime» и другие подписи"
+      },
+      "inverse": {
+        "$value": "{color.white}"
+      },
+      "accent": {
+        "$value": "{color.amaya.orange}"
+      },
+      "positive": {
+        "$value": "{color.amaya.green}",
+        "$description": "«3 days free» и другие выгоды"
+      },
+      "link": {
+        "$value": "{color.amaya.ink-500}"
+      }
     },
     "title": {
-      "fill": { "$value": "{color.ink.900}", "$description": "Игровой заголовок (DsGameTitle): заливка букв" },
-      "stroke": { "$value": "{color.white}", "$description": "Игровой заголовок: обводка вокруг букв" }
+      "fill": {
+        "$value": "{color.amaya.ink-900}",
+        "$description": "Игровой заголовок (DsGameTitle): заливка букв"
+      },
+      "accent": {
+        "$value": "{color.amaya.orange}",
+        "$description": "Игровой заголовок: выделенные слова"
+      },
+      "stroke": {
+        "$value": "{color.transparent}",
+        "$description": "Игровой заголовок: обводка вокруг букв"
+      }
+    },
+    "cta": {
+      "text": {
+        "$value": "{color.white}"
+      },
+      "border": {
+        "$value": "{color.transparent}"
+      },
+      "text-stroke": {
+        "$value": "{color.transparent}",
+        "$description": "Обводка букв на кнопке"
+      }
+    },
+    "secondary": {
+      "text": {
+        "$value": "{color.amaya.ink-900}"
+      },
+      "border": {
+        "$value": "{color.amaya.line}"
+      },
+      "text-stroke": {
+        "$value": "{color.transparent}"
+      }
+    },
+    "plan": {
+      "bg": {
+        "$value": "{color.white}"
+      },
+      "border": {
+        "$value": "{color.amaya.line}"
+      },
+      "bg-selected": {
+        "$value": "{color.amaya.green-50}"
+      },
+      "border-selected": {
+        "$value": "{color.amaya.green}"
+      }
+    },
+    "radio": {
+      "bg": {
+        "$value": "{color.white}"
+      },
+      "border": {
+        "$value": "{color.amaya.line}"
+      }
+    },
+    "badge": {
+      "bg": {
+        "$value": "{color.amaya.orange}"
+      },
+      "text": {
+        "$value": "{color.white}"
+      }
+    },
+    "switch": {
+      "track": {
+        "$value": "{color.amaya.line}"
+      },
+      "track-on": {
+        "$value": "{color.amaya.green}",
+        "$description": "Включённого состояния в макете нет — взят цвет выбранного тарифа, уточнить у Антона"
+      },
+      "thumb": {
+        "$value": "{color.white}"
+      }
+    },
+    "bullet": {
+      "$value": "{color.amaya.green}",
+      "$description": "Точка или галочка в списке преимуществ"
+    },
+    "dot": {
+      "default": {
+        "$value": "#FFFFFF99",
+        "$description": "Точки слайдера: белые 60%"
+      },
+      "active": {
+        "$value": "{color.white}"
+      }
     },
     "close": {
-      "bg": { "$value": "{color.white-70}" },
-      "icon": { "$value": "{color.ink.500}" }
+      "bg": {
+        "$value": "{color.transparent}"
+      },
+      "icon": {
+        "$value": "{color.amaya.lavender}"
+      },
+      "icon-alt": {
+        "$value": "{color.amaya.ink-500}",
+        "$description": "Крестик на светлом попапе (DsCloseButton tone=alt)"
+      }
     },
-    "accent": { "$value": "{color.orange.500}" },
-    "link": { "$value": "{color.ink.500}" }
+    "accent": {
+      "$value": "{color.amaya.orange}"
+    },
+    "slide": {
+      "$description": "Фоны слайдов Amaya Plus в левой половине пейволла (как в InApp)",
+      "sky": {
+        "$value": "{color.amaya.sky}"
+      },
+      "lime": {
+        "$value": "{color.amaya.lime}"
+      },
+      "yellow": {
+        "$value": "{color.amaya.yellow}"
+      },
+      "periwinkle": {
+        "$value": "{color.amaya.periwinkle}"
+      },
+      "lilac": {
+        "$value": "{color.amaya.lilac}"
+      }
+    },
+    "tint": {
+      "$description": "Свои цвета у каждого тарифа (DsPlanCard tint): рамка всегда, фон — у выбранного. Пейволл Farm On click",
+      "sky": {
+        "border": {
+          "$value": "{color.amaya.sky-line}"
+        },
+        "bg": {
+          "$value": "{color.amaya.sky-50}"
+        }
+      },
+      "violet": {
+        "border": {
+          "$value": "{color.amaya.violet-line}"
+        },
+        "bg": {
+          "$value": "{color.amaya.violet-50}"
+        }
+      },
+      "pink": {
+        "border": {
+          "$value": "{color.amaya.pink-line}"
+        },
+        "bg": {
+          "$value": "{color.amaya.pink-50}"
+        }
+      }
+    },
+    "tag": {
+      "$description": "Цветные метки DsBadge: «coloring pages», «puzzles»… В макетах только у Cars 2 — у base те же цвета",
+      "text": {
+        "$value": "{color.white}"
+      },
+      "green": {
+        "$value": "{color.cars2.tag-green}"
+      },
+      "red": {
+        "$value": "{color.cars2.tag-red}"
+      },
+      "purple": {
+        "$value": "{color.cars2.tag-purple}"
+      },
+      "blue": {
+        "$value": "{color.cars2.tag-blue}"
+      },
+      "yellow": {
+        "$value": "{color.cars2.tag-yellow}"
+      }
+    },
+    "price": {
+      "$description": "Плашка цены DsPriceTag и строка под ней",
+      "bg": {
+        "$value": "{color.amaya.green-50}"
+      },
+      "text": {
+        "$value": "{color.amaya.ink-900}"
+      },
+      "sub": {
+        "$value": "{color.amaya.ink-700}"
+      }
+    },
+    "card": {
+      "border": {
+        "$value": "{color.amaya.line}",
+        "$description": "Рамка карточки DsBox surface=card"
+      }
+    },
+    "check": {
+      "$description": "Круглая галочка «включено» (DsCheckMark)",
+      "bg": {
+        "$value": "{color.amaya.green}"
+      },
+      "icon": {
+        "$value": "{color.white}"
+      }
+    },
+    "highlight": {
+      "$description": "Выделенные слова в тексте: «boys» и «girls» на обороте карточки Cars 2",
+      "boys": {
+        "$value": "{color.cars2.blue}"
+      },
+      "girls": {
+        "$value": "{color.cars2.pink}"
+      }
+    },
+    "popup": {
+      "$description": "Попап тарифов снизу (PwHeroSlider): светлая кромка и цветная полоса под ней",
+      "rim": {
+        "$value": "{color.white}"
+      },
+      "edge": {
+        "$value": "{color.amaya.line}"
+      }
+    },
+    "info": {
+      "$description": "Круглая кнопка со значком (DsIconButton): рамка и значок; заливка — surface.info",
+      "border": {
+        "$value": "{color.white}"
+      },
+      "icon": {
+        "$value": "{color.white}"
+      }
+    }
   },
-  "spacing": {
-    "$type": "dimension",
-    "touch": { "$value": "{size.44}", "$description": "Зона нажатия не меньше 44×44: ds:min-h-touch, ds:min-w-touch" },
-    "icon-sm": { "$value": "{size.16}" },
-    "icon-md": { "$value": "{size.20}" },
-    "icon-lg": { "$value": "{size.24}" },
-    "close": { "$value": "{size.32}", "$description": "Видимый круг крестика; зона нажатия всё равно 44" },
-    "store-badge": { "$value": "{size.40}", "$description": "Высота значка App Store / Google Play" }
+  "surface": {
+    "$type": "gradient",
+    "$description": "Заливки, которые бывают градиентом: класс ds:surface-<имя> ставит background",
+    "cta": {
+      "$value": "{color.amaya.orange}"
+    },
+    "secondary": {
+      "$value": "{color.white}"
+    },
+    "radio-dot": {
+      "$value": "{color.amaya.green}"
+    },
+    "card": {
+      "$value": "{color.white}",
+      "$description": "Заливка карточки DsBox surface=card"
+    },
+    "info": {
+      "$value": "{color.amaya.sky}",
+      "$description": "Заливка круглой кнопки со значком (DsIconButton)"
+    }
   },
-  "radius": {
-    "$type": "dimension",
-    "card": { "$value": "{radius.16}" },
-    "button": { "$value": "{radius.24}" },
-    "badge": { "$value": "{radius.8}" },
-    "pill": { "$value": "{radius.full}" }
+  "shadow": {
+    "$type": "shadow",
+    "cta": {
+      "$value": "{shadow.none}"
+    },
+    "card": {
+      "$value": "{shadow.none}"
+    },
+    "info": {
+      "$value": "{shadow.none}"
+    }
   },
   "font": {
     "$type": "fontFamily",
-    "title": { "$value": "{font.nunito}" },
-    "body": { "$value": "{font.open-sans}" }
+    "display": {
+      "$value": "{font.nunito}",
+      "$description": "Крупные игровые заголовки (text-display-*)"
+    },
+    "title": {
+      "$value": "{font.open-sans}"
+    },
+    "body": {
+      "$value": "{font.open-sans}"
+    },
+    "button": {
+      "$value": "{font.open-sans}"
+    },
+    "link": {
+      "$value": "{font.open-sans}",
+      "$description": "Документы внизу и ссылки"
+    }
+  },
+  "case": {
+    "$description": "Регистр: в сервисе тексты в обычном регистре, капс делает CSS (класс ds:case-<имя>)",
+    "title-lg": {
+      "$value": "uppercase"
+    },
+    "button": {
+      "$value": "uppercase"
+    },
+    "badge": {
+      "$value": "uppercase"
+    },
+    "plan": {
+      "$value": "uppercase",
+      "$description": "Название тарифа: YEARLY ACCESS"
+    }
   },
   "duration": {
     "$type": "duration",
-    "fast": { "$value": "{duration.fast}" },
-    "base": { "$value": "{duration.base}" }
+    "fast": {
+      "$value": "{duration.fast}"
+    },
+    "base": {
+      "$value": "{duration.base}"
+    }
   },
   "ease": {
     "$type": "cubicBezier",
-    "standard": { "$value": "{ease.standard}" }
+    "standard": {
+      "$value": "{ease.standard}"
+    }
   }
 }

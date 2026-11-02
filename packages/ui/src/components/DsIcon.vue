@@ -8,14 +8,15 @@ import { computed } from 'vue'
 
 const props = withDefaults(defineProps<{
   name: DsIconName
-  size?: 'sm' | 'md' | 'lg'
+  // fill — во всю обёртку: размер задаёт обёртка (крестик берёт spacing.close-icon)
+  size?: 'sm' | 'md' | 'lg' | 'fill'
   label?: string
 }>(), {
   size: 'md',
   label: undefined
 })
 
-const SIZE = { sm: 'ds:size-icon-sm', md: 'ds:size-icon-md', lg: 'ds:size-icon-lg' }
+const SIZE = { sm: 'ds:size-icon-sm', md: 'ds:size-icon-md', lg: 'ds:size-icon-lg', fill: 'ds:size-full' }
 
 const shape = computed(() => icons[props.name] as { d: string, fill?: boolean })
 </script>

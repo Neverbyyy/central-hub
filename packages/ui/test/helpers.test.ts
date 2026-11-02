@@ -19,8 +19,8 @@ describe('картинки по конвенции', () => {
   it('источники <picture>: сначала large, потом medium, у каждого webp раньше png; small png — у <img>', () => {
     const sources = imageSources(imageSet('/a'))
     expect(sources.map(s => `${s.key} ${s.media ?? '—'}`)).toEqual([
-      'large-webp (min-width: 1024px)',
-      'large-png (min-width: 1024px)',
+      'large-webp (min-width: 1024px) and (min-height: 600px)',
+      'large-png (min-width: 1024px) and (min-height: 600px)',
       'medium-webp (min-width: 844px)',
       'medium-png (min-width: 844px)',
       'small-webp —'

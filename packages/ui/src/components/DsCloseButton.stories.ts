@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import { ref } from 'vue'
-import { useStoryTexts } from '../stories/useStoryTexts'
+import { useStoryTexts } from '../stories'
 import DsCloseButton from './DsCloseButton.vue'
 
 const meta = {
-  title: 'Действия/DsCloseButton',
+  title: 'Общее/Крестик',
   component: DsCloseButton,
   // label история берёт из сервиса (ds.close_button.aria.label), поле в панели не нужно
   args: { active: true, delay: 3000, label: '' },
@@ -19,7 +19,7 @@ export default meta
 
 // active — экран показан; выключить и включить — крестик снова ждёт delay, как при повторном открытии экрана
 export const Delay: StoryObj<typeof meta> = {
-  name: 'Появляется с задержкой',
+  name: 'Крестик',
   render: args => ({
     components: { DsCloseButton },
     setup() {

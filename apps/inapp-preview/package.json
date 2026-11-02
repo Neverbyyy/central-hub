@@ -1,0 +1,30 @@
+{
+  "name": "@amaya/inapp-preview",
+  "private": true,
+  "type": "module",
+  "description": "Экраны пейволлов и онбордингов, устроенные как варианты InApp, и эмулятор InApp для их проверки",
+  "scripts": {
+    "dev": "vite --port 6020 --host",
+    "build": "vite build",
+    "preview": "vite preview --port 6021 --host",
+    "lint": "eslint .",
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "@amaya/locales": "workspace:*",
+    "@amaya/paywall-kit": "workspace:*",
+    "@amaya/tokens": "workspace:*",
+    "@amaya/ui": "workspace:*",
+    "vue": "^3.5.33",
+    "vue-i18n": "^11.4.16"
+  },
+  "devDependencies": {
+    "@storybook/vue3-vite": "10.6.5",
+    "@tailwindcss/vite": "^4.3.3",
+    "@vitejs/plugin-vue": "^6.0.6",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^6.0.3",
+    "vite": "^7.3.2",
+    "vue-tsc": "^3.2.7"
+  }
+}

@@ -1,11 +1,179 @@
 {
-  "$description": "Тема Cars 2: только отличия от base. ВРЕМЕННО: выбранный тариф — зелёный, как в InApp cars2/tm11.",
+  "$description": "Тема Cars 2 по макетам (Figma, 2 ноя 2026): только отличия от base. Пейволл лежит поверх игры на затемнении, всё на Nunito, кнопки — градиенты с белой рамкой и обводкой букв.",
   "color": {
     "$type": "color",
-    "plan": {
-      "bg-selected": { "$value": "{color.green.50}" },
-      "border-selected": { "$value": "{color.green.500}" }
+    "bg": {
+      "screen": {
+        "$value": "{color.cars2.black-50}"
+      },
+      "backdrop": {
+        "$value": "{color.cars2.black-50}"
+      }
     },
-    "accent": { "$value": "{color.green.500}" }
+    "text": {
+      "primary": {
+        "$value": "{color.cars2.black-blue-text}"
+      },
+      "secondary": {
+        "$value": "{color.cars2.price-text}"
+      },
+      "muted": {
+        "$value": "{color.cars2.price-text}"
+      },
+      "accent": {
+        "$value": "{color.cars2.red-text}"
+      },
+      "positive": {
+        "$value": "{color.cars2.green-dark}"
+      },
+      "link": {
+        "$value": "{color.white}"
+      }
+    },
+    "title": {
+      "fill": {
+        "$value": "{color.cars2.black-blue-text}"
+      },
+      "accent": {
+        "$value": "{color.cars2.red-text}"
+      },
+      "stroke": {
+        "$value": "{color.white}"
+      }
+    },
+    "cta": {
+      "border": {
+        "$value": "{color.white}"
+      },
+      "text-stroke": {
+        "$value": "{color.cars2.green-dark}"
+      }
+    },
+    "secondary": {
+      "text": {
+        "$value": "{color.white}"
+      },
+      "border": {
+        "$value": "{color.white}"
+      },
+      "text-stroke": {
+        "$value": "{color.cars2.orange-dark}"
+      }
+    },
+    "plan": {
+      "bg": {
+        "$value": "{color.cars2.white-snow}"
+      },
+      "border": {
+        "$value": "{color.cars2.blue}"
+      },
+      "bg-selected": {
+        "$value": "{color.white}"
+      },
+      "border-selected": {
+        "$value": "{color.cars2.green-dark}"
+      }
+    },
+    "radio": {
+      "bg": {
+        "$value": "{color.cars2.radio-button-bg}"
+      },
+      "border": {
+        "$value": "{color.cars2.radio-button-border}"
+      }
+    },
+    "bullet": {
+      "$value": "{color.cars2.check}"
+    },
+    "close": {
+      "icon": {
+        "$value": "{color.white}"
+      },
+      "icon-alt": {
+        "$value": "{color.cars2.close-on-light}"
+      }
+    },
+    "accent": {
+      "$value": "{color.cars2.green-dark}"
+    },
+    "price": {
+      "bg": {
+        "$value": "{color.cars2.price-pill}"
+      },
+      "text": {
+        "$value": "{color.cars2.price-text}"
+      },
+      "sub": {
+        "$value": "{color.cars2.price-sub}"
+      }
+    },
+    "card": {
+      "border": {
+        "$value": "{color.cars2.card-border}"
+      }
+    },
+    "check": {
+      "bg": {
+        "$value": "{color.cars2.check-bg}"
+      }
+    },
+    "popup": {
+      "edge": {
+        "$value": "{color.cars2.popup-line}"
+      }
+    }
+  },
+  "surface": {
+    "cta": {
+      "$value": "{gradient.cars2.gradient-green}"
+    },
+    "secondary": {
+      "$value": "{gradient.cars2.gradient-orange}"
+    },
+    "radio-dot": {
+      "$value": "{gradient.cars2.green-gradient}"
+    },
+    "card": {
+      "$value": "{gradient.cars2.info-card}"
+    },
+    "info": {
+      "$value": "{gradient.cars2.info}"
+    }
+  },
+  "shadow": {
+    "cta": {
+      "$value": "{shadow.cars2.button}"
+    },
+    "card": {
+      "$value": "{shadow.cars2.info-card}"
+    },
+    "info": {
+      "$value": "{shadow.cars2.info-button}"
+    }
+  },
+  "font": {
+    "title": {
+      "$value": "{font.nunito}"
+    },
+    "body": {
+      "$value": "{font.nunito}"
+    },
+    "button": {
+      "$value": "{font.nunito}"
+    }
+  },
+  "case": {
+    "title-lg": {
+      "$value": "none"
+    },
+    "button": {
+      "$value": "none"
+    },
+    "badge": {
+      "$value": "none"
+    },
+    "plan": {
+      "$value": "none"
+    }
   }
 }

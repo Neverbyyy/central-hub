@@ -5,7 +5,8 @@
   "description": "Компоненты дизайн-системы Ds* и пресет Tailwind 4",
   "exports": {
     ".": "./src/index.ts",
-    "./tailwind.css": "./src/tailwind.css"
+    "./tailwind.css": "./src/tailwind.css",
+    "./stories": "./src/stories/index.ts"
   },
   "scripts": {
     "lint": "eslint .",

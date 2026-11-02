@@ -1,0 +1,163 @@
+{
+  "$description": "Размеры base на большом экране: от 1024 px, iPad 1024×768 и десктоп. Только отличия от small. Из макетов Farm.",
+  "text": {
+    "$type": "dimension",
+    "display-lg": {
+      "size": {
+        "$value": 42
+      },
+      "line-height": {
+        "$value": 52
+      }
+    },
+    "display-md": {
+      "size": {
+        "$value": 32
+      },
+      "line-height": {
+        "$value": 36
+      }
+    },
+    "title-lg": {
+      "size": {
+        "$value": 32
+      },
+      "line-height": {
+        "$value": 36
+      }
+    },
+    "title-md": {
+      "size": {
+        "$value": 32
+      },
+      "line-height": {
+        "$value": 36
+      }
+    },
+    "body-lg": {
+      "size": {
+        "$value": 28
+      },
+      "line-height": {
+        "$value": 36
+      }
+    },
+    "body": {
+      "size": {
+        "$value": 24
+      },
+      "line-height": {
+        "$value": 32
+      }
+    },
+    "list": {
+      "size": {
+        "$value": 28
+      },
+      "line-height": {
+        "$value": 32
+      }
+    },
+    "caption": {
+      "size": {
+        "$value": 18
+      },
+      "line-height": {
+        "$value": 24
+      }
+    },
+    "price": {
+      "size": {
+        "$value": 20
+      },
+      "line-height": {
+        "$value": 28
+      }
+    },
+    "button": {
+      "size": {
+        "$value": 24
+      },
+      "line-height": {
+        "$value": 32
+      }
+    },
+    "button-sm": {
+      "size": {
+        "$value": 20
+      },
+      "line-height": {
+        "$value": 28
+      }
+    },
+    "badge": {
+      "size": {
+        "$value": 14
+      },
+      "line-height": {
+        "$value": 18
+      }
+    },
+    "legal": {
+      "size": {
+        "$value": 18
+      },
+      "line-height": {
+        "$value": 24
+      }
+    },
+    "link": {
+      "size": {
+        "$value": 20
+      },
+      "line-height": {
+        "$value": 28
+      }
+    }
+  },
+  "spacing": {
+    "$type": "dimension",
+    "button": {
+      "$value": "{size.64}"
+    },
+    "close": {
+      "$value": "{size.64}"
+    },
+    "close-icon": {
+      "$value": "{size.28}"
+    },
+    "button-x": {
+      "$value": "{size.32}"
+    },
+    "plan-x": {
+      "$value": "{size.24}"
+    },
+    "plan-y": {
+      "$value": "{size.16}"
+    },
+    "icon-button": {
+      "$value": "{size.56}"
+    },
+    "hero-w": {
+      "$value": "{size.686}"
+    },
+    "hero-h": {
+      "$value": "{size.474}"
+    },
+    "unlock-w": {
+      "$value": "{size.267}"
+    },
+    "unlock-h": {
+      "$value": "{size.360}"
+    }
+  },
+  "radius": {
+    "$type": "dimension",
+    "card": {
+      "$value": "{radius.24}"
+    },
+    "plan": {
+      "$value": "{radius.24}"
+    }
+  }
+}

@@ -1,14 +1,3 @@
 {
-  "$description": "Тема Farm: только отличия от base. ВРЕМЕННО: синие акценты, как в InApp farm/tm9.",
-  "color": {
-    "$type": "color",
-    "plan": {
-      "bg-selected": { "$value": "{color.blue.50}" },
-      "border-selected": { "$value": "{color.blue.500}" }
-    },
-    "badge": {
-      "bg": { "$value": "{color.blue.500}" }
-    },
-    "accent": { "$value": "{color.blue.500}" }
-  }
+  "$description": "Тема Farm: пейволл и онбординг Farm в макетах — стиль Amaya Plus, он и есть base. Здесь будут только отличия Farm от base; пока их нет."
 }

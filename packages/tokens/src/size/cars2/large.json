@@ -1,0 +1,148 @@
+{
+  "$description": "Размеры Cars 2 на большом экране (iPad 1024×768): текстовые стили Антона LG/*. Только отличия от cars2/small.",
+  "text": {
+    "$type": "dimension",
+    "display-lg": {
+      "$description": "LG/lg-pw-title1",
+      "size": {
+        "$value": 44
+      },
+      "line-height": {
+        "$value": 44
+      }
+    },
+    "display-md": {
+      "$description": "LG/lg-pw-title2",
+      "size": {
+        "$value": 28
+      },
+      "line-height": {
+        "$value": 28
+      }
+    },
+    "title-lg": {
+      "$description": "LG/lg-pw-moreplanes-title1",
+      "size": {
+        "$value": 40
+      },
+      "line-height": {
+        "$value": 48
+      }
+    },
+    "title-md": {
+      "$description": "LG/lg-pw-moreplanes-title2",
+      "size": {
+        "$value": 32
+      },
+      "line-height": {
+        "$value": 48
+      }
+    },
+    "body": {
+      "$description": "LG/lg-pw-price",
+      "size": {
+        "$value": 24
+      },
+      "line-height": {
+        "$value": 26
+      }
+    },
+    "list": {
+      "$description": "LG/lg-pw-back-text",
+      "size": {
+        "$value": 18
+      },
+      "line-height": {
+        "$value": 18
+      }
+    },
+    "caption": {
+      "size": {
+        "$value": 14
+      },
+      "line-height": {
+        "$value": 20
+      }
+    },
+    "price": {
+      "$description": "LG/lg-pw-moreplanes-price",
+      "size": {
+        "$value": 24
+      },
+      "line-height": {
+        "$value": 32
+      },
+      "tracking": {
+        "$value": 0.96
+      }
+    },
+    "button": {
+      "$description": "LG/lg-big-button-text",
+      "size": {
+        "$value": 32
+      },
+      "line-height": {
+        "$value": 34
+      }
+    },
+    "button-sm": {
+      "$description": "LG/lg-small-button-text",
+      "size": {
+        "$value": 24
+      },
+      "line-height": {
+        "$value": 28
+      }
+    },
+    "badge": {
+      "size": {
+        "$value": 18
+      },
+      "line-height": {
+        "$value": 18
+      }
+    },
+    "legal": {
+      "$description": "LG/lg-small-links",
+      "size": {
+        "$value": 18
+      },
+      "line-height": {
+        "$value": 18
+      }
+    },
+    "link": {
+      "$description": "LG/lg-moreplanes-link",
+      "size": {
+        "$value": 20
+      },
+      "line-height": {
+        "$value": 20
+      }
+    }
+  },
+  "spacing": {
+    "$type": "dimension",
+    "button": {
+      "$value": "{size.72}"
+    },
+    "close": {
+      "$value": "{size.56}"
+    },
+    "button-x": {
+      "$value": "{size.36}"
+    },
+    "plan-x": {
+      "$value": "{size.28}"
+    },
+    "plan-y": {
+      "$value": "{size.24}"
+    }
+  },
+  "line": {
+    "$type": "dimension",
+    "cta": {
+      "$value": "{size.4}"
+    }
+  }
+}

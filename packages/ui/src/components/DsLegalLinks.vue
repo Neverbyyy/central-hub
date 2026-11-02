@@ -4,7 +4,8 @@
  * (common.link.terms_of_use, common.link.privacy_policy, common.button.restore); нет текста — нет ссылки.
  * Когда использовать: низ пейволла и футер лендинга. Компонент только отдаёт события: адреса документов,
  * родительский гейт и восстановление покупок — дело экрана (интерфейс окружения), он не знает про InApp.
- * На узком экране строка переносится.
+ * Вид по макетам Cars 2 и Farm: подчёркнутые ссылки стилем text.legal через промежуток, без точек.
+ * На узком экране строка переносится. Если ссылки стоят в разных углах экрана (Cars 2) — экран ставит DsLink сам.
  */
 import { computed } from 'vue'
 import DsLink from './DsLink.vue'
@@ -15,7 +16,7 @@ const props = withDefaults(defineProps<{
   terms?: string
   privacy?: string
   restore?: string
-  tone?: 'link' | 'secondary' | 'inverse'
+  tone?: 'link' | 'secondary' | 'muted' | 'inverse'
   // Подпись блока для скринридера
   label?: string
 }>(), {
@@ -42,25 +43,18 @@ const select = (item: LegalItem) => {
 <template>
   <nav
     :aria-label="label"
-    class="ds:flex ds:flex-wrap ds:items-center ds:justify-center ds:text-center ds:font-body ds:text-caption"
+    class="ds:flex ds:flex-wrap ds:items-center ds:justify-center ds:text-center ds:font-link ds:text-legal"
   >
-    <template
-      v-for="({ item, text }, index) in items"
+    <!-- Промежуток — полями у каждой ссылки, не gap (старые вебвью); при переносе строки тоже ровно -->
+    <DsLink
+      v-for="{ item, text } in items"
       :key="item"
+      class="ds:mx-1.5 ds:my-0.5"
+      :tone="tone"
+      :data-legal="item"
+      @click="select(item)"
     >
-      <span
-        v-if="index"
-        class="ds:mx-2 ds:text-text-secondary"
-        aria-hidden="true"
-      >·</span>
-      <DsLink
-        :tone="tone"
-        :underline="false"
-        :data-legal="item"
-        @click="select(item)"
-      >
-        {{ text }}
-      </DsLink>
-    </template>
+      {{ text }}
+    </DsLink>
   </nav>
 </template>

@@ -1,0 +1,16 @@
+/* Пресет дизайн-системы; Tailwind не смотрит в пакеты — классы экранов и шаблонов подключаем явно */
+@import '@amaya/ui/tailwind.css';
+
+@source './';
+@source '../../../packages/paywall-kit/src';
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+  /* Как в InApp: под экраном — игра, вебвью прозрачный */
+  background: transparent;
+  overflow: hidden;
+  overscroll-behavior: none;
+}

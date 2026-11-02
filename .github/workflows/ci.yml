@@ -29,12 +29,12 @@ jobs:
       - name: Unit-тесты
         run: pnpm test
 
-      # Чистый клон собирается одной командой: токены → Storybook, сервис (turbo)
+      # Чистый клон собирается одной командой: токены → Storybook, экраны InApp, сервис (turbo)
       - name: Сборка
         run: pnpm build
 
       - name: Линтер и типы дизайн-системы и Storybook
-        run: pnpm turbo run lint typecheck --filter=@amaya/storybook...
+        run: pnpm turbo run lint typecheck --filter=@amaya/storybook... --filter=@amaya/inapp-preview...
 
       # Тесты базы идут на одноразовом локальном Supabase: миграции с нуля, строки InApp и Pages Hub из fixtures
       - name: Локальный Supabase

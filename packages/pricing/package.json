@@ -1,0 +1,16 @@
+{
+  "name": "@amaya/pricing",
+  "private": true,
+  "type": "module",
+  "description": "Цены пейволлов: разбор строки цены из стора, цена «в неделю» и «в месяц», скидка",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3"
+  }
+}

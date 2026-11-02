@@ -1,0 +1,12 @@
+{
+  "$description": "Размеры base на среднем экране: 844–1023 px, телефон в альбомной 844×390. Только отличия от small. Из макетов Farm.",
+  "text": {
+    "$type": "dimension",
+    "display-lg": { "size": { "$value": 28 }, "line-height": { "$value": 32 } },
+    "display-md": { "size": { "$value": 20 }, "line-height": { "$value": 24 } },
+    "title-lg": { "size": { "$value": 20 }, "line-height": { "$value": 24 } },
+    "body-lg": { "size": { "$value": 18 }, "line-height": { "$value": 24 } },
+    "body": { "size": { "$value": 16 }, "line-height": { "$value": 20 } },
+    "price": { "size": { "$value": 16 }, "line-height": { "$value": 20 } }
+  }
+}

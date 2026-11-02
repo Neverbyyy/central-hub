@@ -18,7 +18,7 @@ try {
   const { theme, overrides, list } = buildTokens({
     primitives: read('primitives.json'),
     themes: Object.fromEntries(THEMES.map(name => [name, optional(`theme/${name}.json`)])),
-    breakpoints: Object.fromEntries(BREAKPOINTS.map(({ name }) => [name, optional(`breakpoint/${name}.json`)]))
+    sizes: Object.fromEntries(THEMES.map(theme => [theme, Object.fromEntries(BREAKPOINTS.map(({ name }) => [name, optional(`size/${theme}/${name}.json`)]))]))
   })
   mkdirSync(join(root, 'dist'), { recursive: true })
   writeFileSync(join(root, 'dist/theme.css'), theme)

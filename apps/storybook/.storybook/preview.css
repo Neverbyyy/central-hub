@@ -4,8 +4,20 @@
 /* Классы в общих историях — токены, тексты */
 @source '../stories';
 
+/* Шаблоны пейволлов и экраны: Tailwind не смотрит в пакеты сам */
+@source '../../../packages/paywall-kit/src';
+@source '../../inapp-preview/src';
+
 .sb-themes {
   min-height: 100vh;
+}
+
+/* Холст Storybook — белый у всех тем. Затемнение Cars 2 (color.bg.screen) лежит поверх игры, а не под компонентами:
+   на сером холсте тёмный текст Cars 2 плохо читался. Белым элементам Cars 2 подложку даёт их история
+   (небо карточки, фон «игры» под каруселью и экраном) */
+.sb-theme {
+  min-height: 100vh;
+  background: #ffffff;
 }
 
 .sb-themes--all {
@@ -72,4 +84,32 @@
   padding: 16px;
   font: 13px/1.5 ui-sans-serif, system-ui, sans-serif;
   color: rgb(0 0 0 / 0.6);
+}
+
+/* Экран целиком: под пейволлом — «игра» (цвет фона истории), справа внизу — лог вызовов экрана */
+.sb-screen {
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.sb-log {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  z-index: 100;
+  max-width: 280px;
+  max-height: 40vh;
+  overflow: auto;
+  margin: 0;
+  padding: 6px 10px 6px 26px;
+  border-radius: 8px;
+  background: rgb(0 0 0 / 0.65);
+  color: #fff;
+  font: 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  pointer-events: none;
+}
+
+.sb-log:empty {
+  display: none;
 }

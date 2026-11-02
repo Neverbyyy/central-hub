@@ -1,10 +1,10 @@
-import { messages } from '@amaya/locales'
+import { messages, pluralRules } from '@amaya/locales'
 import '@amaya/tokens/fonts.css'
 import { DS_THEMES, DsRoot } from '@amaya/ui'
 import { setup, type Decorator, type Preview } from '@storybook/vue3-vite'
 import { computed } from 'vue'
 import { createI18n } from 'vue-i18n'
-import { storyGlobals } from './env'
+import { storyGlobals } from '@amaya/ui/stories'
 import './preview.css'
 
 // Те же 9 языков, что в сервисе. Утверждённых текстов набора ds на каком-то языке может ещё не быть —
@@ -13,7 +13,7 @@ const LANGUAGES = ['en', 'ru', 'de', 'es', 'it', 'pt', 'fr', 'sv', 'nl']
 const languageNames = new Intl.DisplayNames(['ru'], { type: 'language' })
 
 // Тексты — из сервиса, через `pnpm l10n pull` (@amaya/locales). Компоненты сами не переводят: тексты им передаёт история
-const i18n = createI18n({ legacy: false, locale: 'en', fallbackLocale: 'en', messages, missingWarn: false, fallbackWarn: false })
+const i18n = createI18n({ legacy: false, locale: 'en', fallbackLocale: 'en', messages, pluralRules, missingWarn: false, fallbackWarn: false })
 setup((app) => {
   app.use(i18n)
 })
@@ -35,7 +35,7 @@ const VIEWPORTS = {
  * parameters.themes: false — история сама показывает все темы (страницы токенов): один корень base.
  */
 const withDsRoot: Decorator = (story, context) => {
-  // Вызывается и при каждой смене переключателя — обновляем общее реактивное состояние (env.ts)
+  // Вызывается и при каждой смене переключателя — обновляем общее реактивное состояние (@amaya/ui/stories)
   storyGlobals.theme = String(context.globals.theme ?? 'base')
   storyGlobals.locale = String(context.globals.locale ?? 'en')
   storyGlobals.screen = context.globals.screen === 'closed' ? 'closed' : 'open'
@@ -126,7 +126,19 @@ const preview: Preview = {
   parameters: {
     layout: 'fullscreen',
     viewport: { options: VIEWPORTS },
-    controls: { expanded: true }
+    controls: { expanded: true },
+    // Сначала целые пейволлы, потом общее для Cars 2 и Farm, потом то, что есть только у одной игры
+    options: {
+      storySort: {
+        order: [
+          'Пейволлы', ['Cars 2', 'Farm · On start', 'Farm · On click'],
+          'Общее', ['Кнопка', 'Крестик', 'Выбор тарифа', 'Текст', 'Плашки и списки', 'Картинка', 'Подгонка по высоте'],
+          'Cars 2', ['Заголовок с обводкой', 'Главная карточка', 'Попап тарифов', 'Карусель наборов'],
+          'Farm', ['Тумблер триала', 'Слайды Amaya Plus', 'Документы'],
+          'Токены'
+        ]
+      }
+    }
   }
 }
 

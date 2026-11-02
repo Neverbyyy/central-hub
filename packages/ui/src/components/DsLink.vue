@@ -10,7 +10,7 @@ import { useTapGuard } from '../composables/useTapGuard'
 
 const props = withDefaults(defineProps<{
   href?: string
-  tone?: 'link' | 'primary' | 'secondary' | 'inverse' | 'inherit'
+  tone?: 'link' | 'primary' | 'secondary' | 'muted' | 'inverse' | 'inherit'
   underline?: boolean
 }>(), {
   href: undefined,
@@ -29,7 +29,8 @@ const onClick = (event: MouseEvent) => {
 }
 
 const TONE = {
-  link: 'ds:text-link',
+  link: 'ds:text-text-link',
+  muted: 'ds:text-text-muted',
   primary: 'ds:text-text-primary',
   secondary: 'ds:text-text-secondary',
   inverse: 'ds:text-text-inverse',

@@ -18,7 +18,8 @@ export default createConfigForNuxt({
 }).append({
   ignores: ['apps/central-hub/**', '**/dist/**', '**/storybook-static/**', '**/.turbo/**']
 }, {
-  files: ['packages/ui/src/**/*.{ts,vue}'],
+  // Всё, что потом переносят в InApp: компоненты, шаблоны пейволлов и папки экранов
+  files: ['packages/ui/src/**/*.{ts,vue}', 'packages/paywall-kit/src/**/*.{ts,vue}', 'apps/inapp-preview/src/variants/**/*.{ts,vue}'],
   rules: {
     'no-restricted-imports': ['error', {
       paths: [{ name: 'vue', importNames: ['useTemplateRef', 'useId', 'onWatcherCleanup', 'useModel', 'useHost', 'useShadowRoot'], message: `${VUE_33} (Vue 3.4–3.5)` }]
@@ -28,5 +29,11 @@ export default createConfigForNuxt({
       { selector: 'VariableDeclarator[id.type=\'ObjectPattern\'] > CallExpression[callee.name=\'defineProps\']', message: `Деструктуризация пропсов — Vue 3.5. ${VUE_33}: const props = defineProps(...)` },
       { selector: 'VariableDeclarator[id.type=\'ObjectPattern\'] > CallExpression[callee.name=\'withDefaults\']', message: `Деструктуризация пропсов — Vue 3.5. ${VUE_33}: const props = withDefaults(...)` }
     ]
+  }
+}, {
+  // Папка экрана устроена как вариант InApp: экран — её index.vue
+  files: ['apps/inapp-preview/src/variants/**/index.vue'],
+  rules: {
+    'vue/multi-word-component-names': 'off'
   }
 })

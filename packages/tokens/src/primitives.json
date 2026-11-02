@@ -1,57 +1,386 @@
 {
-  "$description": "Примитивы: палитра, радиусы, шрифты, анимации. Компоненты их не используют — только через смысловые токены тем. ВРЕМЕННЫЕ значения из пейволлов InApp (ios/as/cars2/tm11, farm/tm9) — заменить экспортом переменных Figma от Антона.",
+  "$description": "Примитивы: палитра, заливки, тени, радиусы, шрифты, анимации — из макетов Cars 2 и Farm (Figma, 2 ноя 2026). Компоненты их не используют — только через смысловые токены тем. Палитра Cars 2 названа по стилям Антона в Figma; у Farm стилей нет — имена наши.",
   "color": {
     "$type": "color",
-    "white": { "$value": "#FFFFFF" },
-    "white-70": { "$value": "#FFFFFFB3", "$description": "Белая подложка крестика поверх арта" },
-    "ink": {
-      "900": { "$value": "#3D3B4B", "$description": "Основной текст пейволлов Cars 2 и Farm" },
-      "500": { "$value": "#9896A9", "$description": "Второстепенный текст, ссылки легала" },
-      "200": { "$value": "#DBD9ED", "$description": "Рамка карточки тарифа" }
+    "white": {
+      "$value": "#FFFFFF"
     },
-    "orange": {
-      "500": { "$value": "#FF8D24", "$description": "Кнопка CTA в Cars 2 и Farm" },
-      "600": { "$value": "#FF7A00", "$description": "Кнопка CTA нажата" },
-      "50": { "$value": "#FFF3E8" }
+    "black": {
+      "$value": "#000000"
     },
-    "green": {
-      "500": { "$value": "#64BF07", "$description": "Рамка выбранного тарифа в Cars 2" },
-      "50": { "$value": "#EDF7E4", "$description": "Фон выбранного тарифа в Cars 2" }
+    "transparent": {
+      "$value": "transparent"
     },
-    "blue": {
-      "500": { "$value": "#4473B7", "$description": "Акцент Farm" },
-      "50": { "$value": "#E8EEF7" }
+    "amaya": {
+      "$description": "Amaya Plus / Farm: пейволл, онбординг, Cross Promo",
+      "ink-900": {
+        "$value": "#3D3B4B",
+        "$description": "Основной текст"
+      },
+      "ink-700": {
+        "$value": "#5C5A6A",
+        "$description": "Преимущества, строка под кнопкой"
+      },
+      "ink-500": {
+        "$value": "#9896A9",
+        "$description": "Документы внизу, «Cancel anytime»"
+      },
+      "line": {
+        "$value": "#DBD9ED",
+        "$description": "Рамки тарифа и тумблера, выключенный тумблер"
+      },
+      "lavender": {
+        "$value": "#ECE8FD",
+        "$description": "Крестик на белом"
+      },
+      "orange": {
+        "$value": "#FF8D24",
+        "$description": "Главная кнопка, плашка BEST OFFER, акцент в заголовках"
+      },
+      "green": {
+        "$value": "#64BF07",
+        "$description": "Рамка выбранного тарифа, точки списка"
+      },
+      "green-50": {
+        "$value": "#EDF7E4",
+        "$description": "Фон выбранного тарифа"
+      },
+      "sky": {
+        "$value": "#84DAFF",
+        "$description": "Фон левой половины пейволла"
+      },
+      "backdrop": {
+        "$value": "#000000BF",
+        "$description": "Затемнение под попапом Cross Promo"
+      },
+      "lime": {
+        "$value": "#CAE45A",
+        "$description": "Фон слайда «Loved & trusted» Amaya Plus"
+      },
+      "yellow": {
+        "$value": "#FFE16C",
+        "$description": "Фон слайда «Privacy protected» Amaya Plus"
+      },
+      "periwinkle": {
+        "$value": "#B8C9FF",
+        "$description": "Фон слайда «Educational content» Amaya Plus"
+      },
+      "lilac": {
+        "$value": "#D4BCFF",
+        "$description": "Фон слайда «Play offline» Amaya Plus"
+      },
+      "sky-line": {
+        "$value": "#50D8FE",
+        "$description": "Рамка тарифа Weekly в пейволле On click"
+      },
+      "sky-50": {
+        "$value": "#E6F9FF",
+        "$description": "Фон выбранного тарифа Weekly — в макете не нарисован, подобран под голубую рамку; уточнить у Антона"
+      },
+      "violet-line": {
+        "$value": "#E6BEFC",
+        "$description": "Рамка тарифа Monthly в пейволле On click"
+      },
+      "violet-50": {
+        "$value": "#F6E5FE",
+        "$description": "Фон выбранного тарифа Monthly в пейволле On click"
+      },
+      "pink-line": {
+        "$value": "#FFBACC",
+        "$description": "Рамка тарифа Yearly в пейволле On click"
+      },
+      "pink-50": {
+        "$value": "#FFF0F4",
+        "$description": "Фон выбранного тарифа Yearly — в макете не нарисован, подобран под розовую рамку; уточнить у Антона"
+      }
+    },
+    "cars2": {
+      "$description": "Cars 2: имена — стили Антона в Figma",
+      "black-blue-text": {
+        "$value": "#1F2138",
+        "$description": "Стиль black-blue-text: основной текст и заголовки"
+      },
+      "red-text": {
+        "$value": "#F23E1B",
+        "$description": "Стиль red-text: акцентные слова заголовка"
+      },
+      "blue": {
+        "$value": "#2F98E1",
+        "$description": "Стиль blue: рамка невыбранного тарифа, «boys»"
+      },
+      "white-snow": {
+        "$value": "#E9F3F9",
+        "$description": "Стиль white-snow: фон невыбранного тарифа"
+      },
+      "green-dark": {
+        "$value": "#28B000",
+        "$description": "Стиль green-dark: рамка выбранного тарифа, обводка текста кнопки, «N days free»"
+      },
+      "orange-dark": {
+        "$value": "#D88502",
+        "$description": "Стиль orange-dark: обводка текста оранжевой кнопки"
+      },
+      "pink": {
+        "$value": "#F13D70",
+        "$description": "Стиль pink: «girls»"
+      },
+      "black-50": {
+        "$value": "#00000080",
+        "$description": "Стиль black (чёрный 50%): затемнение над игрой"
+      },
+      "radio-button-bg": {
+        "$value": "#3F7E571A",
+        "$description": "Стиль radio_button_bg"
+      },
+      "radio-button-border": {
+        "$value": "#B3C4C2",
+        "$description": "Стиль radio_button_border"
+      },
+      "check": {
+        "$value": "#52B819",
+        "$description": "Галочки в списке преимуществ (без стиля)"
+      },
+      "price-pill": {
+        "$value": "#EBFEFF",
+        "$description": "Плашка цены в неделю (без стиля)"
+      },
+      "price-text": {
+        "$value": "#48638F",
+        "$description": "Цена в неделю (без стиля)"
+      },
+      "close-on-light": {
+        "$value": "#2D83BD",
+        "$description": "Крестик на светлом попапе (без стиля)"
+      },
+      "price-sub": {
+        "$value": "#29497D",
+        "$description": "Цена за год под плашкой цены в неделю (без стиля)"
+      },
+      "card-border": {
+        "$value": "#36B700",
+        "$description": "Рамка карточек на обороте главной карточки (без стиля)"
+      },
+      "check-bg": {
+        "$value": "#73DC1D",
+        "$description": "Круглая галочка в углу карточки на обороте (без стиля)"
+      },
+      "tag-green": {
+        "$value": "#7BD035",
+        "$description": "Метка «coloring pages»"
+      },
+      "tag-red": {
+        "$value": "#FF5557",
+        "$description": "Метка «puzzles»"
+      },
+      "tag-purple": {
+        "$value": "#C566FF",
+        "$description": "Метка «fairy tales»"
+      },
+      "tag-blue": {
+        "$value": "#40C2EF",
+        "$description": "Метка «animals»"
+      },
+      "tag-yellow": {
+        "$value": "#FFCB40",
+        "$description": "Метка «dinosaurs»"
+      },
+      "popup-line": {
+        "$value": "#62C0FF",
+        "$description": "Голубая кромка попапа тарифов под белой линией"
+      }
+    }
+  },
+  "gradient": {
+    "$type": "gradient",
+    "$description": "Заливки-градиенты: в Figma это стили, переменными их не выразить. Значение — CSS",
+    "cars2": {
+      "gradient-green": {
+        "$value": "linear-gradient(180deg, #76EC00 0%, #36B902 100%)",
+        "$description": "Стиль gradient-green: главная кнопка"
+      },
+      "gradient-orange": {
+        "$value": "linear-gradient(180deg, #FFD500 0%, #FE9F00 100%)",
+        "$description": "Стиль gradient-orange: кнопка «Unlock for»"
+      },
+      "green-gradient": {
+        "$value": "linear-gradient(180deg, #72E800 0%, #39BA00 100%)",
+        "$description": "Стиль green_gradient: точка выбранной радиокнопки"
+      },
+      "info": {
+        "$value": "linear-gradient(180deg, #019DF7 0%, #0178CD 100%)",
+        "$description": "Круглая кнопка «i» на главной карточке (без стиля)"
+      },
+      "info-card": {
+        "$value": "linear-gradient(180deg, #FFFFFF 69%, #E7EFF2 100%)",
+        "$description": "Карточки на обороте главной карточки (без стиля)"
+      }
+    }
+  },
+  "shadow": {
+    "$type": "shadow",
+    "none": {
+      "$value": "0 0 #0000",
+      "$description": "Нет тени: нулевая прозрачная, как у Tailwind — её можно складывать с другими"
+    },
+    "cars2": {
+      "button": {
+        "$value": "0 10px 18px -3px #002A46CC",
+        "$description": "Тень главной кнопки в попапе тарифов"
+      },
+      "info-card": {
+        "$value": "0 0 10px 0 #257D0080",
+        "$description": "Зелёное свечение карточек на обороте главной карточки"
+      },
+      "info-button": {
+        "$value": "0 2px 2px 0 #00000026",
+        "$description": "Тень кнопки «i»"
+      }
     }
   },
   "size": {
-    "$type": "dimension",
-    "16": { "$value": 16 },
-    "20": { "$value": 20 },
-    "24": { "$value": 24 },
-    "32": { "$value": 32 },
-    "40": { "$value": 40 },
-    "44": { "$value": 44, "$description": "Минимальная зона нажатия — правило ТЗ" }
+    "0": {
+      "$value": 0
+    },
+    "1": {
+      "$value": 1
+    },
+    "2": {
+      "$value": 2
+    },
+    "3": {
+      "$value": 3
+    },
+    "4": {
+      "$value": 4
+    },
+    "8": {
+      "$value": 8
+    },
+    "12": {
+      "$value": 12
+    },
+    "16": {
+      "$value": 16
+    },
+    "18": {
+      "$value": 18
+    },
+    "20": {
+      "$value": 20
+    },
+    "24": {
+      "$value": 24
+    },
+    "28": {
+      "$value": 28
+    },
+    "32": {
+      "$value": 32
+    },
+    "36": {
+      "$value": 36
+    },
+    "40": {
+      "$value": 40
+    },
+    "44": {
+      "$value": 44,
+      "$description": "Минимальная зона нажатия — правило ТЗ"
+    },
+    "48": {
+      "$value": 48
+    },
+    "56": {
+      "$value": 56
+    },
+    "64": {
+      "$value": 64
+    },
+    "72": {
+      "$value": 72
+    },
+    "5": {
+      "$value": 5
+    },
+    "6": {
+      "$value": 6
+    },
+    "178": {
+      "$value": 178,
+      "$description": "Карточка набора машин Cars 2: ширина"
+    },
+    "240": {
+      "$value": 240,
+      "$description": "Карточка набора машин Cars 2: высота"
+    },
+    "267": {
+      "$value": 267
+    },
+    "290": {
+      "$value": 290,
+      "$description": "Главная карточка Cars 2: высота"
+    },
+    "360": {
+      "$value": 360
+    },
+    "420": {
+      "$value": 420,
+      "$description": "Главная карточка Cars 2: ширина"
+    },
+    "474": {
+      "$value": 474
+    },
+    "686": {
+      "$value": 686
+    },
+    "$type": "dimension"
   },
   "radius": {
+    "4": {
+      "$value": 4
+    },
+    "8": {
+      "$value": 8
+    },
+    "12": {
+      "$value": 12
+    },
+    "16": {
+      "$value": 16
+    },
+    "24": {
+      "$value": 24
+    },
+    "32": {
+      "$value": 32
+    },
     "$type": "dimension",
-    "8": { "$value": 8 },
-    "16": { "$value": 16 },
-    "24": { "$value": 24 },
-    "32": { "$value": 32 },
-    "full": { "$value": 999 }
+    "full": {
+      "$value": 999
+    }
   },
   "font": {
     "$type": "fontFamily",
-    "nunito": { "$value": "'Nunito Variable', 'Nunito', Arial, sans-serif" },
-    "open-sans": { "$value": "'Open Sans Variable', 'Open Sans', Arial, sans-serif" }
+    "nunito": {
+      "$value": "'Nunito Variable', 'Nunito', Arial, sans-serif"
+    },
+    "open-sans": {
+      "$value": "'Open Sans Variable', 'Open Sans', Arial, sans-serif"
+    }
   },
   "duration": {
     "$type": "duration",
-    "fast": { "$value": "150ms" },
-    "base": { "$value": "250ms" }
+    "fast": {
+      "$value": "150ms"
+    },
+    "base": {
+      "$value": "250ms"
+    }
   },
   "ease": {
     "$type": "cubicBezier",
-    "standard": { "$value": "cubic-bezier(0.2, 0, 0, 1)" }
+    "standard": {
+      "$value": "cubic-bezier(0.2, 0, 0, 1)"
+    }
   }
 }

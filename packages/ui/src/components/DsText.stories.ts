@@ -1,56 +1,36 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
-import { useStoryTexts } from '../stories/useStoryTexts'
+import { GAME_BACKDROP, useStoryTexts } from '../stories'
+import { DS_TEXT_TONES, DS_TEXT_VARIANTS } from '../types'
 import DsText from './DsText.vue'
 
 const meta = {
-  title: 'Основа/DsText',
+  title: 'Общее/Текст',
   component: DsText
 } satisfies Meta<typeof DsText>
 
 export default meta
 
-const VARIANTS = ['title-lg', 'title-md', 'button', 'body', 'caption', 'badge']
-const TONES = ['primary', 'secondary', 'accent', 'link']
+const TONES = DS_TEXT_TONES.filter(tone => tone !== 'inherit')
 
-export const Variants: StoryObj = {
-  name: 'Стили — размер меняется на 844 и 1024',
+// Стили текста меняют размер на 844 и 1024 px и свои у каждой темы; цвета — из темы. Каждый цвет — на холсте
+// и на тёмном фоне: ссылки Cars 2 и inverse белые, они лежат поверх игры
+export const Styles: StoryObj = {
+  name: 'Текст',
   render: () => ({
     components: { DsText },
-    setup: () => ({ ...useStoryTexts(), VARIANTS }),
+    setup: () => ({ ...useStoryTexts(), VARIANTS: DS_TEXT_VARIANTS, TONES, game: GAME_BACKDROP }),
     template: `
-      <div class="ds:space-y-4 ds:p-6">
-        <div v-for="variant in VARIANTS" :key="variant">
+      <div class="ds:p-6">
+        <div v-for="variant in VARIANTS" :key="variant" class="ds:mb-3">
           <code style="opacity: .5; font-size: 11px">{{ variant }}</code>
-          <DsText :variant="variant" :data-variant="variant">{{ t('app.farm.banner.title_1') }}</DsText>
+          <DsText :variant="variant" :data-variant="variant">{{ t('common.plus.title.unlimited') }}</DsText>
         </div>
-      </div>
-    `
-  })
-}
-
-export const Tones: StoryObj = {
-  name: 'Цвета',
-  render: () => ({
-    components: { DsText },
-    setup: () => ({ ...useStoryTexts(), TONES }),
-    template: `
-      <div class="ds:space-y-3 ds:p-6">
-        <DsText v-for="tone in TONES" :key="tone" :tone="tone" variant="title-md">{{ tone }} — {{ t('app.farm.banner.title_2') }}</DsText>
-        <div class="ds:bg-cta-bg ds:p-3"><DsText tone="inverse" variant="title-md">inverse — {{ t('app.farm.banner.title_2') }}</DsText></div>
-      </div>
-    `
-  })
-}
-
-export const LongText: StoryObj = {
-  name: 'Длинный текст',
-  render: () => ({
-    components: { DsText },
-    setup: () => useStoryTexts(),
-    template: `
-      <div class="ds:space-y-3 ds:p-6" style="max-width: 320px">
-        <DsText variant="title-lg">{{ longest('app.farm.banner.title_4') }}</DsText>
-        <DsText variant="body">{{ longest('common.legal.cancel_anytime') }}</DsText>
+        <div class="ds:mt-6 ds:grid ds:grid-cols-2">
+          <template v-for="tone in TONES" :key="tone">
+            <DsText :tone="tone" variant="body" class="ds:py-1 ds:pe-3">{{ tone }} — {{ t('common.button.restore') }}</DsText>
+            <DsText :tone="tone" variant="body" class="ds:px-3 ds:py-1" :style="{ background: game }">{{ tone }} — {{ t('common.button.restore') }}</DsText>
+          </template>
+        </div>
       </div>
     `
   })

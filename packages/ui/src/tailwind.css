@@ -1,6 +1,6 @@
 /* Пресет Tailwind 4 дизайн-системы. Подключается в приложении одной строкой: @import '@amaya/ui/tailwind.css'.
    Потом это встраивают в InApp и Pages Hub, где много своих стилей, поэтому:
-   - классы и переменные с префиксом ds: ds:flex, ds:bg-cta-bg, --ds-color-cta-bg;
+   - классы и переменные с префиксом ds: ds:flex, ds:bg-plan-bg, --ds-color-plan-bg;
    - без глобального сброса (preflight) — стили сбрасываются только внутри [data-ds-root] (styles/reset.css);
    - стандартные палитра, шрифты, радиусы и размеры Tailwind выключены — только токены из @amaya/tokens. */
 @layer theme, base, components, utilities;
@@ -12,6 +12,21 @@
 @import '@amaya/tokens/overrides.css';
 @import './styles/reset.css';
 @import './styles/webview.css';
+
+/* Заливка, которая в одной теме цвет, а в другой градиент (кнопка Cars 2): ds:surface-cta → background.
+   Цветовые классы ds:bg-* ставят background-color и градиент не примут */
+@utility surface-* {
+  background: --value(--surface-*);
+}
+
+/* Брейкпоинт iPad: и ширина, и высота — как у размеров токенов (packages/tokens/scripts/tokens.mjs, BREAKPOINTS).
+   ds:medium: — от 844 px в ширину, это обычный брейкпоинт темы */
+@custom-variant large (@media (min-width: 1024px) and (min-height: 600px));
+
+/* Регистр из темы: Farm пишет заголовки и кнопки капсом, Cars 2 — нет. Тексты в сервисе — в обычном регистре */
+@utility case-* {
+  text-transform: --value(--case-*);
+}
 
 /* Tailwind не смотрит в node_modules: классы компонентов пакета подключаем явно.
    Приложение добавляет @source своих файлов само */

@@ -14,8 +14,9 @@ export interface DsImageSet {
   large?: DsImageVariant
 }
 
+// large — как размеры iPad у токенов: и ширина, и высота (широкое низкое окно берёт арт medium)
 export const IMAGE_MEDIA = {
-  large: '(min-width: 1024px)',
+  large: '(min-width: 1024px) and (min-height: 600px)',
   medium: '(min-width: 844px)'
 } as const
 
@@ -28,6 +29,26 @@ export function imageSet(base: string): DsImageSet {
     webp2x: `${base}-${size}@2x.webp`
   })
   return { small: variant('small'), medium: variant('medium'), large: variant('large') }
+}
+
+/**
+ * Набор из найденных файлов: экран держит арт в своей папке и берёт адреса через import.meta.glob(…, { query: '?url' }),
+ * адреса получаются с хешем сборки. imageSetFromFiles(files, './art/front') → front-small.png, …-large@2x.webp.
+ * Без файла small (png или webp) — ошибка: значит, опечатка в имени или картинку забыли положить.
+ */
+export function imageSetFromFiles(files: Record<string, string>, base: string): DsImageSet {
+  const variant = (size: 'small' | 'medium' | 'large'): DsImageVariant | undefined => {
+    const found: DsImageVariant = {
+      png: files[`${base}-${size}.png`],
+      png2x: files[`${base}-${size}@2x.png`],
+      webp: files[`${base}-${size}.webp`],
+      webp2x: files[`${base}-${size}@2x.webp`]
+    }
+    return found.png || found.webp ? found : undefined
+  }
+  const small = variant('small')
+  if (!small) throw new Error(`Нет картинки ${base}-small.png или .webp`)
+  return { small, medium: variant('medium'), large: variant('large') }
 }
 
 /** srcset из 1x и 2x: «a.webp 1x, a@2x.webp 2x»; пустая строка — нет ни одного. */

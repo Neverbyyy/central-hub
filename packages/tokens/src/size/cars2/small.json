@@ -1,0 +1,231 @@
+{
+  "$description": "Размеры Cars 2 на маленьком и среднем экране: в макетах 667 и 844 используют одни и те же текстовые стили Антона SM/*. Только отличия от base. В описаниях — имя стиля в Figma.",
+  "text": {
+    "$type": "dimension",
+    "display-lg": {
+      "$description": "SM/sm-pw-title1",
+      "size": {
+        "$value": 24
+      },
+      "line-height": {
+        "$value": 24
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 900
+      }
+    },
+    "display-md": {
+      "$description": "SM/sm-pw-title2",
+      "size": {
+        "$value": 18
+      },
+      "line-height": {
+        "$value": 18
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 900
+      }
+    },
+    "title-lg": {
+      "$description": "SM/sm-pw-moreplanes-title1",
+      "size": {
+        "$value": 26
+      },
+      "line-height": {
+        "$value": 32
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 900
+      }
+    },
+    "title-md": {
+      "$description": "SM/sm-pw-moreplanes-title2",
+      "size": {
+        "$value": 20
+      },
+      "line-height": {
+        "$value": 28
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 900
+      }
+    },
+    "body": {
+      "$description": "SM/sm-pw-price",
+      "size": {
+        "$value": 14
+      },
+      "line-height": {
+        "$value": 14
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 700
+      }
+    },
+    "list": {
+      "$description": "SM/sm-pw-back-text",
+      "size": {
+        "$value": 12
+      },
+      "line-height": {
+        "$value": 12
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 700
+      }
+    },
+    "caption": {
+      "$description": "«Just {0} per week» в карточке тарифа, без стиля",
+      "size": {
+        "$value": 10
+      },
+      "line-height": {
+        "$value": 10
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 600
+      }
+    },
+    "price": {
+      "$description": "SM/sm-pw-moreplanes-price",
+      "size": {
+        "$value": 14
+      },
+      "line-height": {
+        "$value": 16
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 900
+      },
+      "tracking": {
+        "$value": 0.56
+      }
+    },
+    "button": {
+      "$description": "SM/sm-big-button-text",
+      "size": {
+        "$value": 18
+      },
+      "line-height": {
+        "$value": 20
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 800
+      }
+    },
+    "button-sm": {
+      "$description": "SM/sm-small-button-text",
+      "size": {
+        "$value": 14
+      },
+      "line-height": {
+        "$value": 16
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 800
+      }
+    },
+    "badge": {
+      "$description": "Метки «coloring pages», без стиля",
+      "size": {
+        "$value": 12
+      },
+      "line-height": {
+        "$value": 12
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 700
+      }
+    },
+    "legal": {
+      "$description": "SM/sm-small-links",
+      "size": {
+        "$value": 10
+      },
+      "line-height": {
+        "$value": 10
+      }
+    },
+    "link": {
+      "$description": "SM/sm-moreplanes-link",
+      "size": {
+        "$value": 14
+      },
+      "line-height": {
+        "$value": 14
+      }
+    }
+  },
+  "spacing": {
+    "$type": "dimension",
+    "button": {
+      "$value": "{size.48}"
+    },
+    "close": {
+      "$value": "{size.40}"
+    },
+    "button-x": {
+      "$value": "{size.24}"
+    },
+    "plan-x": {
+      "$value": "{size.20}"
+    },
+    "plan-y": {
+      "$value": "{size.16}"
+    }
+  },
+  "radius": {
+    "$type": "dimension",
+    "card": {
+      "$value": "{radius.24}"
+    },
+    "plan": {
+      "$value": "{radius.12}"
+    }
+  },
+  "line": {
+    "$type": "dimension",
+    "cta": {
+      "$value": "{size.3}"
+    },
+    "cta-text": {
+      "$value": "{size.2}"
+    },
+    "secondary": {
+      "$value": "{size.3}"
+    },
+    "secondary-text": {
+      "$value": "{size.2}"
+    },
+    "display": {
+      "$value": "{size.1}"
+    },
+    "title": {
+      "$value": "{size.2}"
+    },
+    "plan": {
+      "$value": "{size.1}"
+    },
+    "plan-selected": {
+      "$value": "{size.3}"
+    },
+    "card": {
+      "$value": "{size.1}"
+    },
+    "hero": {
+      "$value": "{size.4}",
+      "$description": "Белая рамка карточек: у главной в макете 5, у наборов 4 — взяли 4"
+    }
+  }
+}

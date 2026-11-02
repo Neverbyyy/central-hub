@@ -2,38 +2,50 @@
 // и список для Storybook. Чистые функции без файловой системы — их проверяет packages/tokens/test.
 //
 // Источник — «коллекция → режим», как переменные у Антона в Figma:
-//   primitives            палитра, радиусы, шрифты — компоненты их не видят, только через смысловые токены;
-//   theme/<тема>          смысловые токены (color.cta.bg, radius.card…): base целиком, темы игр — только отличия;
-//   breakpoint/<размер>   размеры текста: small целиком, medium и large — только отличия от small.
+//   primitives               палитра, градиенты, тени, шрифты — компоненты их не видят, только через смысловые токены;
+//   theme/<тема>             как выглядит: цвета, заливки, тени, шрифты, регистр — base целиком, темы игр — отличия;
+//   size/<тема>/<размер>     величины: текст, отступы, радиусы, толщины линий. base/small — целиком, остальное — отличия.
+// Размеры зависят и от темы: заголовок Cars 2 на 667 — 26 px Nunito 900, у Farm — 16 px Open Sans 700.
+// Значение темы T на размере B: T/B → T/small → base/B → base/small. Если тема задала токен, его лесенку
+// по размерам задаёт она сама: Cars 2 на 844 берёт свой small (в макетах 667 и 844 — одни стили SM/*).
 
 // Tailwind собирается с prefix(ds): переменные темы у него --ds-*, переопределения пишем в те же имена
 export const PREFIX = 'ds'
 export const THEMES = ['base', 'cars2', 'farm']
-// Брейкпоинты как в макетах и в InApp: 667 (по умолчанию) / 844 / 1024
+// Брейкпоинты как в макетах и в InApp: 667 (по умолчанию) / 844 / 1024. Размеры iPad (large) — только на экране,
+// который и широкий, и высокий: от 1024 px в ширину и от 600 px в высоту. Широкое, но низкое окно (вебвью
+// в половину экрана, окно браузера) получает размеры телефона — иначе макет iPad не помещается по высоте
 export const BREAKPOINTS = [
   { name: 'small', min: 0 },
   { name: 'medium', min: 844 },
-  { name: 'large', min: 1024 }
+  { name: 'large', min: 1024, minHeight: 600 }
 ]
+
+/** Условие @media брейкпоинта: «(min-width: 1024px) and (min-height: 600px)». */
+export const mediaQuery = ({ min, minHeight }) => `(min-width: ${min}px)${minHeight ? ` and (min-height: ${minHeight}px)` : ''}`
 // Шаг отступов: ds:p-4 = 16px — сетка 4 px, без произвольных пикселей
 const SPACING = '4px'
 // Стандартные значения Tailwind в этих пространствах выключены: остаются только наши токены
-const RESET = ['color', 'font', 'radius', 'text', 'breakpoint', 'ease']
+const RESET = ['color', 'font', 'radius', 'text', 'breakpoint', 'ease', 'shadow']
 // Части текстового токена → переменные Tailwind: text.title-lg.size → --text-title-lg, .weight → --text-title-lg--font-weight
 const TEXT_PARTS = { 'size': '', 'line-height': '--line-height', 'weight': '--font-weight', 'tracking': '--letter-spacing' }
 // Числа без единиц в этих частях — пиксели (Figma отдаёт размеры числами)
 const PX_PATH = /(^|\.)(size|line-height|tracking|radius|spacing|width|height)(\.|$)/
 const REF = /^\{([^{}]+)\}$/
 
-/** Дерево файла → плоский список: путь → { value, type, description }. $type наследуется от группы. */
-export function flatten(tree, path = [], inheritedType) {
+/**
+ * Дерево файла → плоский список: путь → { value, type, description }. $type и $description наследуются от группы:
+ * описание стиля text.title-lg достаётся его size, line-height и weight.
+ */
+export function flatten(tree, path = [], inheritedType, inheritedDescription) {
   const out = new Map()
   for (const [name, node] of Object.entries(tree)) {
     if (name.startsWith('$') || !node || typeof node !== 'object') continue
     const key = [...path, name]
     const type = node.$type ?? inheritedType
-    if ('$value' in node) out.set(key.join('.'), { value: node.$value, type, description: node.$description })
-    else for (const [k, v] of flatten(node, key, type)) out.set(k, v)
+    const description = node.$description ?? inheritedDescription
+    if ('$value' in node) out.set(key.join('.'), { value: node.$value, type, description })
+    else for (const [k, v] of flatten(node, key, type, description)) out.set(k, v)
   }
   return out
 }
@@ -77,26 +89,34 @@ export function themeVar(path) {
 
 const prefixed = name => `--${PREFIX}-${name.slice(2)}`
 
-/** Только токены, которые есть в образце (base / small): тема или брейкпоинт не может завести новый. */
-function assertKnown(kind, mode, tokens, reference) {
+/** Только токены, которые есть в образце (base или base/small): тема или размер не может завести новый. */
+function assertKnown(kind, mode, tokens, reference, referenceName) {
   for (const name of tokens.keys()) {
-    if (!reference.has(name)) throw new Error(`${kind} «${mode}» задаёт «${name}», а в ${kind === 'Тема' ? 'base' : 'small'} такого токена нет`)
+    if (!reference.has(name)) throw new Error(`${kind} «${mode}» задаёт «${name}», а в ${referenceName} такого токена нет`)
   }
 }
 
+const block = (selector, entries, indent = '') => `${indent}${selector} {\n${entries.map(([name, value]) => `${indent}  ${prefixed(themeVar(name))}: ${value};`).join('\n')}\n${indent}}`
+const media = (breakpoint, inner) => `@media ${mediaQuery(breakpoint)} {\n${inner}\n}`
+
 /**
- * sources: { primitives, themes: { base, cars2, farm }, breakpoints: { small, medium, large } } — деревья JSON.
- * Результат: { theme: CSS для @theme, overrides: CSS тем и брейкпоинтов, list: токены для Storybook }.
+ * sources: { primitives, themes: { base, cars2, farm }, sizes: { base: { small, medium, large }, cars2: {…}, farm: {…} } }
+ * — деревья JSON. Результат: { theme: CSS для @theme, overrides: CSS тем и размеров, list: токены для Storybook }.
  */
 export function buildTokens(sources) {
   const primitives = flatten(sources.primitives)
   const themes = Object.fromEntries(THEMES.map(name => [name, flatten(sources.themes[name] ?? {})]))
-  const breakpoints = Object.fromEntries(BREAKPOINTS.map(({ name }) => [name, flatten(sources.breakpoints[name] ?? {})]))
+  const sizes = Object.fromEntries(THEMES.map(theme => [theme, Object.fromEntries(BREAKPOINTS.map(({ name }) => [name, flatten(sources.sizes?.[theme]?.[name] ?? {})]))]))
   const base = themes.base
-  const small = breakpoints.small
+  const small = sizes.base.small
   if (!base.size) throw new Error('Тема base пустая — нечего собирать')
-  for (const name of THEMES.slice(1)) assertKnown('Тема', name, themes[name], base)
-  for (const { name } of BREAKPOINTS.slice(1)) assertKnown('Брейкпоинт', name, breakpoints[name], small)
+  if (!small.size) throw new Error('Размеры base/small пустые — нечего собирать')
+  for (const name of THEMES.slice(1)) assertKnown('Тема', name, themes[name], base, 'base')
+  for (const theme of THEMES) {
+    for (const { name } of BREAKPOINTS) {
+      if (theme !== 'base' || name !== 'small') assertKnown('Файл размеров', `${theme}/${name}`, sizes[theme][name], small, 'base/small')
+    }
+  }
 
   // Значение токена в теме: своё или из base; ссылки — на свою тему, base и примитивы
   const themeValue = (theme, name) => {
@@ -104,32 +124,47 @@ export function buildTokens(sources) {
     const token = own ?? base.get(name)
     return cssValue(name, resolve(name, token, own ? [themes[theme], base, primitives] : [base, primitives]))
   }
-  // Значение на брейкпоинте: своё или из small (не из соседнего размера — так задумано в источнике)
-  const sizeValue = (bp, name) => {
-    const token = breakpoints[bp].get(name) ?? small.get(name)
-    return cssValue(name, resolve(name, token, [breakpoints[bp], small, primitives]))
+  // Значение размера в теме на брейкпоинте: T/B → T/small → base/B → base/small (не из соседнего размера —
+  // так задумано в источнике); ссылки ищутся по той же цепочке и в примитивах
+  const sizeValue = (theme, bp, name) => {
+    const chain = [sizes[theme][bp], sizes[theme].small, sizes.base[bp], small]
+    const token = chain.map(scope => scope.get(name)).find(Boolean)
+    return cssValue(name, resolve(name, token, [...chain, primitives]))
   }
+  const ladder = (theme, name) => BREAKPOINTS.map(({ name: bp }) => sizeValue(theme, bp, name))
 
   const lines = [
     ...RESET.map(space => `  --${space}-*: initial;`),
     `  --spacing: ${SPACING};`,
-    ...BREAKPOINTS.slice(1).map(({ name, min }) => `  --breakpoint-${name}: ${min}px;`),
+    // Вариант ds:large: с условием по высоте объявлен в пресете (@custom-variant) — переменная брейкпоинта
+    // Tailwind знает только ширину
+    ...BREAKPOINTS.slice(1).filter(bp => !bp.minHeight).map(({ name, min }) => `  --breakpoint-${name}: ${min}px;`),
     ...[...base.keys()].map(name => `  ${themeVar(name)}: ${themeValue('base', name)};`),
-    ...[...small.keys()].map(name => `  ${themeVar(name)}: ${sizeValue('small', name)};`)
+    ...[...small.keys()].map(name => `  ${themeVar(name)}: ${sizeValue('base', 'small', name)};`)
   ]
   const theme = `/* Собрано скриптом packages/tokens/scripts/build.mjs из src/ — не править руками */\n@theme static {\n${lines.join('\n')}\n}\n`
 
   const blocks = []
+  const themeSelector = name => `[data-${PREFIX}-theme='${name}']`
   for (const name of THEMES.slice(1)) {
     const changed = [...base.keys()].filter(token => themeValue(name, token) !== themeValue('base', token))
-    if (changed.length) blocks.push(`[data-${PREFIX}-theme='${name}'] {\n${changed.map(token => `  ${prefixed(themeVar(token))}: ${themeValue(name, token)};`).join('\n')}\n}`)
+    if (changed.length) blocks.push(block(themeSelector(name), changed.map(token => [token, themeValue(name, token)])))
   }
   // Каскад min-width: на large действует и блок medium, поэтому large пишет всё, что отличается от medium
   for (let i = 1; i < BREAKPOINTS.length; i++) {
-    const { name, min } = BREAKPOINTS[i]
-    const previous = BREAKPOINTS[i - 1].name
-    const changed = [...small.keys()].filter(token => sizeValue(name, token) !== sizeValue(previous, token))
-    if (changed.length) blocks.push(`@media (min-width: ${min}px) {\n  :root, :host {\n${changed.map(token => `    ${prefixed(themeVar(token))}: ${sizeValue(name, token)};`).join('\n')}\n  }\n}`)
+    const changed = [...small.keys()].filter(token => sizeValue('base', BREAKPOINTS[i].name, token) !== sizeValue('base', BREAKPOINTS[i - 1].name, token))
+    if (changed.length) blocks.push(media(BREAKPOINTS[i], block(':root, :host', changed.map(token => [token, sizeValue('base', BREAKPOINTS[i].name, token)]), '  ')))
+  }
+  // Размеры темы: если лесенка токена у темы своя, тема пишет её целиком на корне экрана — значения :root
+  // до него не доходят, поэтому на small пишем всегда, а дальше — только изменения, тем же каскадом
+  for (const name of THEMES.slice(1)) {
+    const own = [...small.keys()].filter(token => ladder(name, token).join() !== ladder('base', token).join())
+    if (!own.length) continue
+    blocks.push(block(themeSelector(name), own.map(token => [token, sizeValue(name, 'small', token)])))
+    for (let i = 1; i < BREAKPOINTS.length; i++) {
+      const changed = own.filter(token => sizeValue(name, BREAKPOINTS[i].name, token) !== sizeValue(name, BREAKPOINTS[i - 1].name, token))
+      if (changed.length) blocks.push(media(BREAKPOINTS[i], block(themeSelector(name), changed.map(token => [token, sizeValue(name, BREAKPOINTS[i].name, token)]), '  ')))
+    }
   }
   const overrides = `/* Собрано скриптом packages/tokens/scripts/build.mjs из src/ — не править руками.\n   Вне слоёв: сильнее переменных @theme в @layer theme. */\n${blocks.join('\n\n')}\n`
 
@@ -137,19 +172,23 @@ export function buildTokens(sources) {
     themes: THEMES,
     breakpoints: BREAKPOINTS,
     tokens: [
+      // Тема: значение по темам
       ...[...base.keys()].map(name => ({
         name,
+        kind: 'theme',
         cssVar: prefixed(themeVar(name)),
         type: resolve(name, base.get(name), [base, primitives]).type ?? null,
         description: base.get(name).description ?? null,
         values: Object.fromEntries(THEMES.map(theme => [theme, themeValue(theme, name)]))
       })),
+      // Размер: значение по темам и брейкпоинтам
       ...[...small.keys()].map(name => ({
         name,
+        kind: 'size',
         cssVar: prefixed(themeVar(name)),
-        type: small.get(name).type ?? null,
+        type: resolve(name, small.get(name), [small, primitives]).type ?? null,
         description: small.get(name).description ?? null,
-        values: Object.fromEntries(BREAKPOINTS.map(({ name: bp }) => [bp, sizeValue(bp, name)]))
+        values: Object.fromEntries(THEMES.map(theme => [theme, Object.fromEntries(BREAKPOINTS.map(({ name: bp }) => [bp, sizeValue(theme, bp, name)]))]))
       }))
     ]
   }

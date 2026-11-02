@@ -36,7 +36,20 @@ onMounted(async () => {
         <UCard
           title="WebViews"
           description="Все варианты WebView используемые в тестах и не только."
-          class="w-full sm:w-xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 dark:shadow-black/40 hover:bg-elevated hover:ring-accented dark:hover:bg-gray-700/60 dark:hover:ring-gray-600 rounded-xl"
+          class="w-full h-full sm:w-xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 dark:shadow-black/40 hover:bg-elevated hover:ring-accented dark:hover:bg-gray-700/60 dark:hover:ring-gray-600 rounded-xl"
+        />
+      </NuxtLink>
+
+      <!-- Storybook дизайн-системы: компоненты, токены и целые экраны пейволлов (apps/storybook) -->
+      <NuxtLink
+        to="https://amaya-storybook.vercel.app"
+        target="_blank"
+        external
+      >
+        <UCard
+          title="Дизайн-система"
+          description="Storybook: компоненты, токены и экраны пейволлов Cars 2 и Farm."
+          class="w-full h-full sm:w-xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 dark:shadow-black/40 hover:bg-elevated hover:ring-accented dark:hover:bg-gray-700/60 dark:hover:ring-gray-600 rounded-xl"
         />
       </NuxtLink>
     </div>

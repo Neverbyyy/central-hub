@@ -1,0 +1,324 @@
+{
+  "$description": "Размеры base (стиль Amaya Plus / Farm) на маленьком экране: до 844 px, телефон в альбомной 667×375. Полный набор — medium и large задают только отличия. Компонент пишет ds:text-title-lg, и размер меняется сам. Из макетов Farm (Figma, 2 ноя 2026).",
+  "text": {
+    "$type": "dimension",
+    "display-lg": {
+      "$description": "Крупный игровой заголовок: «Unlock a collection…» в Special offer",
+      "size": {
+        "$value": 24
+      },
+      "line-height": {
+        "$value": 28
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 900
+      }
+    },
+    "display-md": {
+      "$description": "Вторая строка игрового заголовка",
+      "size": {
+        "$value": 18
+      },
+      "line-height": {
+        "$value": 20
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 700
+      }
+    },
+    "title-lg": {
+      "$description": "Заголовок экрана: GET UNLIMITED ACCESS",
+      "size": {
+        "$value": 16
+      },
+      "line-height": {
+        "$value": 20
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 700
+      }
+    },
+    "title-md": {
+      "$description": "Заголовок блока: «25+ Apps»",
+      "size": {
+        "$value": 16
+      },
+      "line-height": {
+        "$value": 20
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 700
+      }
+    },
+    "body-lg": {
+      "$description": "Абзац онбординга",
+      "size": {
+        "$value": 16
+      },
+      "line-height": {
+        "$value": 20
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 400
+      }
+    },
+    "body": {
+      "$description": "Обычный текст: подзаголовок, «Free trial», название тарифа",
+      "size": {
+        "$value": 14
+      },
+      "line-height": {
+        "$value": 18
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 400
+      }
+    },
+    "list": {
+      "$description": "Список преимуществ",
+      "size": {
+        "$value": 12
+      },
+      "line-height": {
+        "$value": 14
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 400
+      }
+    },
+    "caption": {
+      "$description": "Подписи: «Cancel anytime», «Just $49.99/year»",
+      "size": {
+        "$value": 12
+      },
+      "line-height": {
+        "$value": 14
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 400
+      }
+    },
+    "price": {
+      "$description": "Цена в карточке тарифа",
+      "size": {
+        "$value": 14
+      },
+      "line-height": {
+        "$value": 18
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 400
+      },
+      "tracking": {
+        "$value": 0
+      }
+    },
+    "button": {
+      "$description": "Главная кнопка",
+      "size": {
+        "$value": 16
+      },
+      "line-height": {
+        "$value": 20
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 700
+      }
+    },
+    "button-sm": {
+      "$description": "Маленькая кнопка: «Unlock for $0.99» в Cars 2; в Farm таких нет",
+      "size": {
+        "$value": 14
+      },
+      "line-height": {
+        "$value": 18
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 700
+      }
+    },
+    "badge": {
+      "$description": "Плашка BEST OFFER и метки",
+      "size": {
+        "$value": 10
+      },
+      "line-height": {
+        "$value": 12
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 700
+      }
+    },
+    "legal": {
+      "$description": "Документы внизу: Terms of Use, Restore Purchase",
+      "size": {
+        "$value": 10
+      },
+      "line-height": {
+        "$value": 12
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 400
+      }
+    },
+    "link": {
+      "$description": "Отдельная ссылка: «More Plans» в Cars 2; в Farm таких нет",
+      "size": {
+        "$value": 14
+      },
+      "line-height": {
+        "$value": 18
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 600
+      }
+    }
+  },
+  "spacing": {
+    "$type": "dimension",
+    "touch": {
+      "$value": "{size.44}",
+      "$description": "Зона нажатия не меньше 44×44: ds:min-h-touch, ds:min-w-touch"
+    },
+    "icon-sm": {
+      "$value": "{size.16}"
+    },
+    "icon-md": {
+      "$value": "{size.20}"
+    },
+    "icon-lg": {
+      "$value": "{size.24}"
+    },
+    "button": {
+      "$value": "{size.36}",
+      "$description": "Высота главной кнопки и строки «Free trial», как в макете Farm. Зона нажатия всё равно 44: кнопка добирает её невидимым слоем, вёрстка не меняется"
+    },
+    "button-x": {
+      "$value": "{size.16}",
+      "$description": "Поля кнопки слева и справа"
+    },
+    "close": {
+      "$value": "{size.32}",
+      "$description": "Крестик: квадрат, внутри которого значок; зона нажатия всё равно 44"
+    },
+    "close-icon": {
+      "$value": "{size.20}"
+    },
+    "store-badge": {
+      "$value": "{size.40}",
+      "$description": "Высота значка App Store / Google Play"
+    },
+    "plan-x": {
+      "$value": "{size.18}",
+      "$description": "Поля карточки тарифа слева и справа"
+    },
+    "plan-y": {
+      "$value": "{size.6}",
+      "$description": "Поля карточки тарифа сверху и снизу: в макете Farm карточка без подписи — 52 при цене в две строки"
+    },
+    "icon-button": {
+      "$value": "{size.40}",
+      "$description": "Круглая кнопка со значком (DsIconButton): «i» на карточке Cars 2"
+    },
+    "hero-w": {
+      "$value": "{size.420}",
+      "$description": "Главная карточка пейволла с каруселью (шаблон PwHeroSlider): ширина"
+    },
+    "hero-h": {
+      "$value": "{size.290}",
+      "$description": "Главная карточка пейволла с каруселью: высота"
+    },
+    "unlock-w": {
+      "$value": "{size.178}",
+      "$description": "Карточка разовой покупки в карусели: ширина"
+    },
+    "unlock-h": {
+      "$value": "{size.240}",
+      "$description": "Карточка разовой покупки в карусели: высота"
+    }
+  },
+  "radius": {
+    "$type": "dimension",
+    "card": {
+      "$value": "{radius.16}"
+    },
+    "button": {
+      "$value": "{radius.full}"
+    },
+    "plan": {
+      "$value": "{radius.16}"
+    },
+    "badge": {
+      "$value": "{radius.full}"
+    },
+    "pill": {
+      "$value": "{radius.full}"
+    },
+    "tag": {
+      "$value": "{radius.4}",
+      "$description": "Цветные метки DsBadge: «coloring pages»"
+    },
+    "hero": {
+      "$value": "{radius.32}",
+      "$description": "Скругление половины экрана с артом (пейволл Amaya Plus)"
+    }
+  },
+  "line": {
+    "$type": "dimension",
+    "$description": "Толщина линий: рамки и обводка букв (ds:border-(length:--ds-line-*))",
+    "cta": {
+      "$value": "{size.0}",
+      "$description": "Рамка главной кнопки"
+    },
+    "cta-text": {
+      "$value": "{size.0}",
+      "$description": "Обводка букв на главной кнопке"
+    },
+    "secondary": {
+      "$value": "{size.2}"
+    },
+    "secondary-text": {
+      "$value": "{size.0}"
+    },
+    "display": {
+      "$value": "{size.0}",
+      "$description": "Обводка букв игрового заголовка text-display-*"
+    },
+    "title": {
+      "$value": "{size.0}",
+      "$description": "Обводка букв игрового заголовка text-title-*"
+    },
+    "plan": {
+      "$value": "{size.2}"
+    },
+    "plan-selected": {
+      "$value": "{size.2}"
+    },
+    "card": {
+      "$value": "{size.0}",
+      "$description": "Рамка карточки DsBox surface=card"
+    },
+    "info": {
+      "$value": "{size.2}",
+      "$description": "Рамка круглой кнопки со значком (DsIconButton)"
+    },
+    "hero": {
+      "$value": "{size.0}",
+      "$description": "Рамка главной карточки и карточек наборов (PwHeroSlider)"
+    }
+  }
+}
