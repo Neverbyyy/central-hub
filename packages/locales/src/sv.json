@@ -1,6 +1,9 @@
 {
   "common": {
     "button": {
+      "continue": {
+        "default": "Fortsätt"
+      },
       "restore": "Återställa köp"
     },
     "legal": {
@@ -9,6 +12,26 @@
     "link": {
       "privacy_policy": "Integritetspolicy",
       "terms_of_use": "Användarvillkor"
+    }
+  },
+  "ds": {
+    "close_button": {
+      "aria": {
+        "label": "Stäng"
+      }
+    },
+    "spinner": {
+      "aria": {
+        "label": "Laddar"
+      }
+    },
+    "store_badges": {
+      "app_store": {
+        "label": "Hämta i App Store"
+      },
+      "google_play": {
+        "label": "Ladda ned på Google Play"
+      }
     }
   },
   "app": {

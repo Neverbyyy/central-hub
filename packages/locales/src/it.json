@@ -1,6 +1,9 @@
 {
   "common": {
     "button": {
+      "continue": {
+        "default": "Continua"
+      },
       "restore": "Ripristina gli acquisti"
     },
     "legal": {
@@ -9,6 +12,26 @@
     "link": {
       "privacy_policy": "Informativa sulla privacy",
       "terms_of_use": "Termini di utilizzo"
+    }
+  },
+  "ds": {
+    "close_button": {
+      "aria": {
+        "label": "Chiudi"
+      }
+    },
+    "spinner": {
+      "aria": {
+        "label": "Caricamento"
+      }
+    },
+    "store_badges": {
+      "app_store": {
+        "label": "Scarica su App Store"
+      },
+      "google_play": {
+        "label": "Disponibile su Google Play"
+      }
     }
   },
   "app": {

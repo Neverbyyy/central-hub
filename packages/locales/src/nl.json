@@ -1,6 +1,9 @@
 {
   "common": {
     "button": {
+      "continue": {
+        "default": "Doorgaan"
+      },
       "restore": "Herstel aankopen"
     },
     "legal": {
@@ -9,6 +12,26 @@
     "link": {
       "privacy_policy": "Privacybeleid",
       "terms_of_use": "Gebruiksvoorwaarden"
+    }
+  },
+  "ds": {
+    "close_button": {
+      "aria": {
+        "label": "Sluiten"
+      }
+    },
+    "spinner": {
+      "aria": {
+        "label": "Laden"
+      }
+    },
+    "store_badges": {
+      "app_store": {
+        "label": "Download in de App Store"
+      },
+      "google_play": {
+        "label": "Ontdek het op Google Play"
+      }
     }
   },
   "app": {

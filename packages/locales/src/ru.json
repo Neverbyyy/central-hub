@@ -1,6 +1,9 @@
 {
   "common": {
     "button": {
+      "continue": {
+        "default": "Продолжить"
+      },
       "restore": "Восстановить покупки"
     },
     "legal": {
@@ -9,6 +12,26 @@
     "link": {
       "privacy_policy": "Политика конфиденциальности",
       "terms_of_use": "Пользовательское соглашение"
+    }
+  },
+  "ds": {
+    "close_button": {
+      "aria": {
+        "label": "Закрыть"
+      }
+    },
+    "spinner": {
+      "aria": {
+        "label": "Загрузка"
+      }
+    },
+    "store_badges": {
+      "app_store": {
+        "label": "Загрузите в App Store"
+      },
+      "google_play": {
+        "label": "Доступно в Google Play"
+      }
     }
   },
   "app": {
