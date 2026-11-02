@@ -1,23 +1,123 @@
 {
   "common": {
+    "badge": {
+      "best_offer": "Выгодно"
+    },
+    "benefit": {
+      "no_ads": "Без рекламы",
+      "no_extra_payments": "Без скрытых платежей"
+    },
     "button": {
+      "back": "Назад",
       "continue": {
         "default": "Продолжить"
       },
-      "restore": "Восстановить покупки"
+      "restore": "Восстановить покупки",
+      "try_free": "Попробовать бесплатно",
+      "try_free_days": "Попробуйте {days} день бесплатно | Попробуйте {days} дня бесплатно | Попробуйте {days} дней бесплатно",
+      "unlock": "Открыть",
+      "unlock_for": "Открыть за {price}",
+      "whats_included": "Что входит"
     },
     "legal": {
-      "cancel_anytime": "Можно отменить в любое время"
+      "cancel_anytime": "Можно отменить в любое время",
+      "no_payment_now": "Сейчас оплата не требуется"
     },
     "link": {
+      "more_plans": "Другие подписки",
       "privacy_policy": "Политика конфиденциальности",
       "terms_of_use": "Пользовательское соглашение"
+    },
+    "period": {
+      "per_month": "в месяц",
+      "per_week": "в неделю",
+      "per_year": "в год"
+    },
+    "plan": {
+      "group_label": "Варианты подписки",
+      "monthly": "Месячная",
+      "weekly": "Недельная",
+      "weekly_access": "Неделя",
+      "yearly": "Годовая",
+      "yearly_access": "Год"
+    },
+    "plus": {
+      "feature": {
+        "apps": "{count}+ приложений",
+        "hours": "1000+ часов игры",
+        "offline": "Играйте офлайн",
+        "updates": "Регулярные обновления"
+      },
+      "full_access": "Полный доступ ко всем приложениям Amaya Plus.",
+      "info": {
+        "apps": "Более {count} весёлых и обучающих приложений",
+        "audience": "Для {boys} и {girls} 2–7 лет",
+        "boys": "мальчиков",
+        "girls": "девочек"
+      },
+      "logo": {
+        "label": "Amaya Plus"
+      },
+      "slide": {
+        "apps": {
+          "text": "Полный доступ ко всем играм AmayaKids.",
+          "title": "{count}+ приложений"
+        },
+        "educational": {
+          "text": "Игры, которые развивают креативное мышление и полезные навыки.",
+          "title": "Увлекательные и обучающие"
+        },
+        "offline": {
+          "text": "Нет интернета? Ничего страшного! Вы можете играть офлайн.",
+          "title": "Играйте офлайн"
+        },
+        "privacy": {
+          "text": "Мы не делимся вашими данными.",
+          "title": "Защита информации"
+        },
+        "trusted": {
+          "text": "Нам доверяют миллионы детей и их родители.",
+          "title": "Создано для детей"
+        }
+      },
+      "tag": {
+        "animals": "животные",
+        "coloring_pages": "раскраски",
+        "dinosaurs": "динозавры",
+        "fairy_tales": "сказки",
+        "puzzles": "пазлы"
+      },
+      "title": {
+        "unlimited": "Получить полный доступ",
+        "unlimited_apps": "Получи полный доступ к {count}+ приложениям"
+      }
+    },
+    "price": {
+      "just_per_week": "Всего {price} в неделю",
+      "just_per_year": "Всего {price}/год",
+      "per_week": "{price} в неделю",
+      "per_week_short": "{price}/неделя",
+      "per_year": "{price} в год",
+      "per_year_short": "{price}/год"
+    },
+    "trial": {
+      "any_plan_free": "Любая подписка бесплатно на {days} день | Любая подписка бесплатно на {days} дня | Любая подписка бесплатно на {days} дней",
+      "days_free": "{days} день бесплатно | {days} дня бесплатно | {days} дней бесплатно",
+      "free_trial": "Пробный период",
+      "then_per_month": "{days} день бесплатно, затем {price} в месяц. | {days} дня бесплатно, затем {price} в месяц. | {days} дней бесплатно, затем {price} в месяц.",
+      "then_per_week": "{days} день бесплатно, затем {price} в неделю. | {days} дня бесплатно, затем {price} в неделю. | {days} дней бесплатно, затем {price} в неделю.",
+      "then_per_year": "{days} день бесплатно, затем {price} в год. | {days} дня бесплатно, затем {price} в год. | {days} дней бесплатно, затем {price} в год."
     }
   },
   "ds": {
     "close_button": {
       "aria": {
         "label": "Закрыть"
+      }
+    },
+    "slides": {
+      "dot": {
+        "label": "Слайд {number}"
       }
     },
     "spinner": {
@@ -35,6 +135,19 @@
     }
   },
   "app": {
+    "cars2": {
+      "paywall": {
+        "info": {
+          "cars": "Все машинки в этом приложении"
+        },
+        "title": {
+          "all_cars": "Все машинки",
+          "and_apps": "и {apps}",
+          "apps": "{count}+ весёлых приложений",
+          "subscription": "в ОДНОЙ подписке!"
+        }
+      }
+    },
     "farm": {
       "banner": {
         "title": "Заголовок для баннера",

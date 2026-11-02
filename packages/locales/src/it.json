@@ -1,23 +1,123 @@
 {
   "common": {
+    "badge": {
+      "best_offer": "Offerta migliore"
+    },
+    "benefit": {
+      "no_ads": "Zero pubblicità",
+      "no_extra_payments": "Nessun costo aggiuntivo"
+    },
     "button": {
+      "back": "Indietro",
       "continue": {
         "default": "Continua"
       },
-      "restore": "Ripristina gli acquisti"
+      "restore": "Ripristina gli acquisti",
+      "try_free": "Prova gratis",
+      "try_free_days": "Prova {days} giorno GRATIS | Prova {days} giorni GRATIS",
+      "unlock": "Sblocca",
+      "unlock_for": "Sblocca per {price}",
+      "whats_included": "Cosa è incluso"
     },
     "legal": {
-      "cancel_anytime": "Disdici quando vuoi"
+      "cancel_anytime": "Disdici quando vuoi",
+      "no_payment_now": "Nessun pagamento ora"
     },
     "link": {
+      "more_plans": "Altri piani",
       "privacy_policy": "Informativa sulla privacy",
       "terms_of_use": "Termini di utilizzo"
+    },
+    "period": {
+      "per_month": "al mese",
+      "per_week": "a settimana",
+      "per_year": "all’anno"
+    },
+    "plan": {
+      "group_label": "Piani di abbonamento",
+      "monthly": "Mensile",
+      "weekly": "Settimanale",
+      "weekly_access": "Settimanale",
+      "yearly": "Annuale",
+      "yearly_access": "Annuale"
+    },
+    "plus": {
+      "feature": {
+        "apps": "+{count} app",
+        "hours": "+1000 ore di gioco",
+        "offline": "Gioca offline",
+        "updates": "Aggiornamenti regolari"
+      },
+      "full_access": "Accesso completo a tutte le app di Amaya Plus.",
+      "info": {
+        "apps": "Oltre {count} app divertenti ed educative",
+        "audience": "Per {boys} e {girls} dai 2 ai 7 anni",
+        "boys": "bambini",
+        "girls": "bambine"
+      },
+      "logo": {
+        "label": "Amaya Plus"
+      },
+      "slide": {
+        "apps": {
+          "text": "Accesso completo a tutte le app AmayaKids.",
+          "title": "+{count} app"
+        },
+        "educational": {
+          "text": "Giochi che sviluppano il pensiero creativo e competenze utili.",
+          "title": "Educativo e divertente"
+        },
+        "offline": {
+          "text": "Niente internet? No problem! Puoi giocare offline.",
+          "title": "Gioca offline"
+        },
+        "privacy": {
+          "text": "Non condivideremo mai le tue informazioni.",
+          "title": "Tutela della privacy"
+        },
+        "trusted": {
+          "text": "Amati da milioni di genitori e bambini.",
+          "title": "Sicuri, pensati per i bambini"
+        }
+      },
+      "tag": {
+        "animals": "animali",
+        "coloring_pages": "disegni da colorare",
+        "dinosaurs": "dinosauri",
+        "fairy_tales": "fiabe",
+        "puzzles": "puzzle"
+      },
+      "title": {
+        "unlimited": "Ottieni accesso illimitato",
+        "unlimited_apps": "Ottieni accesso illimitato a {count}+ app"
+      }
+    },
+    "price": {
+      "just_per_week": "Solo {price} a settimana",
+      "just_per_year": "Solo {price}/anno",
+      "per_week": "{price} a settimana",
+      "per_week_short": "{price}/settimana",
+      "per_year": "{price} all’anno",
+      "per_year_short": "{price}/anno"
+    },
+    "trial": {
+      "any_plan_free": "Qualsiasi piano gratis per {days} giorno | Qualsiasi piano gratis per {days} giorni",
+      "days_free": "{days} giorno gratis | {days} giorni gratis",
+      "free_trial": "Prova gratuita",
+      "then_per_month": "{days} giorno gratis, poi {price} al mese. | {days} giorni gratis, poi {price} al mese.",
+      "then_per_week": "{days} giorno gratis, poi {price} a settimana. | {days} giorni gratis, poi {price} a settimana.",
+      "then_per_year": "{days} giorno gratis, poi {price} all’anno. | {days} giorni gratis, poi {price} all’anno."
     }
   },
   "ds": {
     "close_button": {
       "aria": {
         "label": "Chiudi"
+      }
+    },
+    "slides": {
+      "dot": {
+        "label": "Slide {number}"
       }
     },
     "spinner": {
@@ -35,6 +135,19 @@
     }
   },
   "app": {
+    "cars2": {
+      "paywall": {
+        "info": {
+          "cars": "Tutte le auto in questa app"
+        },
+        "title": {
+          "all_cars": "Tutte le auto",
+          "and_apps": "e {apps}",
+          "apps": "oltre {count} app divertenti",
+          "subscription": "in UN unico abbonamento!"
+        }
+      }
+    },
     "farm": {
       "banner": {
         "title": "Titolo del banner",

@@ -1,23 +1,123 @@
 {
   "common": {
+    "badge": {
+      "best_offer": "Bästa erbjudande"
+    },
+    "benefit": {
+      "no_ads": "Inga annonser",
+      "no_extra_payments": "Inga extra betalningar"
+    },
     "button": {
+      "back": "Tillbaka",
       "continue": {
         "default": "Fortsätt"
       },
-      "restore": "Återställa köp"
+      "restore": "Återställa köp",
+      "try_free": "Prova gratis",
+      "try_free_days": "Prova GRATIS i {days} dag | Prova GRATIS i {days} dagar",
+      "unlock": "Lås upp",
+      "unlock_for": "Lås upp för {price}",
+      "whats_included": "Vad som ingår"
     },
     "legal": {
-      "cancel_anytime": "Avsluta när som helst"
+      "cancel_anytime": "Avsluta när som helst",
+      "no_payment_now": "Ingen betalning nu"
     },
     "link": {
+      "more_plans": "Fler planer",
       "privacy_policy": "Integritetspolicy",
       "terms_of_use": "Användarvillkor"
+    },
+    "period": {
+      "per_month": "per månad",
+      "per_week": "per vecka",
+      "per_year": "per år"
+    },
+    "plan": {
+      "group_label": "Prenumerationsplaner",
+      "monthly": "Månadsvis",
+      "weekly": "Veckovis",
+      "weekly_access": "Veckovis",
+      "yearly": "Årligen",
+      "yearly_access": "Årlig"
+    },
+    "plus": {
+      "feature": {
+        "apps": "Över {count} appar",
+        "hours": "1000+ timmars spel",
+        "offline": "Spela offline",
+        "updates": "Regelbundna uppdateringar"
+      },
+      "full_access": "Full tillgång till alla Amaya Plus-appar.",
+      "info": {
+        "apps": "Över {count} roliga och lärorika appar",
+        "audience": "För {boys} och {girls} mellan 2 och 7 år",
+        "boys": "pojkar",
+        "girls": "flickor"
+      },
+      "logo": {
+        "label": "Amaya Plus"
+      },
+      "slide": {
+        "apps": {
+          "text": "Full tillgång till alla AmayaKids-appar.",
+          "title": "Över {count} appar"
+        },
+        "educational": {
+          "text": "Spel som utvecklar kreativt tänkande och användbara färdigheter.",
+          "title": "Pedagogiskt och roligt"
+        },
+        "offline": {
+          "text": "Ingen internetanslutning? Ingen fara! Du kan spela offline.",
+          "title": "Spela offline"
+        },
+        "privacy": {
+          "text": "Vi kommer aldrig att dela din information.",
+          "title": "Skyddad integritet"
+        },
+        "trusted": {
+          "text": "Rekommenderas av miljontals föräldrar och barn.",
+          "title": "Säkert och barnvänligt"
+        }
+      },
+      "tag": {
+        "animals": "djur",
+        "coloring_pages": "målarbilder",
+        "dinosaurs": "dinosaurier",
+        "fairy_tales": "sagor",
+        "puzzles": "pussel"
+      },
+      "title": {
+        "unlimited": "Få obegränsad tillgång",
+        "unlimited_apps": "Få full tillgång till {count}+ appar"
+      }
+    },
+    "price": {
+      "just_per_week": "Bara {price} per vecka",
+      "just_per_year": "Endast {price}/år",
+      "per_week": "{price} per vecka",
+      "per_week_short": "{price}/vecka",
+      "per_year": "{price} per år",
+      "per_year_short": "{price}/år"
+    },
+    "trial": {
+      "any_plan_free": "Alla planer gratis i {days} dag | Alla planer gratis i {days} dagar",
+      "days_free": "{days} dag gratis | {days} dagar gratis",
+      "free_trial": "Gratis provperiod",
+      "then_per_month": "{days} dag gratis, sedan {price} per månad. | {days} dagar gratis, sedan {price} per månad.",
+      "then_per_week": "{days} dag gratis, sedan {price} per vecka. | {days} dagar gratis, sedan {price} per vecka.",
+      "then_per_year": "{days} dag gratis, sedan {price} per år. | {days} dagar gratis, sedan {price} per år."
     }
   },
   "ds": {
     "close_button": {
       "aria": {
         "label": "Stäng"
+      }
+    },
+    "slides": {
+      "dot": {
+        "label": "Bild {number}"
       }
     },
     "spinner": {
@@ -35,6 +135,19 @@
     }
   },
   "app": {
+    "cars2": {
+      "paywall": {
+        "info": {
+          "cars": "Alla bilar i den här appen"
+        },
+        "title": {
+          "all_cars": "Alla bilar",
+          "and_apps": "och {apps}",
+          "apps": "{count}+ roliga appar",
+          "subscription": "i EN prenumeration!"
+        }
+      }
+    },
     "farm": {
       "banner": {
         "title": "Bannerrubrik",
