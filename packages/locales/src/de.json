@@ -12,6 +12,7 @@
       "continue": {
         "default": "Weiter"
       },
+      "play_free": "Kostenlos spielen!",
       "restore": "Käufe wiederherstellen",
       "try_free": "Kostenlos testen",
       "try_free_days": "Testen Sie {days} Tag KOSTENLOS | Testen Sie {days} Tage KOSTENLOS",
@@ -20,6 +21,7 @@
       "whats_included": "Was ist enthalten"
     },
     "legal": {
+      "all_rights_reserved": "Alle Rechte vorbehalten",
       "cancel_anytime": "Jederzeit kündbar",
       "no_payment_now": "Jetzt keine Zahlung"
     },
@@ -115,6 +117,11 @@
         "label": "Schließen"
       }
     },
+    "rating": {
+      "aria": {
+        "label": "Bewertung: {rating} von 5"
+      }
+    },
     "slides": {
       "dot": {
         "label": "Folie {number}"
@@ -131,6 +138,11 @@
       },
       "google_play": {
         "label": "Jetzt bei Google Play"
+      }
+    },
+    "video": {
+      "play": {
+        "label": "Video abspielen"
       }
     }
   },
@@ -155,6 +167,86 @@
         "title_2": "Lerne alle Tiere vom Bauernhof kennen",
         "title_3": "Pflanzen, ernten und spielen!",
         "title_4": "Schalte heute den ganzen Bauernhof frei"
+      }
+    }
+  },
+  "web": {
+    "lp_cars2": {
+      "faq": {
+        "item_1": {
+          "answer": "Ja. Der volle Zugang zum Spiel ist für immer kostenlos, ohne versteckte Kosten.",
+          "question": "Ist das Spiel wirklich kostenlos?"
+        },
+        "item_2": {
+          "answer": "Laden Sie das Spiel im App Store oder bei Google Play herunter, registrieren Sie sich und spielen Sie los.",
+          "question": "Wie fange ich an?"
+        },
+        "item_3": {
+          "answer": "Für Kinder ab 2 Jahren. Die einfache Steuerung fördert Feinmotorik und Fantasie.",
+          "question": "Für welches Alter ist das Spiel?"
+        },
+        "item_4": {
+          "answer": "Ja. Nach dem Herunterladen funktioniert das Spiel offline – praktisch auf Reisen.",
+          "question": "Kann man ohne Internet spielen?"
+        },
+        "item_5": {
+          "answer": "Auf iPhone und iPad über den App Store und auf Android-Smartphones und -Tablets über Google Play.",
+          "question": "Auf welchen Geräten läuft es?"
+        },
+        "title": "Fragen und Antworten"
+      },
+      "features": {
+        "item_1": {
+          "text": "Fördert Feinmotorik und Fantasie",
+          "title": "Für Kinder ab 2 Jahren"
+        },
+        "item_2": {
+          "text": "Vom großen Feuerwehrauto bis zum flinken Superheldenauto",
+          "title": "Über 75 Autos"
+        },
+        "item_3": {
+          "text": "Millionen Kinder und Eltern vertrauen uns.",
+          "title": "Für Kinder gemacht"
+        },
+        "item_4": {
+          "text": "Kein Internet? Kein Problem! Sie können offline spielen.",
+          "title": "Offline spielen"
+        }
+      },
+      "footer": {
+        "copyright": "© {year}, Amaya Kids"
+      },
+      "header": {
+        "logo": "Amaya Kids"
+      },
+      "hero": {
+        "adv_1": "Für immer, ohne versteckte Kosten.",
+        "adv_2": "Registrieren, herunterladen, spielen!",
+        "stores_note": "Im App Store und bei Google Play",
+        "text": "Sie haben jetzt KOSTENLOSEN Vollzugriff auf Kids Cars 2!",
+        "title": "Glückwunsch!"
+      },
+      "meta": {
+        "description": "Über 75 Autos, Rennen und eine Waschanlage für Kinder ab 2. Funktioniert offline. Kostenlos im App Store und bei Google Play.",
+        "title": "Kids Cars 2 – kostenlos spielen · Amaya Kids"
+      },
+      "reviews": {
+        "item_1": {
+          "author": "LoveYourLife",
+          "text": "Unsere Zwillinge lieben die verschiedenen Fahrzeuge und Aufgaben. Man kann auf mehreren Geräten spielen, also streiten wir nicht mehr ums Handy: Einer kann immer auf dem Tablet spielen."
+        },
+        "item_2": {
+          "author": "Aunt Stacy M",
+          "text": "Mein 4-jähriger Neffe liebt dieses Spiel. Eines der besten Autospiele für die Kleinen! Es ist ganz einfach zu spielen, und er sucht sich am liebsten verschiedene Autos und Lastwagen aus. Es gibt sogar eine Waschanlage, und man kann Auto oder Lastwagen bemalen. Ein tolles Autospiel für Kinder ab 3!"
+        },
+        "item_3": {
+          "author": "kimkim57",
+          "text": "Meine Enkelin ist 2. Sie spielt das Spiel richtig gut und verbringt viel Zeit damit. Sie freut sich riesig, wenn sie das Ende des Hindernisparcours erreicht und zur Belohnung fotografiert wird."
+        },
+        "item_4": {
+          "author": "LostHero",
+          "text": "Alle Arten von Fahrzeugen an einem Ort, und das aus gutem Grund! Lustige Spiele, und man kann sogar ohne Internet spielen – auf langen Reisen super praktisch."
+        }
       }
     }
   }
