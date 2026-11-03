@@ -97,7 +97,10 @@ const groups = computed<CommandPaletteGroup<CommandPaletteItem>[]>(() => {
   const pages: CommandPaletteItem[] = [
     { label: 'Главная', icon: 'i-lucide-house', onSelect: () => go('/') },
     { label: 'Локализации', icon: 'i-lucide-languages', onSelect: () => go('/localizations') },
-    { label: 'Настройки', icon: 'i-lucide-settings', onSelect: () => go('/settings') }
+    { label: 'Настройки', icon: 'i-lucide-settings', onSelect: () => go('/settings') },
+    // Инструменты дизайн-системы — те же адреса, что у карточек на главной, в новой вкладке
+    { label: 'Эмулятор InApp', icon: 'i-lucide-smartphone', onSelect: () => window.open('https://inapp-preview.vercel.app', '_blank', 'noopener') },
+    { label: 'Storybook', icon: 'i-lucide-book-open', onSelect: () => window.open('https://amaya-storybook.vercel.app', '_blank', 'noopener') }
   ]
 
   return [

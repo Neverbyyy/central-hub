@@ -52,6 +52,19 @@ onMounted(async () => {
           class="w-full h-full sm:w-xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 dark:shadow-black/40 hover:bg-elevated hover:ring-accented dark:hover:bg-gray-700/60 dark:hover:ring-gray-600 rounded-xl"
         />
       </NuxtLink>
+
+      <!-- Эмулятор InApp: экраны в рамке устройства по протоколу InApp, панель, лог, ссылки сценариев (apps/inapp-preview) -->
+      <NuxtLink
+        to="https://inapp-preview.vercel.app"
+        target="_blank"
+        external
+      >
+        <UCard
+          title="Эмулятор InApp"
+          description="Пейволлы и онбординги как в InApp: покупка, лог и устройства."
+          class="w-full h-full sm:w-xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 dark:shadow-black/40 hover:bg-elevated hover:ring-accented dark:hover:bg-gray-700/60 dark:hover:ring-gray-600 rounded-xl"
+        />
+      </NuxtLink>
     </div>
 
     <h2 class="font-bold">

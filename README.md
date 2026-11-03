@@ -663,9 +663,17 @@ Vercel: Root Directory — `apps/central-hub`, переменные окруже
 - Output Directory — `storybook-static`; переменная `ENABLE_EXPERIMENTAL_COREPACK=1`;
 - секреты не нужны: тексты уже лежат в репозитории (`packages/locales`), Storybook их не запрашивает.
 
-**Экраны InApp** (`apps/inapp-preview`) — так же: Root Directory `apps/inapp-preview`, Framework Preset — Vite,
-Build Command — `cd ../.. && pnpm turbo run build --filter=@amaya/inapp-preview`, Output Directory — `dist`.
-Корень `/` — эмулятор с панелью; ссылка вида `/?variant=ios_as_farm_ds1_varb_ut1_pw_switch_v1&preset=default` — экран для телефона.
+**Эмулятор InApp** (`apps/inapp-preview`) — так же:
+- Root Directory `apps/inapp-preview`, Framework Preset — Vite;
+- Build Command — `cd ../.. && pnpm turbo run build --filter=@amaya/inapp-preview`, Output Directory — `dist`;
+- переменная `ENABLE_EXPERIMENTAL_COREPACK=1`, секреты не нужны.
+
+Это статика: корень `/` — эмулятор с панелью, ссылка вида `/?variant=ios_as_farm_ds1_varb_ut1_pw_switch_v1&preset=default`
+— экран для телефона. Собранный эмулятор проходит `scenarios --url <адрес>` так же, как dev.
+
+**Ссылки в сервисе** — карточки «Дизайн-система» (https://amaya-storybook.vercel.app) и «Эмулятор InApp»
+(https://inapp-preview.vercel.app) на главной (`app/pages/index.vue`) и пункты Ctrl+K — адреса прямо в коде,
+как у остальных карточек.
 
 **Лендинги** (`apps/landings`) — третий проект Vercel: Root Directory `apps/landings`, Framework Preset — Nuxt.js,
 Build Command — `cd ../.. && pnpm turbo run build --filter=@amaya/landings`, переменная `ENABLE_EXPERIMENTAL_COREPACK=1`.
