@@ -13,6 +13,7 @@
     "@amaya/locales": "workspace:*",
     "@amaya/tokens": "workspace:*",
     "@amaya/ui": "workspace:*",
+    "@rive-app/webgl2": "2.39.2",
     "vue": "^3.5.33",
     "vue-i18n": "^11.4.16"
   },

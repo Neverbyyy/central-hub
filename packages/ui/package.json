@@ -17,10 +17,17 @@
     "@amaya/tokens": "workspace:*"
   },
   "peerDependencies": {
+    "@rive-app/webgl2": "^2.39.2",
     "tailwindcss": "^4.3.0",
     "vue": "^3.3.4"
   },
+  "peerDependenciesMeta": {
+    "@rive-app/webgl2": {
+      "optional": true
+    }
+  },
   "devDependencies": {
+    "@rive-app/webgl2": "2.39.2",
     "@storybook/vue3-vite": "10.6.5",
     "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3",

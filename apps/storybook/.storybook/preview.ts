@@ -1,11 +1,16 @@
 import { messages, pluralRules } from '@amaya/locales'
 import '@amaya/tokens/fonts.css'
-import { DS_THEMES, DsRoot } from '@amaya/ui'
+import { configureRive, DS_THEMES, DsRoot } from '@amaya/ui'
 import { setup, type Decorator, type Preview } from '@storybook/vue3-vite'
+import riveWasm from '@rive-app/webgl2/rive.wasm?url'
+import riveWasmFallback from '@rive-app/webgl2/rive_fallback.wasm?url'
 import { computed } from 'vue'
 import { createI18n } from 'vue-i18n'
 import { storyGlobals } from '@amaya/ui/stories'
 import './preview.css'
+
+// wasm Rive — со своего адреса, а не с unpkg (так по умолчанию делает рантайм): без внешней сети и без лишнего запроса
+configureRive({ wasmUrl: riveWasm, wasmFallbackUrl: riveWasmFallback })
 
 // Те же 9 языков, что в сервисе. Утверждённых текстов набора ds на каком-то языке может ещё не быть —
 // тогда vue-i18n показывает английский
@@ -135,6 +140,7 @@ const preview: Preview = {
           'Общее', ['Кнопка', 'Крестик', 'Выбор тарифа', 'Текст', 'Плашки и списки', 'Картинка', 'Подгонка по высоте'],
           'Cars 2', ['Заголовок с обводкой', 'Главная карточка', 'Попап тарифов', 'Карусель наборов'],
           'Farm', ['Тумблер триала', 'Слайды Amaya Plus', 'Документы'],
+          'Анимации', ['Rive'],
           'Токены'
         ]
       }
