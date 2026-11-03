@@ -167,6 +167,16 @@
         "title_2": "Lerne alle Tiere vom Bauernhof kennen",
         "title_3": "Pflanzen, ernten und spielen!",
         "title_4": "Schalte heute den ganzen Bauernhof frei"
+      },
+      "onboarding": {
+        "step_1": {
+          "text": "Gewinner mehrerer Kinder-App-Preise! Dieses unterhaltsame und lehrreiche Abenteuer hilft Kindern, die Welt der Bauernhof- und Wildtiere zu entdecken, Obst und Gemüse kennenzulernen und spielerisch zu lernen – fröhlich und interaktiv.",
+          "title": "Von Eltern geliebt, von Lehrern empfohlen"
+        },
+        "step_2": {
+          "text": "Entdecke eine Welt kreativer und lehrreicher Apps – alles an einem Ort! Malvorlagen, Märchen, Rennen, Tiere und mehr. Unendlicher Spaß für Jungen und Mädchen!",
+          "title": "Mehr als nur ein Bauernhof! Genieße {count}+ Apps"
+        }
       }
     }
   },

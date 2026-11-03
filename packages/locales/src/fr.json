@@ -167,6 +167,16 @@
         "title_2": "Découvre tous les animaux de la ferme",
         "title_3": "Plante, récolte et joue !",
         "title_4": "Débloque toute la ferme dès aujourd'hui"
+      },
+      "onboarding": {
+        "step_1": {
+          "text": "Lauréate de plusieurs prix d’apps pour enfants ! Cette aventure amusante et éducative aide les enfants à explorer le monde des animaux de la ferme et sauvages, à découvrir les fruits et légumes et à apprendre en jouant de manière ludique et interactive.",
+          "title": "Adoré par les parents, approuvé par les enseignants"
+        },
+        "step_2": {
+          "text": "Découvre un monde d’applis créatives et éducatives, réunies au même endroit ! Coloriages, contes, courses, animaux et bien plus encore. Un plaisir sans fin pour les filles et les garçons !",
+          "title": "Plus qu’une simple ferme ! Profite de {count}+ applis"
+        }
       }
     }
   },

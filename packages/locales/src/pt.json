@@ -167,6 +167,16 @@
         "title_2": "Conheça todos os animais da fazenda",
         "title_3": "Plante, colha e brinque!",
         "title_4": "Desbloqueie a fazenda inteira hoje"
+      },
+      "onboarding": {
+        "step_1": {
+          "text": "Vencedor de vários prêmios de aplicativos infantis! Esta divertida e educativa aventura ajuda as crianças a explorar o mundo dos animais da fazenda e selvagens, descobrir frutas e vegetais e aprender brincando de forma alegre e interativa.",
+          "title": "Amado pelos pais, aprovado pelos professores"
+        },
+        "step_2": {
+          "text": "Desbloqueie um mundo de apps criativos e educativos – tudo em um só lugar! Explore páginas para colorir, contos de fadas, corridas, animais e muito mais. Diversão sem fim para meninos e meninas!",
+          "title": "Muito mais que uma fazenda! Curta {count}+ apps"
+        }
       }
     }
   },
