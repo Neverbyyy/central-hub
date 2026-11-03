@@ -1,5 +1,5 @@
 // Rive-анимации. Новая анимация — положить .riv в apps/storybook/rive: она сама появится в списке «Файл».
-// Анимации, которые уже взял экран, лежат у арта экрана (как в InApp) — они в списке тоже, с путём экрана.
+// Анимации, которые уже взял экран или лендинг, лежат у его арта (как в InApp) — они в списке тоже, с путём.
 // Артборды и стейт-машины читаются из файла; inputs стейт-машины и свойства view model — кнопками справа,
 // Rive Events и смена состояний — в лог. Рисует тот же DsRive, что и экраны
 import { DsRive, loadRive, type RiveInstance } from '@amaya/ui'
@@ -7,10 +7,13 @@ import { GAME_BACKDROP, WHITE_BACKDROP } from '@amaya/ui/stories'
 import type { StoryObj } from '@storybook/vue3-vite'
 import { computed, ref, shallowRef, watch } from 'vue'
 
-const SCREENS = '../../inapp-preview/src/variants/'
-const FILES = import.meta.glob<string>(['../rive/*.riv', '../../inapp-preview/src/variants/**/*.riv'], { query: '?url', import: 'default', eager: true })
-// Имя в списке: файл из apps/storybook/rive — просто имя, файл экрана — путь от папки вариантов
-const label = (path: string) => (path.startsWith(SCREENS) ? path.slice(SCREENS.length) : path.split('/').pop()!).replace(/\.riv$/, '')
+const OWNERS = ['../../inapp-preview/src/variants/', '../../landings/app/landings/']
+const FILES = import.meta.glob<string>(['../rive/*.riv', '../../inapp-preview/src/variants/**/*.riv', '../../landings/app/landings/**/*.riv'], { query: '?url', import: 'default', eager: true })
+// Имя в списке: файл из apps/storybook/rive — просто имя, файл экрана или лендинга — путь от его папки
+const label = (path: string) => {
+  const owner = OWNERS.find(prefix => path.startsWith(prefix))
+  return (owner ? path.slice(owner.length) : path.split('/').pop()!).replace(/\.riv$/, '')
+}
 const URLS: Record<string, string> = Object.fromEntries(Object.entries(FILES).map(([path, url]) => [label(path), url]))
 const NAMES = Object.keys(URLS).sort()
 

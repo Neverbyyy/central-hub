@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview --port 6021 --host",
     "lint": "eslint .",
-    "typecheck": "vue-tsc --noEmit"
+    "typecheck": "vue-tsc --noEmit",
+    "scenarios": "node scripts/scenarios.mjs"
   },
   "dependencies": {
     "@amaya/locales": "workspace:*",

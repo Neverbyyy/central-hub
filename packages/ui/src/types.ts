@@ -2,7 +2,7 @@
 
 // Текстовые стили — токены text.* (packages/tokens/src/size): размер, интерлиньяж и вес свои у темы и брейкпоинта
 export const DS_TEXT_VARIANTS = [
-  'display-lg', 'display-md', 'title-lg', 'title-md', 'body-lg', 'body', 'list', 'caption', 'price', 'button', 'badge', 'legal', 'link'
+  'display-lg', 'display-md', 'title-xl', 'title-lg', 'title-md', 'body-lg', 'body', 'list', 'caption', 'price', 'button', 'badge', 'legal', 'link'
 ] as const
 export type DsTextVariant = typeof DS_TEXT_VARIANTS[number]
 
@@ -35,4 +35,11 @@ export interface DsPlan {
   tint?: 'sky' | 'violet' | 'pink'
   // Название и цена жирные
   emphasis?: boolean
+}
+
+// Пункт DsAccordion: тексты уже переведены страницей
+export interface DsAccordionItem {
+  id: string
+  question: string
+  answer: string
 }

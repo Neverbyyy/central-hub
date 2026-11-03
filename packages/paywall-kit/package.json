@@ -4,7 +4,8 @@
   "type": "module",
   "description": "Пейволлы и онбординги: связь с окружением (InApp), общая логика экрана и шаблоны из компонентов Ds*",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./uniwebview": "./src/uniwebview.ts"
   },
   "scripts": {
     "lint": "eslint .",

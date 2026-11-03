@@ -1,18 +1,22 @@
 <script setup lang="ts">
 /**
- * Экран в вебвью — как InApp: окружение по протоколу uniwebview:// (данные, open, close, payment от приложения).
- * ?variant=<имя варианта> — какой экран. Без приложения (на телефоне по ссылке) — ?preset=<пресет>: данные пресета
- * подставляются сами, экран открывается, покупка «проходит» через 1,5 с. Полный эмулятор с панелью — этап 3.
+ * Без ?variant — эмулятор InApp (панель, экран в iframe). С ?variant — сам экран в вебвью, как в InApp: окружение
+ * по протоколу uniwebview:// (данные, open, close, payment от приложения или эмулятора). Без приложения (на телефоне
+ * по ссылке) — ?preset=<пресет>[&lang=de]: данные пресета подставляются сами, экран открывается, покупка «проходит»
+ * через 1,5 с.
  */
 import { createStubEnv, createUniwebviewEnv, type PaywallEnv } from '@amaya/paywall-kit'
-import { computed, onBeforeUnmount, shallowRef, watch, type Component } from 'vue'
+import { computed, defineAsyncComponent, onBeforeUnmount, shallowRef, watch, type Component } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { findScreen, screens } from './variants'
 
+const InAppEmulator = defineAsyncComponent(() => import('./emulator/InAppEmulator.vue'))
+
 const params = new URLSearchParams(location.search)
-const variant = params.get('variant') ?? screens[0]!.id
+const variant = params.get('variant')
 const presetName = params.get('preset')
-const screen = findScreen(variant)
+const lang = params.get('lang')
+const screen = variant ? findScreen(variant) : undefined
 
 const { locale } = useI18n()
 const component = shallowRef<Component | null>(null)
@@ -30,7 +34,8 @@ if (screen) {
     // Без приложения: данные из пресета, экран сразу открыт
     screen.presets().then(({ presets }) => {
       const preset = presets[presetName] ?? presets.default!
-      const stub = createStubEnv({ data: { ...preset.data, variant }, purchaseDelay: 1500, onCall: call => console.info('[экран →]', call.name, ...call.args) })
+      const data = { ...preset.data, variant: preset.data.variant ?? variant!, ...(lang ? { locale: lang } : {}) }
+      const stub = createStubEnv({ data, purchaseDelay: 1500, onCall: call => console.info('[экран →]', call.name, ...call.args) })
       env.value = stub
       openStub = () => stub.open()
     })
@@ -47,8 +52,8 @@ if (screen) {
 const unwatch = watch(env, (current) => {
   if (!current) return
   const apply = () => {
-    const lang = current.data()?.locale
-    if (lang) locale.value = lang
+    const next = current.data()?.locale
+    if (next) locale.value = next
   }
   apply()
   current.on('data', apply)
@@ -63,9 +68,10 @@ const ready = computed(() => component.value && env.value)
 </script>
 
 <template>
+  <InAppEmulator v-if="!variant" />
   <component
     :is="component!"
-    v-if="ready"
+    v-else-if="ready"
     :env="env!"
     @vue:mounted="onScreenMounted"
   />

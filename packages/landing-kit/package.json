@@ -1,0 +1,26 @@
+{
+  "name": "@amaya/landing-kit",
+  "private": true,
+  "type": "module",
+  "description": "Лендинги: переход в стор с UTM, одна функция track, конфиг страницы и блоки из компонентов Ds*",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "@amaya/ui": "workspace:*"
+  },
+  "peerDependencies": {
+    "vue": "^3.3.4",
+    "vue-i18n": "^9.2.2 || ^10.0.0 || ^11.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3",
+    "vue": "^3.5.33",
+    "vue-i18n": "^11.4.16",
+    "vue-tsc": "^3.2.7"
+  }
+}

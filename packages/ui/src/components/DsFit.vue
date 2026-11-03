@@ -49,16 +49,36 @@ const fit = () => {
   apply(scale)
 }
 
+let mutations: MutationObserver | undefined
+
 onMounted(() => {
   fit()
+  // Шрифт догрузился — текст переложился, высота другая
+  if (typeof document !== 'undefined') document.fonts?.ready.then(() => fit())
   if (typeof ResizeObserver === 'undefined') return
   observer = new ResizeObserver(() => fit())
   if (box.value) observer.observe(box.value)
   const content = inner.value?.firstElementChild
-  if (content) observer.observe(content)
+  if (!content) return
+  observer.observe(content)
+  // Содержимое во всю высоту (h-full) своего размера не меняет, когда текст внутри растёт (другой язык, шрифт):
+  // следим и за его детьми, и за тем, какие они (v-if)
+  const watchChildren = () => {
+    for (const child of content.children) observer!.observe(child)
+  }
+  watchChildren()
+  if (typeof MutationObserver === 'undefined') return
+  mutations = new MutationObserver(() => {
+    watchChildren()
+    fit()
+  })
+  mutations.observe(content, { childList: true })
 })
 
-onBeforeUnmount(() => observer?.disconnect())
+onBeforeUnmount(() => {
+  observer?.disconnect()
+  mutations?.disconnect()
+})
 
 defineExpose({ fit })
 </script>

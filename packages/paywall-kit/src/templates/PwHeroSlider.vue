@@ -8,7 +8,7 @@
  * Логика экрана — usePaywall; тексты — ключи сервиса из конфига; цены — из стора.
  */
 import { perWeek } from '@amaya/pricing'
-import { DsBox, DsButton, DsCarousel, DsCheckMark, DsCloseButton, DsFit, DsGameTitle, DsIconButton, DsImage, DsLink, DsPlanPicker, DsPopup, DsPriceTag, DsRoot, DsText, DsBenefitList, DsBadge, type DsPlan, type DsTheme } from '@amaya/ui'
+import { DsBox, DsButton, DsCarousel, DsCheckMark, DsCloseButton, DsFit, DsGameTitle, DsIconButton, DsImage, DsLink, DsPlanPicker, DsPopup, DsPriceTag, DsRive, DsRoot, DsText, DsBenefitList, DsBadge, type DsPlan, type DsTheme } from '@amaya/ui'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { resolveSegment, type HeroSliderConfig, type HeroUnlock } from '../config'
@@ -170,6 +170,30 @@ const popupHeight = () => sheet.value?.offsetHeight ?? 0
                   @load="paywall.markLoaded('art')"
                   @error="paywall.markLoaded('art')"
                 />
+                <!-- Живой арт: только пока экран открыт, на каждое открытие — заново (key), на обороте — пауза.
+                     front под ним — постер: «готов» анимацию не ждёт, не загрузилась — остаётся картинка -->
+                <div
+                  v-if="config.art.live && opened"
+                  :key="session"
+                  class="ds:absolute ds:inset-0"
+                >
+                  <DsRive
+                    class="ds:size-full"
+                    :src="config.art.live.src"
+                    :artboard="config.art.live.artboard"
+                    :state-machine="config.art.live.stateMachine"
+                    fit="cover"
+                    :autoplay="!infoOpen"
+                    alt=""
+                  />
+                </div>
+                <DsImage
+                  v-if="config.art.live?.overlay"
+                  class="ds:absolute ds:inset-0"
+                  :set="config.art.live.overlay"
+                  alt=""
+                  fit="cover"
+                />
                 <DsImage
                   class="ds:absolute ds:inset-0 ds:transition-opacity ds:duration-(--ds-duration-base)"
                   :class="infoOpen ? 'ds:opacity-100' : 'ds:opacity-0'"
@@ -325,6 +349,7 @@ const popupHeight = () => sheet.value?.offsetHeight ?? 0
             </div>
 
             <DsButton
+              data-pw="cta"
               class="ds:-mt-6"
               shine
               :loading="purchasing === yearKey && !popupOpen || forcePurchasing"
@@ -335,6 +360,7 @@ const popupHeight = () => sheet.value?.offsetHeight ?? 0
               {{ mainButton }}
             </DsButton>
             <DsLink
+              data-pw="more"
               tone="inverse"
               class="ds:mt-1 ds:font-link ds:text-link"
               @click="!busy && (popupOpen = true)"
@@ -399,6 +425,7 @@ const popupHeight = () => sheet.value?.offsetHeight ?? 0
 
     <div class="ds:absolute ds:end-1.5 ds:top-1.5">
       <DsCloseButton
+        data-pw="close"
         :label="t(tx.close)"
         :active="opened"
         @close="paywall.close()"

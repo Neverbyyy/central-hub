@@ -6,11 +6,13 @@
   "exports": {
     ".": "./src/index.ts",
     "./tailwind.css": "./src/tailwind.css",
-    "./stories": "./src/stories/index.ts"
+    "./stories": "./src/stories/index.ts",
+    "./manifest.json": "./manifest.json"
   },
   "scripts": {
-    "lint": "eslint .",
-    "typecheck": "vue-tsc --noEmit"
+    "lint": "eslint . && node scripts/manifest.mjs --check",
+    "typecheck": "vue-tsc --noEmit",
+    "manifest": "node scripts/manifest.mjs"
   },
   "dependencies": {
     "@amaya/icons": "workspace:*",

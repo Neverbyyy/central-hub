@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * Картинка по конвенции small/medium/large × 1x/2x × png/webp: браузер сам берёт размер под экран (от 844 и 1024 px),
+ * Картинка по конвенции small/medium/large × 1x/2x × png/webp: браузер сам берёт размер под экран (телефон от 844 px, iPad — от 844 px при высоте от 600),
  * webp — где понимает, иначе png. Один файл (например, SVG значка) — проп src.
  * Когда использовать: любая картинка — арт, иконка игры, значок стора. <img> напрямую не пишем.
  * ratio занимает место до загрузки — экран не прыгает; событие load — для «готов» у пейволла.
@@ -14,7 +14,8 @@ const props = withDefaults(defineProps<{
   // Текст для скринридера ключом из сервиса; '' — картинка-украшение
   alt: string
   fit?: 'contain' | 'cover'
-  position?: 'center' | 'top' | 'bottom'
+  // right-bottom — арт, у которого важное справа внизу (первый экран лендинга Cars 2)
+  position?: 'center' | 'top' | 'bottom' | 'right-bottom'
   // fill — во всю ширину блока; intrinsic — по высоте блока, ширина своя (значки)
   size?: 'fill' | 'intrinsic'
   // «16 / 9»: место под картинку занято до загрузки
@@ -45,7 +46,7 @@ const img = computed(() => {
 })
 
 const FIT = { contain: 'ds:object-contain', cover: 'ds:object-cover' }
-const POSITION = { center: 'ds:object-center', top: 'ds:object-top', bottom: 'ds:object-bottom' }
+const POSITION = { 'center': 'ds:object-center', 'top': 'ds:object-top', 'bottom': 'ds:object-bottom', 'right-bottom': 'ds:object-right-bottom' }
 const SIZE = { fill: 'ds:h-full ds:w-full', intrinsic: 'ds:h-full ds:w-auto' }
 </script>
 

@@ -28,6 +28,19 @@
         "$value": 700
       }
     },
+    "title-xl": {
+      "$description": "Заголовок онбординга: LOVED BY PARENTS, APPROVED BY TEACHERS (на 667 крупнее заголовка пейволла)",
+      "size": {
+        "$value": 18
+      },
+      "line-height": {
+        "$value": 24
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 700
+      }
+    },
     "title-lg": {
       "$description": "Заголовок экрана: GET UNLIMITED ACCESS",
       "size": {
@@ -186,6 +199,96 @@
         "$type": "fontWeight",
         "$value": 600
       }
+    },
+    "lp-hero-title": {
+      "$description": "Лендинг: заголовок первого экрана «Congratulations!» (шрифт font.display). Значения лендинга — из макета Cars 2 (Figma 38:57), одинаковые на 375 и 768",
+      "size": { "$value": 44 },
+      "line-height": { "$value": 44 },
+      "weight": { "$type": "fontWeight", "$value": 900 }
+    },
+    "lp-hero-text": {
+      "$description": "Лендинг: подзаголовок первого экрана",
+      "size": { "$value": 20 },
+      "line-height": { "$value": 24 },
+      "weight": { "$type": "fontWeight", "$value": 900 }
+    },
+    "lp-note": {
+      "$description": "Лендинг: строка «есть в App Store и Google Play»",
+      "size": { "$value": 16 },
+      "line-height": { "$value": 20 },
+      "weight": { "$type": "fontWeight", "$value": 900 }
+    },
+    "lp-adv": {
+      "$description": "Лендинг: текст цветной плашки-преимущества",
+      "size": { "$value": 16 },
+      "line-height": { "$value": 22 },
+      "weight": { "$type": "fontWeight", "$value": 900 }
+    },
+    "lp-cta": {
+      "$description": "Лендинг: кнопка первого экрана (DsButton variant=lp)",
+      "size": { "$value": 22 },
+      "line-height": { "$value": 22 },
+      "weight": { "$type": "fontWeight", "$value": 900 }
+    },
+    "lp-cta-lg": {
+      "$description": "Лендинг: кнопки ниже по странице (DsButton variant=lp size=lg)",
+      "size": { "$value": 24 },
+      "line-height": { "$value": 24 },
+      "weight": { "$type": "fontWeight", "$value": 900 }
+    },
+    "lp-feature-title": {
+      "$description": "Лендинг: заголовок преимущества, телефон",
+      "size": { "$value": 18 },
+      "line-height": { "$value": 20 },
+      "weight": { "$type": "fontWeight", "$value": 800 }
+    },
+    "lp-feature-title-wide": {
+      "$description": "Лендинг: заголовок преимущества от 640 px (ds:wide:)",
+      "size": { "$value": 20 },
+      "line-height": { "$value": 24 },
+      "weight": { "$type": "fontWeight", "$value": 800 }
+    },
+    "lp-feature-text": {
+      "$description": "Лендинг: пояснение преимущества, телефон",
+      "size": { "$value": 14 },
+      "line-height": { "$value": 16 },
+      "weight": { "$type": "fontWeight", "$value": 600 }
+    },
+    "lp-feature-text-wide": {
+      "$description": "Лендинг: пояснение преимущества от 640 px",
+      "size": { "$value": 16 },
+      "line-height": { "$value": 22 },
+      "weight": { "$type": "fontWeight", "$value": 600 }
+    },
+    "lp-section-title": {
+      "$description": "Лендинг: заголовок блока (FAQ) — в макете нет, по стилю первого экрана",
+      "size": { "$value": 28 },
+      "line-height": { "$value": 32 },
+      "weight": { "$type": "fontWeight", "$value": 900 }
+    },
+    "lp-question": {
+      "$description": "Лендинг: вопрос FAQ (кнопка аккордеона)",
+      "size": { "$value": 18 },
+      "line-height": { "$value": 24 },
+      "weight": { "$type": "fontWeight", "$value": 800 }
+    },
+    "lp-review": {
+      "$description": "Лендинг: текст отзыва и ответ FAQ (шрифт font.lp-body)",
+      "size": { "$value": 16 },
+      "line-height": { "$value": 22 },
+      "weight": { "$type": "fontWeight", "$value": 400 }
+    },
+    "lp-review-author": {
+      "$description": "Лендинг: автор отзыва",
+      "size": { "$value": 20 },
+      "line-height": { "$value": 28 },
+      "weight": { "$type": "fontWeight", "$value": 700 }
+    },
+    "lp-footnote": {
+      "$description": "Лендинг: футер — копирайт и документы",
+      "size": { "$value": 18 },
+      "line-height": { "$value": 24 },
+      "weight": { "$type": "fontWeight", "$value": 600 }
     }
   },
   "spacing": {
@@ -249,7 +352,41 @@
     "unlock-h": {
       "$value": "{size.240}",
       "$description": "Карточка разовой покупки в карусели: высота"
-    }
+    },
+    "lp-column": { "$value": 768, "$description": "Лендинг: ширина колонки — на десктопе раскладка планшета по центру, фоны секций во всю ширину" },
+    "lp-logo-w": { "$value": 166, "$description": "Лендинг: логотип в шапке, ширина" },
+    "lp-logo-h": { "$value": 52, "$description": "Лендинг: логотип в шапке, высота" },
+    "lp-hero-h": { "$value": 319, "$description": "Лендинг: высота арта первого экрана, телефон" },
+    "lp-hero-h-wide": { "$value": 338, "$description": "Лендинг: высота арта первого экрана от 640 px" },
+    "lp-hero-overlap": { "$value": 109, "$description": "Лендинг: насколько «капля» с заголовком заходит на арт, телефон" },
+    "lp-hero-overlap-wide": { "$value": 141, "$description": "Лендинг: то же от 640 px" },
+    "lp-blob-w": { "$value": 398, "$description": "Лендинг: «капля» первого экрана, ширина (длинный текст её растягивает вниз)" },
+    "lp-blob-h": { "$value": 342, "$description": "Лендинг: «капля» первого экрана, высота не меньше" },
+    "lp-hero-text-w": { "$value": 286, "$description": "Лендинг: колонка текста в «капле»" },
+    "lp-adv-w": { "$value": 208, "$description": "Лендинг: цветная плашка-преимущество, ширина на телефоне" },
+    "lp-adv-w-wide": { "$value": 180, "$description": "Лендинг: плашка от 640 px — по бокам «капли»" },
+    "lp-adv-h": { "$value": 112, "$description": "Лендинг: плашка, высота не меньше" },
+    "lp-cta-h": { "$value": 60, "$description": "Лендинг: кнопка первого экрана, высота" },
+    "lp-cta-lg-h": { "$value": 64, "$description": "Лендинг: кнопки ниже по странице, высота" },
+    "lp-cta-x": { "$value": 32, "$description": "Лендинг: поля кнопки первого экрана" },
+    "lp-cta-lg-x": { "$value": 40, "$description": "Лендинг: поля кнопок ниже по странице" },
+    "lp-feature-w": { "$value": 160, "$description": "Лендинг: колонка преимущества, телефон" },
+    "lp-feature-w-wide": { "$value": 300, "$description": "Лендинг: колонка преимущества от 640 px" },
+    "lp-feature-img-w": { "$value": 140, "$description": "Лендинг: иллюстрация преимущества, телефон" },
+    "lp-feature-img-h": { "$value": 115 },
+    "lp-feature-img-w-wide": { "$value": 200, "$description": "Лендинг: иллюстрация преимущества от 640 px" },
+    "lp-feature-img-h-wide": { "$value": 164 },
+    "lp-card-w": { "$value": 286, "$description": "Лендинг: карточка отзыва" },
+    "lp-video-overlap": { "$value": 124, "$description": "Лендинг: насколько видео заходит на синий блок отзывов, телефон" },
+    "lp-video-overlap-wide": { "$value": 254, "$description": "Лендинг: то же от 640 px" },
+    "lp-quote-w": { "$value": 38, "$description": "Лендинг: кавычка в карточке отзыва" },
+    "lp-quote-h": { "$value": 32 },
+    "lp-star": { "$value": 23, "$description": "Звезда рейтинга (DsRating)" },
+    "lp-deco-w": { "$value": 90, "$description": "Лендинг: живой элемент в углу первого экрана (hero.rive с layout corner, пропорции 361×610), телефон" },
+    "lp-deco-h": { "$value": 152 },
+    "lp-deco-w-wide": { "$value": 112, "$description": "Лендинг: то же от 640 px" },
+    "lp-deco-h-wide": { "$value": 190 },
+    "lp-play": { "$value": 64, "$description": "Кнопка «▶» на постере видео (DsVideo)" }
   },
   "radius": {
     "$type": "dimension",
@@ -275,6 +412,14 @@
     "hero": {
       "$value": "{radius.32}",
       "$description": "Скругление половины экрана с артом (пейволл Amaya Plus)"
+    },
+    "lp-card": {
+      "$value": "{radius.32}",
+      "$description": "Лендинг: карточка отзыва и карточка вопроса FAQ"
+    },
+    "lp-video": {
+      "$value": "{radius.32}",
+      "$description": "Лендинг: видео"
     }
   },
   "line": {

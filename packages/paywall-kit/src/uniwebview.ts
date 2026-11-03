@@ -36,6 +36,27 @@ export function fromInAppData(raw: InAppData): PaywallData {
   }
 }
 
+// Подписки InApp отличает от разовых покупок по типу продукта; в ID у нас период есть только у подписок
+const SUBSCRIPTION = /\.(weekly|monthly|yearly)\./
+
+/**
+ * Данные экрана → AppData InApp: так их присылает приложение. Нужна эмулятору — он играет роль InApp, и пресеты
+ * уходят в экран в том же виде, что из приложения, через тот же разбор (fromInAppData).
+ */
+export function toInAppData(data: PaywallData): InAppData {
+  const purchase = (id: string): InAppPurchase => ({ Product: { ProductId: id } })
+  return {
+    locale: data.locale,
+    variant: data.variant,
+    wasTrial: data.wasTrial,
+    productData: data.products.map(product => ({ Id: product.id, Price: product.price })),
+    purchases: {
+      ActiveSubscriptions: data.owned.filter(id => SUBSCRIPTION.test(id)).map(purchase),
+      NonConsumable: data.owned.filter(id => !SUBSCRIPTION.test(id)).map(purchase)
+    }
+  }
+}
+
 export interface UniwebviewEnvOptions {
   // Адреса документов юрлица: у Amaya (as) — amayakids.com/terms.html и privacy.html
   legal: Record<LegalDoc, string>

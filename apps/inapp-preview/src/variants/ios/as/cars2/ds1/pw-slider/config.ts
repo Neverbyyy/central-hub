@@ -1,10 +1,19 @@
 // Пейволл Cars 2 на дизайн-системе: редизайн InApp ios/as/cars2/tm11/pw-slider (вариант B).
 // Те же продукты, тот же смысл текстов, те же события — меняется только вид. Арт — из InApp, по конвенции 12 файлов
-import type { HeroSliderConfig } from '@amaya/paywall-kit'
+import type { HeroLive, HeroSliderConfig } from '@amaya/paywall-kit'
 import { imageSetFromFiles } from '@amaya/ui'
+import animation from './art/animation-paywall-cars.riv?url'
 
 const files = import.meta.glob<string>('./art/**/*.{png,webp}', { eager: true, query: '?url', import: 'default' })
 const art = (name: string) => imageSetFromFiles(files, `./art/${name}`)
+
+/**
+ * Живая карточка — Rive из ТЗ (въезжают машины, енот машет ключом). Пока не включена: в артборде нет плиток-иконок,
+ * которые есть на карточке в макете, а отдельным слоем их в Figma нет — попросили у Антона. Пришлёт прозрачный
+ * слой — положить в art/ как tiles-* и включить: art: { …, live: { ...live, overlay: art('tiles') } }.
+ * Сравнить с картинкой — история «Пейволлы / Cars 2 · с Rive».
+ */
+export const live: HeroLive = { src: animation, artboard: 'paywall-without-icons', stateMachine: 'State Machine 1' }
 
 // Наборы машин в карусели — в порядке InApp
 const UNLOCKS = ['city', 'christmas', 'halloween', 'construction', 'modern', 'zoo', 'monstertrucks'] as const

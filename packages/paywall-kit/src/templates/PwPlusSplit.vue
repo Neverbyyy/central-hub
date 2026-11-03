@@ -236,6 +236,7 @@ const buy = () => {
             :disabled="busy"
           />
           <DsButton
+            data-pw="cta"
             class="ds:mt-2"
             :class="config.mode === 'trio' ? 'ds:mx-4' : ''"
             block
@@ -269,6 +270,7 @@ const buy = () => {
 
     <div class="ds:absolute ds:end-2 ds:top-2">
       <DsCloseButton
+        data-pw="close"
         :label="t(tx.close)"
         :active="opened"
         @close="paywall.close()"

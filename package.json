@@ -26,8 +26,10 @@
     "@nuxt/eslint-config": "^1.15.2",
     "@supabase/supabase-js": "^2.104.1",
     "eslint": "^10.2.1",
+    "puppeteer-core": "^24.43.1",
     "supabase": "2.122.0",
     "turbo": "^2.11.10",
-    "vitest": "5.0.5"
+    "vitest": "5.0.5",
+    "vue-eslint-parser": "^10.4.0"
   }
 }

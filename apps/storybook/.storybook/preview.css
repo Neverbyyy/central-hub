@@ -6,6 +6,7 @@
 
 /* Шаблоны пейволлов и экраны: Tailwind не смотрит в пакеты сам */
 @source '../../../packages/paywall-kit/src';
+@source '../../../packages/landing-kit/src';
 @source '../../inapp-preview/src';
 
 .sb-themes {

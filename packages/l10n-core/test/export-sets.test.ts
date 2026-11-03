@@ -21,4 +21,13 @@ describe('keyInExportSet', () => {
   it('начало без точки не путается с похожим: application. — не app.', () => {
     expect(keyInExportSet(inapp, 'application.x.y')).toBe(false)
   })
+
+  // Набор ds (миграция ds_export_set_landings): все лендинги — одним началом web.lp_, новый сайт lp_<игра> — сам
+  it('ds: web.lp_ берёт любой лендинг lp_<игра>, но не другие сайты', () => {
+    const ds = { legacy_prefix: null, include_prefixes: ['common.', 'ds.', 'app.cars2.', 'app.farm.', 'brand.', 'web.lp_'], exclude_prefixes: [] }
+    expect(keyInExportSet(ds, 'web.lp_cars2.hero.title')).toBe(true)
+    expect(keyInExportSet(ds, 'web.lp_farm.reviews.item_1.text')).toBe(true)
+    expect(keyInExportSet(ds, 'web.lp_dino.hero.title')).toBe(true)
+    expect(keyInExportSet(ds, 'web.amayakids.home.hero.title')).toBe(false)
+  })
 })

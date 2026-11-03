@@ -10,6 +10,7 @@
     "typecheck": "vue-tsc --noEmit"
   },
   "dependencies": {
+    "@amaya/landing-kit": "workspace:*",
     "@amaya/locales": "workspace:*",
     "@amaya/tokens": "workspace:*",
     "@amaya/ui": "workspace:*",

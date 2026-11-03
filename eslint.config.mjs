@@ -1,7 +1,15 @@
-// Линтер дизайн-системы и Storybook (packages/tokens, ui, icons, locales, apps/storybook) — тот же стиль, что у сервиса.
-// У apps/central-hub свой конфиг (@nuxt/eslint). Остальные правила дизайн-системы (hex, классы без ds:, <img>)
-// появятся вместе с линтером дизайн-системы
+// Линтер дизайн-системы и Storybook (packages/*, apps/storybook, apps/inapp-preview) — тот же стиль, что у сервиса.
+// У Nuxt-приложений свой конфиг (@nuxt/eslint): apps/central-hub — свой, apps/landings — те же правила
+// дизайн-системы из tools/eslint/rules.mjs. Правила: без текста в шаблоне, классы ds:, без hex и px, <img> → DsImage
 import { createConfigForNuxt } from '@nuxt/eslint-config/flat'
+import { designSystemRules, screenRules } from './tools/eslint/rules.mjs'
+
+// Что уходит в продукты (InApp, Pages Hub): компоненты, шаблоны пейволлов, блоки лендингов, папки экранов.
+// Истории и демо-данные Storybook — инструменты, им можно
+const PRODUCT = ['packages/ui/src/**/*.{ts,vue}', 'packages/paywall-kit/src/**/*.{ts,vue}', 'packages/landing-kit/src/**/*.{ts,vue}', 'apps/inapp-preview/src/variants/**/*.{ts,vue}']
+const TOOLING = ['**/*.stories.ts', 'packages/ui/src/stories/**']
+// Блоки и экраны — только из компонентов; сами компоненты (DsImage, DsVideo, DsRive) теги и реализуют
+const SCREENS = ['packages/paywall-kit/src/**/*.vue', 'packages/landing-kit/src/**/*.vue', 'apps/inapp-preview/src/variants/**/*.vue']
 
 // Компоненты потом встраивают в InApp, а там Vue 3.3: возможности новее нельзя
 const VUE_33 = 'В InApp Vue 3.3 — этого там нет'
@@ -16,10 +24,18 @@ export default createConfigForNuxt({
     }
   }
 }).append({
-  ignores: ['apps/central-hub/**', '**/dist/**', '**/storybook-static/**', '**/.turbo/**']
+  // У Nuxt-приложений свой конфиг (@nuxt/eslint)
+  ignores: ['apps/central-hub/**', 'apps/landings/**', '**/dist/**', '**/storybook-static/**', '**/.turbo/**']
 }, {
-  // Всё, что потом переносят в InApp: компоненты, шаблоны пейволлов и папки экранов
-  files: ['packages/ui/src/**/*.{ts,vue}', 'packages/paywall-kit/src/**/*.{ts,vue}', 'apps/inapp-preview/src/variants/**/*.{ts,vue}'],
+  files: PRODUCT,
+  ignores: TOOLING,
+  ...designSystemRules
+}, {
+  files: SCREENS,
+  ...screenRules
+}, {
+  // Всё, что потом переносят в InApp и Pages Hub: компоненты, шаблоны пейволлов, блоки лендингов и папки экранов
+  files: PRODUCT,
   rules: {
     'no-restricted-imports': ['error', {
       paths: [{ name: 'vue', importNames: ['useTemplateRef', 'useId', 'onWatcherCleanup', 'useModel', 'useHost', 'useShadowRoot'], message: `${VUE_33} (Vue 3.4–3.5)` }]

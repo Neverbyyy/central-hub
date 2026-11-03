@@ -9,8 +9,8 @@ const meta = {
   component: DsButton,
   args: { variant: 'primary', size: 'md', block: false, loading: false, disabled: false, shine: false },
   argTypes: {
-    variant: { control: 'inline-radio', options: ['primary', 'secondary'] },
-    size: { control: 'inline-radio', options: ['md', 'sm'] }
+    variant: { control: 'inline-radio', options: ['primary', 'secondary', 'lp'] },
+    size: { control: 'inline-radio', options: ['md', 'sm', 'lg'] }
   }
 } satisfies Meta<typeof DsButton>
 
@@ -47,6 +47,22 @@ export const States: StoryObj = {
         <DsButton variant="secondary" size="sm" data-testid="secondary-sm">{{ t('common.button.unlock_for', { price: '$5.99' }) }}</DsButton>
         <DsButton block loading :loading-label="t('ds.spinner.aria.label')" data-testid="loading">{{ t('common.button.continue.default') }}</DsButton>
         <DsButton block disabled data-testid="disabled">{{ t('common.button.continue.default') }}</DsButton>
+      </div>
+    `
+  })
+}
+
+// Кнопка лендинга: на первом экране (md, 60) и ниже по странице (lg, 64); в Cars 2 — зелёный градиент, буквы градиентом
+export const Landing: StoryObj = {
+  name: 'Лендинг',
+  render: () => ({
+    components: { DsButton },
+    setup: () => useStoryTexts(),
+    template: `
+      <div class="ds:space-y-6 ds:p-6">
+        <DsButton variant="lp" data-testid="lp">{{ t('common.button.play_free') }}</DsButton>
+        <div><DsButton variant="lp" size="lg" data-testid="lp-lg">{{ t('common.button.play_free') }}</DsButton></div>
+        <div><DsButton variant="lp" size="lg" loading :loading-label="t('ds.spinner.aria.label')">{{ t('common.button.play_free') }}</DsButton></div>
       </div>
     `
   })

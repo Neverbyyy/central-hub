@@ -270,6 +270,69 @@
       "icon": {
         "$value": "{color.white}"
       }
+    },
+    "lp": {
+      "$description": "Лендинг (landing-kit): у base — палитра Amaya Plus, у игры — из её макета лендинга",
+      "page": {
+        "$value": "{color.amaya.sky-50}",
+        "$description": "Фон страницы вокруг колонки лендинга на широком экране"
+      },
+      "surface": {
+        "$value": "{color.white}",
+        "$description": "Фон колонки лендинга"
+      },
+      "section": {
+        "$value": "{color.amaya.sky}",
+        "$description": "Цветные секции: шапка, «капля» первого экрана, фон блока отзывов"
+      },
+      "footer": {
+        "$value": "{color.amaya.sky}"
+      },
+      "text": {
+        "$value": "{color.amaya.ink-900}",
+        "$description": "Текст на белом: преимущества, отзывы, FAQ"
+      },
+      "on-section": {
+        "$value": "{color.white}",
+        "$description": "Текст на цветной секции и в футере"
+      },
+      "deep": {
+        "$value": "{color.amaya.ink-700}",
+        "$description": "Строка «есть в App Store и Google Play» на первом экране"
+      },
+      "adv-1": {
+        "$value": "{color.amaya.orange}",
+        "$description": "Первая плашка-преимущество на первом экране"
+      },
+      "adv-2": {
+        "$value": "{color.amaya.green}",
+        "$description": "Вторая плашка-преимущество"
+      },
+      "star": {
+        "$value": "{color.amaya.orange}",
+        "$description": "Звёзды рейтинга (DsRating)"
+      },
+      "quote": {
+        "$value": "{color.amaya.orange}",
+        "$description": "Кавычка в карточке отзыва"
+      },
+      "line": {
+        "$value": "{color.amaya.line}",
+        "$description": "Рамка карточки вопроса FAQ"
+      },
+      "video-line": {
+        "$value": "{color.transparent}",
+        "$description": "Рамка видео 1 px поверх картинки"
+      }
+    },
+    "video": {
+      "$description": "Кнопка «▶» на постере видео (DsVideo)",
+      "play-bg": {
+        "$value": "{color.black-60}"
+      },
+      "play-icon": {
+        "$value": "{color.white}"
+      }
     }
   },
   "surface": {
@@ -291,6 +354,18 @@
     "info": {
       "$value": "{color.amaya.sky}",
       "$description": "Заливка круглой кнопки со значком (DsIconButton)"
+    },
+    "cta-lp": {
+      "$value": "{color.amaya.orange}",
+      "$description": "Кнопка лендинга (DsButton variant=lp)"
+    },
+    "cta-lp-text": {
+      "$value": "{color.white}",
+      "$description": "Буквы кнопки лендинга: цвет или градиент"
+    },
+    "lp-card": {
+      "$value": "{color.white}",
+      "$description": "Карточка отзыва на лендинге"
     }
   },
   "shadow": {
@@ -303,6 +378,22 @@
     },
     "info": {
       "$value": "{shadow.none}"
+    },
+    "cta-lp": {
+      "$value": "{shadow.none}",
+      "$description": "Кнопка лендинга: тени и рамка"
+    },
+    "cta-lp-text": {
+      "$value": "{shadow.none}",
+      "$description": "Тень букв кнопки лендинга (drop-shadow: одна тень)"
+    },
+    "lp-card": {
+      "$value": "{shadow.none}",
+      "$description": "Карточка отзыва: рамка и тени"
+    },
+    "lp-video": {
+      "$value": "{shadow.none}",
+      "$description": "Видео на лендинге: рамка и тени"
     }
   },
   "font": {
@@ -323,6 +414,10 @@
     "link": {
       "$value": "{font.open-sans}",
       "$description": "Документы внизу и ссылки"
+    },
+    "lp-body": {
+      "$value": "{font.open-sans}",
+      "$description": "Лендинг: отзывы, ответы FAQ, футер — у Cars 2 тоже Open Sans, хотя текст пейволла у неё Nunito"
     }
   },
   "case": {

@@ -4,6 +4,7 @@
     "$type": "dimension",
     "display-lg": { "size": { "$value": 28 }, "line-height": { "$value": 32 } },
     "display-md": { "size": { "$value": 20 }, "line-height": { "$value": 24 } },
+    "title-xl": { "size": { "$value": 20 }, "line-height": { "$value": 24 } },
     "title-lg": { "size": { "$value": 20 }, "line-height": { "$value": 24 } },
     "body-lg": { "size": { "$value": 18 }, "line-height": { "$value": 24 } },
     "body": { "size": { "$value": 16 }, "line-height": { "$value": 20 } },

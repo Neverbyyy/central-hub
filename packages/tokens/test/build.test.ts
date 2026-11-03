@@ -50,7 +50,7 @@ describe('токены дизайн-системы', () => {
     expect(cssValue('text.body.weight', { value: 700, type: 'fontWeight' })).toBe('700')
   })
 
-  it('@theme: стандартная палитра и тени выключены, ссылки разрешены до значений, брейкпоинты 844 и 1024', () => {
+  it('@theme: стандартная палитра и тени выключены, ссылки разрешены до значений, брейкпоинты 844 и iPad (844 × 600)', () => {
     const { theme } = build()
     expect(theme).toContain('--color-*: initial;')
     expect(theme).toContain('--shadow-*: initial;')
@@ -79,7 +79,7 @@ describe('токены дизайн-системы', () => {
     const { overrides } = build()
     expect(overrides).toContain('@media (min-width: 844px) {\n  :root, :host {\n    --ds-text-title-lg: 20px;\n  }\n}')
     // Размеры iPad — только на широком и высоком экране
-    expect(overrides).toContain('@media (min-width: 1024px) and (min-height: 600px) {\n  :root, :host {\n    --ds-text-title-lg: 32px;\n  }\n}')
+    expect(overrides).toContain('@media (min-width: 844px) and (min-height: 600px) {\n  :root, :host {\n    --ds-text-title-lg: 32px;\n  }\n}')
   })
 
   it('размеры темы: своя лесенка на корне экрана — small всегда, дальше изменения; medium берёт свой small, а не base', () => {
@@ -94,7 +94,7 @@ describe('токены дизайн-системы', () => {
     })
     // На small тема пишет все свои токены — иначе на 844 просочится base/medium с :root
     expect(overrides).toContain('[data-ds-theme=\'cars2\'] {\n  --ds-text-title-lg: 26px;\n  --ds-text-title-lg--font-weight: 900;\n  --ds-radius-plan: 12px;\n}')
-    expect(overrides).toContain('@media (min-width: 1024px) and (min-height: 600px) {\n  [data-ds-theme=\'cars2\'] {\n    --ds-text-title-lg: 40px;\n  }\n}')
+    expect(overrides).toContain('@media (min-width: 844px) and (min-height: 600px) {\n  [data-ds-theme=\'cars2\'] {\n    --ds-text-title-lg: 40px;\n  }\n}')
     // Чего тема не задала (line-height), остаётся лесенкой base
     expect(overrides).not.toMatch(/cars2[^}]*--ds-text-title-lg--line-height/)
     const size = list.tokens.find(t => t.name === 'text.title-lg.size')!.values as Record<string, Record<string, string>>

@@ -121,6 +121,42 @@
       "edge": {
         "$value": "{color.cars2.popup-line}"
       }
+    },
+    "lp": {
+      "$description": "Лендинг Cars 2 (Figma 38:57)",
+      "page": {
+        "$value": "{color.cars2.lp-page}"
+      },
+      "section": {
+        "$value": "{color.cars2.lp-sky}"
+      },
+      "footer": {
+        "$value": "{color.cars2.lp-sky-light}"
+      },
+      "text": {
+        "$value": "{color.cars2.lp-ink}"
+      },
+      "deep": {
+        "$value": "{color.cars2.lp-deep}"
+      },
+      "adv-1": {
+        "$value": "{color.cars2.lp-purple}"
+      },
+      "adv-2": {
+        "$value": "{color.cars2.lp-orange}"
+      },
+      "star": {
+        "$value": "{color.cars2.lp-star}"
+      },
+      "quote": {
+        "$value": "{color.cars2.lp-quote}"
+      },
+      "line": {
+        "$value": "{color.cars2.lp-card-line}"
+      },
+      "video-line": {
+        "$value": "{color.cars2.lp-video-line}"
+      }
     }
   },
   "surface": {
@@ -138,6 +174,15 @@
     },
     "info": {
       "$value": "{gradient.cars2.info}"
+    },
+    "cta-lp": {
+      "$value": "{gradient.cars2.lp-cta}"
+    },
+    "cta-lp-text": {
+      "$value": "{gradient.cars2.lp-cta-text}"
+    },
+    "lp-card": {
+      "$value": "{gradient.cars2.lp-card}"
     }
   },
   "shadow": {
@@ -149,6 +194,18 @@
     },
     "info": {
       "$value": "{shadow.cars2.info-button}"
+    },
+    "cta-lp": {
+      "$value": "{shadow.cars2.lp-cta}"
+    },
+    "cta-lp-text": {
+      "$value": "{shadow.cars2.lp-cta-text}"
+    },
+    "lp-card": {
+      "$value": "{shadow.cars2.lp-card}"
+    },
+    "lp-video": {
+      "$value": "{shadow.cars2.lp-video}"
     }
   },
   "font": {

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useTapGuard } from '../src/composables/useTapGuard'
-import { imageSet, imageSources, srcset } from '../src/image'
+import { imageSet, imageSetFromFiles, imageSources, srcset } from '../src/image'
 
 describe('картинки по конвенции', () => {
   it('imageSet: 12 адресов — small/medium/large × 1x/2x × png/webp', () => {
@@ -19,8 +19,8 @@ describe('картинки по конвенции', () => {
   it('источники <picture>: сначала large, потом medium, у каждого webp раньше png; small png — у <img>', () => {
     const sources = imageSources(imageSet('/a'))
     expect(sources.map(s => `${s.key} ${s.media ?? '—'}`)).toEqual([
-      'large-webp (min-width: 1024px) and (min-height: 600px)',
-      'large-png (min-width: 1024px) and (min-height: 600px)',
+      'large-webp (min-width: 844px) and (min-height: 600px)',
+      'large-png (min-width: 844px) and (min-height: 600px)',
       'medium-webp (min-width: 844px)',
       'medium-png (min-width: 844px)',
       'small-webp —'
@@ -29,6 +29,25 @@ describe('картинки по конвенции', () => {
 
   it('набор только из small — один источник webp', () => {
     expect(imageSources({ small: { webp: '/a.webp', png: '/a.png' } }).map(s => s.key)).toEqual(['small-webp'])
+  })
+
+  it('wide (лендинг, от 640 px): берётся из файлов -wide и идёт перед small', () => {
+    const files = {
+      './art/hero-small.webp': 's.webp',
+      './art/hero-small@2x.webp': 's2.webp',
+      './art/hero-small.png': 's.png',
+      './art/hero-wide.webp': 'w.webp',
+      './art/hero-wide@2x.webp': 'w2.webp'
+    }
+    const set = imageSetFromFiles(files, './art/hero')
+    expect(set.wide).toEqual({ webp: 'w.webp', webp2x: 'w2.webp' })
+    expect(set.medium).toBeUndefined()
+    expect(imageSources(set).map(s => `${s.key} ${s.media ?? '—'} ${s.srcset}`)).toEqual([
+      'wide-webp (min-width: 640px) w.webp 1x, w2.webp 2x',
+      'small-webp — s.webp 1x, s2.webp 2x'
+    ])
+    // Без файлов -wide набора wide нет — у пейволлов всё как раньше
+    expect('wide' in imageSetFromFiles({ './a-small.png': 'a.png' }, './a')).toBe(false)
   })
 })
 

@@ -11,6 +11,9 @@
       "persistent": true
     },
     "lint": {},
+    "@amaya/ui#lint": {
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/packages/paywall-kit/src/**", "$TURBO_ROOT$/packages/landing-kit/src/**"]
+    },
     "typecheck": {
       "dependsOn": ["^build"]
     }

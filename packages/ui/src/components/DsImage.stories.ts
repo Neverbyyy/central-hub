@@ -19,7 +19,7 @@ export const Convention: StoryObj = {
     template: `
       <div class="ds:p-6" style="max-width: 480px">
         <DsImage :set="set" alt="" ratio="3 / 2" data-testid="image" />
-        <p class="sb-note">small до 844 px, medium от 844, large от 1024 при высоте от 600; webp, где понимает браузер; @2x на плотных экранах.</p>
+        <p class="sb-note">small до 844 px, medium от 844, large — iPad: от 844 при высоте от 600; webp, где понимает браузер; @2x на плотных экранах.</p>
       </div>
     `
   })

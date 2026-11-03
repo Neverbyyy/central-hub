@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createStubEnv } from '../src/stub'
 import { resolveSegment } from '../src/config'
-import { createUniwebviewEnv, fromInAppData } from '../src/uniwebview'
+import { createUniwebviewEnv, fromInAppData, toInAppData } from '../src/uniwebview'
 
 // Вебвью без браузера: окружению InApp нужны только window.addEventListener и window.eventFn
 beforeEach(() => {
@@ -32,6 +32,22 @@ describe('fromInAppData', () => {
 
   it('без языка — английский, без покупок — пусто', () => {
     expect(fromInAppData({})).toEqual({ locale: 'en', variant: undefined, wasTrial: false, owned: [], products: [] })
+  })
+})
+
+describe('toInAppData', () => {
+  it('туда и обратно — те же данные: подписки в ActiveSubscriptions, наборы в NonConsumable', () => {
+    const data = {
+      locale: 'ru',
+      variant: 'ios_as_farm_ds1_varb_ut1_pw_switch_v1',
+      wasTrial: true,
+      owned: ['com.amayasoft.cars2.weekly.trial3', 'com.amayasoft.cars2.zoo'],
+      products: [{ id: 'com.amayasoft.farm.yearly.trial3.4999', price: '49,99 €' }, { id: 'gone', price: null }]
+    }
+    const raw = toInAppData(data)
+    expect(raw.purchases?.ActiveSubscriptions).toEqual([{ Product: { ProductId: 'com.amayasoft.cars2.weekly.trial3' } }])
+    expect(raw.purchases?.NonConsumable).toEqual([{ Product: { ProductId: 'com.amayasoft.cars2.zoo' } }])
+    expect(fromInAppData(JSON.parse(JSON.stringify(raw)))).toEqual(data)
   })
 })
 

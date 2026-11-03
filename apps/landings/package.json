@@ -1,0 +1,30 @@
+{
+  "name": "@amaya/landings",
+  "private": true,
+  "type": "module",
+  "description": "Лендинги на Nuxt: одно приложение, лендинги по путям (/cars2, /cars2/ru). Собирается заранее — статичный HTML",
+  "scripts": {
+    "dev": "nuxt dev --port 3020",
+    "build": "nuxt build",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview --port 3021",
+    "postinstall": "nuxt prepare",
+    "lint": "eslint .",
+    "typecheck": "nuxt typecheck"
+  },
+  "dependencies": {
+    "@amaya/landing-kit": "workspace:*",
+    "@amaya/locales": "workspace:*",
+    "@amaya/nuxt": "workspace:*",
+    "@amaya/ui": "workspace:*",
+    "nuxt": "^4.4.2",
+    "vue": "^3.5.33",
+    "vue-i18n": "^11.4.16"
+  },
+  "devDependencies": {
+    "@nuxt/eslint": "^1.15.2",
+    "eslint": "^10.2.1",
+    "typescript": "^6.0.3",
+    "vue-tsc": "^3.2.7"
+  }
+}

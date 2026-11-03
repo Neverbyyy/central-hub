@@ -191,6 +191,18 @@ export interface HeroArt {
   appIcons: DsImageSet[]
   // Попап тарифов: фон и украшения
   popup: { bg: DsImageSet, top: DsImageSet, left: DsImageSet, right: DsImageSet, balloon: DsImageSet, key: DsImageSet }
+  // Живая лицевая сторона: Rive поверх front (front остаётся постером: экран «готов» без анимации) и слой поверх
+  // анимации — то, чего в ней нет (плитки-иконки у animation-paywall-cars.riv, артборд paywall-without-icons)
+  live?: HeroLive
+}
+
+export interface HeroLive {
+  // Адрес .riv: import animation from './art/animation.riv?url'
+  src: string
+  artboard?: string
+  stateMachine?: string
+  // Прозрачная картинка поверх анимации
+  overlay?: DsImageSet
 }
 
 export interface HeroSliderConfig {

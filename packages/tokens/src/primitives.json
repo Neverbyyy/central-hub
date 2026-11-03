@@ -8,6 +8,10 @@
     "black": {
       "$value": "#000000"
     },
+    "black-60": {
+      "$value": "#00000099",
+      "$description": "Подложка кнопки «▶» на постере видео"
+    },
     "transparent": {
       "$value": "transparent"
     },
@@ -187,6 +191,50 @@
       "popup-line": {
         "$value": "#62C0FF",
         "$description": "Голубая кромка попапа тарифов под белой линией"
+      },
+      "lp-sky": {
+        "$value": "#05B8F6",
+        "$description": "Лендинг Cars 2: шапка, «капля» первого экрана, фон блока отзывов"
+      },
+      "lp-sky-light": {
+        "$value": "#33CBFF",
+        "$description": "Лендинг Cars 2: футер"
+      },
+      "lp-ink": {
+        "$value": "#3C4267",
+        "$description": "Лендинг Cars 2: текст на белом — преимущества, отзывы"
+      },
+      "lp-deep": {
+        "$value": "#005471",
+        "$description": "Лендинг Cars 2: строка «есть в App Store и Google Play» на голубом"
+      },
+      "lp-purple": {
+        "$value": "#CC00FF",
+        "$description": "Лендинг Cars 2: фиолетовая плашка-преимущество на первом экране"
+      },
+      "lp-orange": {
+        "$value": "#FF8800",
+        "$description": "Лендинг Cars 2: оранжевая плашка-преимущество на первом экране"
+      },
+      "lp-card-line": {
+        "$value": "#00819A",
+        "$description": "Лендинг Cars 2: рамка карточки отзыва"
+      },
+      "lp-star": {
+        "$value": "#FFB727",
+        "$description": "Лендинг Cars 2: звёзды рейтинга (цвет из картинки звезды в макете — переменной у неё нет)"
+      },
+      "lp-quote": {
+        "$value": "#F47E12",
+        "$description": "Лендинг Cars 2: кавычка в карточке отзыва (цвет из картинки в макете)"
+      },
+      "lp-page": {
+        "$value": "#9BE5FF",
+        "$description": "Лендинг Cars 2: фон страницы вокруг белой колонки на широком экране (фон кадра в макете)"
+      },
+      "lp-video-line": {
+        "$value": "#015B7C",
+        "$description": "Лендинг Cars 2: рамка видео 1 px (в макете — градиент #015B7C → #00365D внизу)"
       }
     }
   },
@@ -213,6 +261,18 @@
       "info-card": {
         "$value": "linear-gradient(180deg, #FFFFFF 69%, #E7EFF2 100%)",
         "$description": "Карточки на обороте главной карточки (без стиля)"
+      },
+      "lp-cta": {
+        "$value": "linear-gradient(0deg, #079D27 0%, #00A846 12%, #14EF6F 100%)",
+        "$description": "Лендинг Cars 2: заливка кнопки «Play for free!» (.PW buttons)"
+      },
+      "lp-cta-text": {
+        "$value": "linear-gradient(180deg, #FFFFFF 0%, #C3FFDC 100%)",
+        "$description": "Лендинг Cars 2: градиент букв на кнопке"
+      },
+      "lp-card": {
+        "$value": "linear-gradient(180deg, #FFFFFF 0%, #D2F8FF 100%)",
+        "$description": "Лендинг Cars 2: карточка отзыва"
       }
     }
   },
@@ -234,6 +294,22 @@
       "info-button": {
         "$value": "0 2px 2px 0 #00000026",
         "$description": "Тень кнопки «i»"
+      },
+      "lp-cta": {
+        "$value": "0 0 0 1px #017C2E, 0 44px 50px 0 #00000033, 0 34px 25px -11px #00000040, 0 19px 14px -5px #00000040, 0 2px 1px 0 #00000066",
+        "$description": "Лендинг Cars 2: кнопка — тёмно-зелёная рамка 1 px снаружи и четыре тени из макета"
+      },
+      "lp-cta-text": {
+        "$value": "0 2px 1px #00000033",
+        "$description": "Лендинг Cars 2: тень букв на кнопке (drop-shadow — буквы залиты градиентом)"
+      },
+      "lp-card": {
+        "$value": "inset 0 0 0 1px #00819A, 0 44px 50px 0 #0000000D, 0 34px 30px -11px #00000017, 0 19px 14px -5px #0000001A, 0 2px 1px 0 #00000054",
+        "$description": "Лендинг Cars 2: карточка отзыва — рамка 1 px внутри и мягкие тени"
+      },
+      "lp-video": {
+        "$value": "0 44px 50px 0 #00000033, 0 34px 25px -11px #00000040, 0 19px 14px -5px #00000040, 0 2px 1px 0 #00000066",
+        "$description": "Лендинг Cars 2: тени видео (рамка — color.lp.video-line поверх картинки)"
       }
     }
   },

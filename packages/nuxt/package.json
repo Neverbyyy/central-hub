@@ -1,0 +1,37 @@
+{
+  "name": "@amaya/nuxt",
+  "private": true,
+  "type": "module",
+  "description": "Nuxt-модуль дизайн-системы: подключить всё одной строкой — пресет Tailwind, шрифты, компоненты Ds* и Lk*, тексты из сервиса, Rive",
+  "exports": {
+    ".": "./src/module.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "@amaya/landing-kit": "workspace:*",
+    "@amaya/locales": "workspace:*",
+    "@amaya/tokens": "workspace:*",
+    "@amaya/ui": "workspace:*",
+    "@fontsource-variable/nunito": "^5.2.0",
+    "@nuxt/kit": "^4.4.2",
+    "@rive-app/webgl2": "2.39.2",
+    "@tailwindcss/vite": "^4.3.3",
+    "tailwindcss": "^4.3.3",
+    "vue-i18n": "^11.4.16"
+  },
+  "peerDependencies": {
+    "nuxt": "^4.4.2",
+    "vue": "^3.3.4"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "nuxt": "^4.4.2",
+    "typescript": "^6.0.3",
+    "vite": "^7.3.2",
+    "vue": "^3.5.33",
+    "vue-tsc": "^3.2.7"
+  }
+}

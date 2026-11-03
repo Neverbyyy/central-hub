@@ -1,5 +1,5 @@
 {
-  "$description": "Размеры base на большом экране: от 1024 px, iPad 1024×768 и десктоп. Только отличия от small. Из макетов Farm.",
+  "$description": "Размеры base на большом экране: от 844 px в ширину и 600 px в высоту — iPad 1024×768, планшеты, десктоп. Только отличия от small. Из макетов Farm.",
   "text": {
     "$type": "dimension",
     "display-lg": {
@@ -11,6 +11,14 @@
       }
     },
     "display-md": {
+      "size": {
+        "$value": 32
+      },
+      "line-height": {
+        "$value": 36
+      }
+    },
+    "title-xl": {
       "size": {
         "$value": 32
       },

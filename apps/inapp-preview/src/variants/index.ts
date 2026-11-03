@@ -33,6 +33,13 @@ export const screens: ScreenEntry[] = [
     match: /^ios_as_farm_ds1_.*pw_trio_v1$/,
     load: () => import('./ios/as/farm/ds1/pw-trio/index.vue'),
     presets: () => import('./ios/as/farm/ds1/pw-trio/presets')
+  },
+  {
+    id: 'ios_as_farm_ds1_varb_ut1_onboarding_v1',
+    title: 'Farm — онбординг B',
+    match: /^ios_as_farm_ds1_.*onboarding_v1$/,
+    load: () => import('./ios/as/farm/ds1/onboarding/index.vue'),
+    presets: () => import('./ios/as/farm/ds1/onboarding/presets')
   }
 ]
 

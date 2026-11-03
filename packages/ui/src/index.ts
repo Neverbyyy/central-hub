@@ -33,10 +33,14 @@ export { default as DsDots } from './components/DsDots.vue'
 export { default as DsCarousel } from './components/DsCarousel.vue'
 // Анимации
 export { default as DsRive } from './components/DsRive.vue'
+// Лендинг
+export { default as DsAccordion } from './components/DsAccordion.vue'
+export { default as DsRating } from './components/DsRating.vue'
+export { default as DsVideo } from './components/DsVideo.vue'
 
 export { DS_THEMES, type DsTheme } from './themes'
 export { imageSet, imageSetFromFiles, imageSources, srcset, IMAGE_MEDIA, type DsImageSet, type DsImageVariant } from './image'
 export { useTapGuard, TAP_COOLDOWN_MS } from './composables/useTapGuard'
 export { usePressed } from './composables/usePressed'
 export { configureRive, loadRive, type RiveInstance, type RiveOptions, type RiveRuntime } from './rive'
-export { DS_TEXT_TONES, DS_TEXT_VARIANTS, type DsPlan, type DsStore, type DsStoreBadge, type DsTextTone, type DsTextVariant } from './types'
+export { DS_TEXT_TONES, DS_TEXT_VARIANTS, type DsAccordionItem, type DsPlan, type DsStore, type DsStoreBadge, type DsTextTone, type DsTextVariant } from './types'

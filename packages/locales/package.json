@@ -4,8 +4,10 @@
   "type": "module",
   "description": "Тексты набора выгрузки ds из сервиса локализации: файлы кладёт pnpm l10n pull",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./lazy": "./src/lazy.ts"
   },
+  "sideEffects": false,
   "scripts": {
     "lint": "eslint ."
   },
