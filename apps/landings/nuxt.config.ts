@@ -36,7 +36,8 @@ export default defineNuxtConfig({
   nitro: {
     prerender: {
       crawlLinks: false,
-      routes: landings.flatMap(landing => [`/${landing}`, ...languages.filter(lang => lang !== 'en').map(lang => `/${landing}/${lang}`)])
+      // / — оглавление стенда: лендинги и кнопки языков
+      routes: ['/', ...landings.flatMap(landing => [`/${landing}`, ...languages.filter(lang => lang !== 'en').map(lang => `/${landing}/${lang}`)])]
     }
   },
 

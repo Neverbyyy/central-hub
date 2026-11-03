@@ -65,6 +65,19 @@ onMounted(async () => {
           class="w-full h-full sm:w-xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 dark:shadow-black/40 hover:bg-elevated hover:ring-accented dark:hover:bg-gray-700/60 dark:hover:ring-gray-600 rounded-xl"
         />
       </NuxtLink>
+
+      <!-- Стенд лендингов: оглавление — все лендинги и кнопка на каждый язык (apps/landings) -->
+      <NuxtLink
+        to="https://landings-six-henna.vercel.app"
+        target="_blank"
+        external
+      >
+        <UCard
+          title="Лендинги"
+          description="Лендинги игр на дизайн-системе: каждый на 9 языках."
+          class="w-full h-full sm:w-xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 dark:shadow-black/40 hover:bg-elevated hover:ring-accented dark:hover:bg-gray-700/60 dark:hover:ring-gray-600 rounded-xl"
+        />
+      </NuxtLink>
     </div>
 
     <h2 class="font-bold">

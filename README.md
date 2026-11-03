@@ -586,7 +586,9 @@ configureRive({ wasmUrl: wasm, wasmFallbackUrl: wasmFallback })
   и preload Nunito первого экрана, компоненты `Ds*` и `Lk*` без импортов, vue-i18n, wasm Rive со своего адреса.
   Тексты — только языка страницы: `await useLocale(lang)` берёт отдельный чанк из `@amaya/locales/lazy`.
   Подсказки `prefetch` Nuxt на картинки, wasm, `.riv` и ролик модуль снимает — они грузятся по требованию.
-- `apps/landings` (Nuxt 4): `/cars2` — английский, `/cars2/<язык>` — остальные 8; страницы собираются заранее
+- `apps/landings` (Nuxt 4), стенд — https://landings-six-henna.vercel.app. `/` — оглавление: все лендинги с кнопкой
+  на каждый язык (служебная страница, без правил дизайн-системы). `/cars2` — английский, `/cars2/<язык>` —
+  остальные 8; страницы собираются заранее
   (prerender: лендинги — папки `app/landings/<путь>`, языки — файлы `packages/locales/src`). Закрыты от индексации:
   meta robots, заголовок `X-Robots-Tag`, `robots.txt`. Арт лендинга — в его папке (`app/landings/cars2/art`):
   картинки по конвенции, ролик геймплея и значки сторов — копии из Pages Hub. Rive на первом экране у Cars 2 нет
@@ -671,8 +673,8 @@ Vercel: Root Directory — `apps/central-hub`, переменные окруже
 Это статика: корень `/` — эмулятор с панелью, ссылка вида `/?variant=ios_as_farm_ds1_varb_ut1_pw_switch_v1&preset=default`
 — экран для телефона. Собранный эмулятор проходит `scenarios --url <адрес>` так же, как dev.
 
-**Ссылки в сервисе** — карточки «Дизайн-система» (https://amaya-storybook.vercel.app) и «Эмулятор InApp»
-(https://inapp-preview.vercel.app) на главной (`app/pages/index.vue`) и пункты Ctrl+K — адреса прямо в коде,
+**Ссылки в сервисе** — карточки «Дизайн-система» (https://amaya-storybook.vercel.app), «Эмулятор InApp»
+(https://inapp-preview.vercel.app) и «Лендинги» (https://landings-six-henna.vercel.app) на главной (`app/pages/index.vue`) и пункты Ctrl+K — адреса прямо в коде,
 как у остальных карточек.
 
 **Лендинги** (`apps/landings`) — третий проект Vercel: Root Directory `apps/landings`, Framework Preset — Nuxt.js,
