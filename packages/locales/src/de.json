@@ -258,6 +258,66 @@
           "text": "Alle Arten von Fahrzeugen an einem Ort, und das aus gutem Grund! Lustige Spiele, und man kann sogar ohne Internet spielen – auf langen Reisen super praktisch."
         }
       }
+    },
+    "lp_farm": {
+      "faq": {
+        "item_1": {
+          "answer": "Für die Kleinsten ab 1 Jahr: große, bunte Bilder, einfaches Tippen und bekannte Tierlaute.",
+          "question": "Für welches Alter ist es?"
+        },
+        "item_2": {
+          "answer": "Die Namen und Laute der Tiere und wo sie leben: auf dem Bauernhof, im Wald und im Dschungel.",
+          "question": "Was lernt mein Kind?"
+        },
+        "item_3": {
+          "answer": "Ja. Nach dem Herunterladen funktioniert das Spiel offline – praktisch auf Reisen.",
+          "question": "Kann man ohne Internet spielen?"
+        },
+        "item_4": {
+          "answer": "Ja. Das Spiel ist kidSAFE-zertifiziert, und wir geben Ihre Daten niemals weiter.",
+          "question": "Ist es sicher für mein Kind?"
+        },
+        "item_5": {
+          "answer": "Auf iPhone und iPad über den App Store und auf Android-Smartphones und -Tablets über Google Play.",
+          "question": "Auf welchen Geräten läuft es?"
+        },
+        "title": "Fragen und Antworten"
+      },
+      "footer": {
+        "copyright": "© {year}, Amaya Kids"
+      },
+      "header": {
+        "logo": "Amaya Kids"
+      },
+      "hero": {
+        "adv_1": "Echte Tierlaute",
+        "adv_2": "Für Kinder ab 1 Jahr",
+        "stores_note": "Im App Store und bei Google Play",
+        "text": "Lerne Bauernhof- und Dschungeltiere in Kids First Animals kennen!",
+        "title": "Hallo, Tiere!"
+      },
+      "meta": {
+        "description": "Tiere vom Bauernhof, aus Wald und Dschungel mit echten Lauten für Kinder ab 1 Jahr. Im App Store und bei Google Play.",
+        "title": "Kids First Animals – mit Tieren spielen · Amaya Kids"
+      },
+      "reviews": {
+        "item_1": {
+          "author": "Dr.gil",
+          "text": "Ich liebe dieses Bauernhofspiel für die Kleinen! Die Grafik ist bezaubernd und die Steuerung ganz einfach. Eine tolle Art, Kindern das Leben auf dem Bauernhof zu zeigen. Sehr zu empfehlen!"
+        },
+        "item_2": {
+          "author": "theRoyalKings",
+          "text": "Meine 16 Monate alte Tochter liebt es und spielt allein, nachdem ich es ihr gezeigt habe. Eine tolle Ablenkung, wenn Langeweile aufkommt."
+        },
+        "item_3": {
+          "author": "Awledt",
+          "text": "Mein 18 Monate alter Enkel LIEBT dieses Spiel! Absolut empfehlenswert."
+        },
+        "item_4": {
+          "author": "_lilly._",
+          "text": "Mein Einjähriges liebt es! Auf jeden Fall zu empfehlen!"
+        }
+      }
     }
   }
 }

@@ -259,6 +259,66 @@
           "text": "All kinds of vehicles in one place, and for good reason! Fun games, and you can even play without the internet, which is really handy on long trips."
         }
       }
+    },
+    "lp_farm": {
+      "faq": {
+        "item_1": {
+          "answer": "For little ones from 1 year old: big bright pictures, simple taps and familiar animal sounds.",
+          "question": "What age is it for?"
+        },
+        "item_2": {
+          "answer": "The names and sounds of animals and where they live: on the farm, in the forest and in the jungle.",
+          "question": "What will my child learn?"
+        },
+        "item_3": {
+          "answer": "Yes. Once downloaded, the game works offline, which is handy on trips.",
+          "question": "Can I play without the internet?"
+        },
+        "item_4": {
+          "answer": "Yes. The game is kidSAFE certified, and we never share your information.",
+          "question": "Is it safe for my child?"
+        },
+        "item_5": {
+          "answer": "On iPhone and iPad from the App Store, and on Android phones and tablets from Google Play.",
+          "question": "Which devices does it work on?"
+        },
+        "title": "Questions and answers"
+      },
+      "footer": {
+        "copyright": "© {year}, Amaya Kids"
+      },
+      "header": {
+        "logo": "Amaya Kids"
+      },
+      "hero": {
+        "adv_1": "Real animal sounds",
+        "adv_2": "For kids from 1 year old",
+        "stores_note": "Available on the App Store and Google Play",
+        "text": "Meet farm and jungle animals in the Kids First Animals app!",
+        "title": "Hello, animals!"
+      },
+      "meta": {
+        "description": "Farm, forest and jungle animals with real sounds for kids from 1 year old. Download on the App Store and Google Play.",
+        "title": "Kids First Animals — play with animals · Amaya Kids"
+      },
+      "reviews": {
+        "item_1": {
+          "author": "Dr.gil",
+          "text": "I absolutely love this farm baby game! The graphics are adorable and the controls are easy to use. It’s a great way to introduce children to farm life. Highly recommended!"
+        },
+        "item_2": {
+          "author": "theRoyalKings",
+          "text": "My 16-month-old loves this and can play on her own after I showed her. A great distraction when they’re bored."
+        },
+        "item_3": {
+          "author": "Awledt",
+          "text": "My 18-month-old grandson LOVES this game! I highly recommend it."
+        },
+        "item_4": {
+          "author": "_lilly._",
+          "text": "My one-year-old loves it! Would definitely recommend!"
+        }
+      }
     }
   }
 }

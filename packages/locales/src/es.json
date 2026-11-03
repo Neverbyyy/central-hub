@@ -258,6 +258,66 @@
           "text": "Todo tipo de vehículos en un solo lugar, ¡y con razón! Juegos divertidos que incluso funcionan sin internet: muy útil en los viajes largos."
         }
       }
+    },
+    "lp_farm": {
+      "faq": {
+        "item_1": {
+          "answer": "Para los más pequeños desde 1 año: imágenes grandes y coloridas, toques sencillos y sonidos de animales conocidos.",
+          "question": "¿Para qué edad es?"
+        },
+        "item_2": {
+          "answer": "Los nombres y sonidos de los animales y dónde viven: en la granja, en el bosque y en la selva.",
+          "question": "¿Qué aprenderá mi hijo?"
+        },
+        "item_3": {
+          "answer": "Sí. Una vez descargado, el juego funciona sin conexión: ideal para los viajes.",
+          "question": "¿Se puede jugar sin internet?"
+        },
+        "item_4": {
+          "answer": "Sí. El juego tiene la certificación kidSAFE y nunca compartimos tus datos.",
+          "question": "¿Es seguro para mi hijo?"
+        },
+        "item_5": {
+          "answer": "En iPhone y iPad desde App Store, y en móviles y tabletas Android desde Google Play.",
+          "question": "¿En qué dispositivos funciona?"
+        },
+        "title": "Preguntas y respuestas"
+      },
+      "footer": {
+        "copyright": "© {year}, Amaya Kids"
+      },
+      "header": {
+        "logo": "Amaya Kids"
+      },
+      "hero": {
+        "adv_1": "Sonidos reales de animales",
+        "adv_2": "Para niños desde 1 año",
+        "stores_note": "Disponible en App Store y Google Play",
+        "text": "¡Conoce a los animales de la granja y la selva en Kids First Animals!",
+        "title": "¡Hola, animales!"
+      },
+      "meta": {
+        "description": "Animales de la granja, el bosque y la selva con sonidos reales para niños desde 1 año. Descárgalo en App Store y Google Play.",
+        "title": "Kids First Animals: juega con animales · Amaya Kids"
+      },
+      "reviews": {
+        "item_1": {
+          "author": "Dr.gil",
+          "text": "¡Me encanta este juego de granja para bebés! Los gráficos son adorables y los controles, muy sencillos. Es una forma estupenda de mostrar a los niños la vida en la granja. ¡Muy recomendable!"
+        },
+        "item_2": {
+          "author": "theRoyalKings",
+          "text": "A mi hija de 16 meses le encanta y juega sola después de que se lo enseñé. Una gran distracción cuando se aburren."
+        },
+        "item_3": {
+          "author": "Awledt",
+          "text": "¡A mi nieto de 18 meses le ENCANTA este juego! Lo recomiendo muchísimo."
+        },
+        "item_4": {
+          "author": "_lilly._",
+          "text": "¡A mi peque de un año le encanta! ¡Lo recomiendo sin duda!"
+        }
+      }
     }
   }
 }

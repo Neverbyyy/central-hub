@@ -258,6 +258,66 @@
           "text": "Alla sorters fordon på ett ställe, och inte utan anledning! Roliga spel, och man kan till och med spela utan internet – väldigt smidigt på långa resor."
         }
       }
+    },
+    "lp_farm": {
+      "faq": {
+        "item_1": {
+          "answer": "För de minsta från 1 år: stora färgglada bilder, enkla tryck och välbekanta djurläten.",
+          "question": "För vilken ålder?"
+        },
+        "item_2": {
+          "answer": "Djurens namn och läten och var de bor: på bondgården, i skogen och i djungeln.",
+          "question": "Vad lär sig mitt barn?"
+        },
+        "item_3": {
+          "answer": "Ja. När spelet är nedladdat fungerar det offline – smidigt på resor.",
+          "question": "Kan man spela utan internet?"
+        },
+        "item_4": {
+          "answer": "Ja. Spelet är kidSAFE-certifierat och vi delar aldrig dina uppgifter.",
+          "question": "Är det säkert för mitt barn?"
+        },
+        "item_5": {
+          "answer": "På iPhone och iPad via App Store och på Android-telefoner och surfplattor via Google Play.",
+          "question": "Vilka enheter fungerar det på?"
+        },
+        "title": "Frågor och svar"
+      },
+      "footer": {
+        "copyright": "© {year}, Amaya Kids"
+      },
+      "header": {
+        "logo": "Amaya Kids"
+      },
+      "hero": {
+        "adv_1": "Riktiga djurläten",
+        "adv_2": "För barn från 1 år",
+        "stores_note": "Finns på App Store och Google Play",
+        "text": "Möt djuren på bondgården och i djungeln i Kids First Animals!",
+        "title": "Hej, djuren!"
+      },
+      "meta": {
+        "description": "Djur från bondgården, skogen och djungeln med riktiga läten för barn från 1 år. Ladda ner i App Store och Google Play.",
+        "title": "Kids First Animals – lek med djur · Amaya Kids"
+      },
+      "reviews": {
+        "item_1": {
+          "author": "Dr.gil",
+          "text": "Jag älskar det här bondgårdsspelet för de minsta! Grafiken är bedårande och kontrollerna lätta att använda. Ett fint sätt att visa barn livet på bondgården. Rekommenderas varmt!"
+        },
+        "item_2": {
+          "author": "theRoyalKings",
+          "text": "Min 16 månader gamla dotter älskar det och spelar själv sedan jag visat henne. En perfekt distraktion när de har tråkigt."
+        },
+        "item_3": {
+          "author": "Awledt",
+          "text": "Mitt 18 månader gamla barnbarn ÄLSKAR det här spelet! Rekommenderas varmt."
+        },
+        "item_4": {
+          "author": "_lilly._",
+          "text": "Min ettåring älskar det! Rekommenderas absolut!"
+        }
+      }
     }
   }
 }

@@ -258,6 +258,66 @@
           "text": "Todo tipo de veículo em um só lugar, e com razão! Jogos divertidos, e dá até para jogar sem internet: ajuda muito em viagens longas."
         }
       }
+    },
+    "lp_farm": {
+      "faq": {
+        "item_1": {
+          "answer": "Para os pequenos a partir de 1 ano: imagens grandes e coloridas, toques simples e sons de animais conhecidos.",
+          "question": "Para qual idade é?"
+        },
+        "item_2": {
+          "answer": "Os nomes e os sons dos animais e onde eles vivem: na fazenda, na floresta e na selva.",
+          "question": "O que meu filho vai aprender?"
+        },
+        "item_3": {
+          "answer": "Sim. Depois de baixado, o jogo funciona offline: ótimo para viagens.",
+          "question": "Dá para jogar sem internet?"
+        },
+        "item_4": {
+          "answer": "Sim. O jogo tem certificação kidSAFE e nunca compartilhamos seus dados.",
+          "question": "É seguro para meu filho?"
+        },
+        "item_5": {
+          "answer": "No iPhone e no iPad pela App Store, e em celulares e tablets Android pelo Google Play.",
+          "question": "Em quais aparelhos funciona?"
+        },
+        "title": "Perguntas e respostas"
+      },
+      "footer": {
+        "copyright": "© {year}, Amaya Kids"
+      },
+      "header": {
+        "logo": "Amaya Kids"
+      },
+      "hero": {
+        "adv_1": "Sons reais de animais",
+        "adv_2": "Para crianças a partir de 1 ano",
+        "stores_note": "Na App Store e no Google Play",
+        "text": "Conheça os animais da fazenda e da selva no Kids First Animals!",
+        "title": "Olá, bichinhos!"
+      },
+      "meta": {
+        "description": "Animais da fazenda, da floresta e da selva com sons reais para crianças a partir de 1 ano. Baixe na App Store e no Google Play.",
+        "title": "Kids First Animals: brinque com animais · Amaya Kids"
+      },
+      "reviews": {
+        "item_1": {
+          "author": "Dr.gil",
+          "text": "Eu adoro este jogo de fazenda para bebês! Os gráficos são encantadores e os controles são fáceis. É uma ótima forma de apresentar a vida na fazenda às crianças. Recomendo muito!"
+        },
+        "item_2": {
+          "author": "theRoyalKings",
+          "text": "Minha filha de 16 meses adora e joga sozinha depois que eu mostrei. Ótima distração quando ficam entediados."
+        },
+        "item_3": {
+          "author": "Awledt",
+          "text": "Meu neto de 18 meses AMA este jogo! Recomendo muito."
+        },
+        "item_4": {
+          "author": "_lilly._",
+          "text": "Meu bebê de um ano adora! Recomendo com certeza!"
+        }
+      }
     }
   }
 }
