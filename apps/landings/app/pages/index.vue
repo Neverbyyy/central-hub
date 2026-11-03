@@ -1,5 +1,7 @@
 <script setup lang="ts">
-// Оглавление стенда лендингов: какие лендинги есть и кнопка на каждый язык — чтобы не набирать адрес руками.
+// Оглавление стенда лендингов: какие лендинги есть, выбор языка и кнопка «Открыть» — чтобы не набирать адрес руками.
+// Язык выбирается списком, а переход — кнопкой: переход сразу по выбору уводил бы со страницы на каждой стрелке
+// клавиатуры. «Открыть» — обычная ссылка: её можно открыть в новой вкладке или скопировать.
 // Служебная страница для команды, не продукт (как эмулятор и Storybook): подписи по-русски, свой CSS, правила
 // дизайн-системы на неё не действуют (eslint.config.mjs). Лендинги — реестр app/landings, языки — файлы текстов
 // набора ds: новый лендинг или язык появится здесь сам. Закрыта от индексации, как и весь стенд
@@ -21,6 +23,8 @@ const nativeName = (lang: string) => {
 const href = (landing: string, lang: string) => (lang === 'en' ? `/${landing}` : `/${landing}/${lang}`)
 
 const landings = Object.entries(LANDINGS).map(([id, config]) => ({ id, config }))
+// Выбранный язык у каждого лендинга свой; по умолчанию английский (/cars2)
+const selected = reactive<Record<string, string>>(Object.fromEntries(landings.map(({ id }) => [id, 'en'])))
 
 useHead({ htmlAttrs: { lang: 'ru' }, title: 'Лендинги Amaya — стенд' })
 useSeoMeta({ robots: 'noindex, nofollow' })
@@ -30,7 +34,7 @@ useSeoMeta({ robots: 'noindex, nofollow' })
   <main class="lp-index">
     <header class="lp-index__header">
       <h1>Лендинги Amaya</h1>
-      <p>Стенд: страницы закрыты от поисковиков. Кнопка языка открывает лендинг — ссылку можно отправить.</p>
+      <p>Стенд: страницы закрыты от поисковиков. Выберите язык и откройте лендинг — ссылку можно отправить.</p>
     </header>
 
     <ul class="lp-index__list">
@@ -41,7 +45,7 @@ useSeoMeta({ robots: 'noindex, nofollow' })
       >
         <a
           class="lp-index__art"
-          :href="href(landing.id, 'en')"
+          :href="href(landing.id, selected[landing.id]!)"
           tabindex="-1"
           aria-hidden="true"
         >
@@ -56,23 +60,30 @@ useSeoMeta({ robots: 'noindex, nofollow' })
         <div class="lp-index__body">
           <h2>{{ t(landing.config.meta.title) }}</h2>
           <p class="lp-index__path">
-            /{{ landing.id }}
+            {{ href(landing.id, selected[landing.id]!) }}
           </p>
-          <nav
-            class="lp-index__langs"
-            :aria-label="`Языки лендинга ${landing.id}`"
-          >
+          <div class="lp-index__open">
+            <label class="lp-index__select">
+              <span class="lp-index__label">Язык</span>
+              <select
+                v-model="selected[landing.id]"
+                :aria-label="`Язык лендинга ${landing.id}`"
+              >
+                <option
+                  v-for="lang in languages"
+                  :key="lang"
+                  :value="lang"
+                >
+                  {{ nativeName(lang) }} · {{ lang.toUpperCase() }}
+                </option>
+              </select>
+            </label>
             <a
-              v-for="lang in languages"
-              :key="lang"
-              class="lp-index__lang"
-              :href="href(landing.id, lang)"
-              :hreflang="lang"
-            >
-              <b>{{ lang.toUpperCase() }}</b>
-              <span>{{ nativeName(lang) }}</span>
-            </a>
-          </nav>
+              class="lp-index__go"
+              :href="href(landing.id, selected[landing.id]!)"
+              :hreflang="selected[landing.id]"
+            >Открыть</a>
+          </div>
         </div>
       </li>
     </ul>
@@ -146,42 +157,65 @@ useSeoMeta({ robots: 'noindex, nofollow' })
   font-size: 13px;
 }
 
-.lp-index__langs {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
-  gap: 8px;
-}
-
-.lp-index__lang {
+/* Выбор языка и «Открыть» — в одну строку; на узком экране кнопка уходит под список */
+.lp-index__open {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
+  align-items: flex-end;
   gap: 8px;
-  min-height: 44px;
-  padding: 6px 10px;
-  color: inherit;
-  text-decoration: none;
-  border: 1px solid #c4c8cf;
-  border-radius: 8px;
-  transition: transform 0.1s ease, background-color 0.1s ease;
 }
 
-.lp-index__lang:hover {
-  background: #f3f5f8;
+.lp-index__select {
+  display: flex;
+  flex: 1 1 220px;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 320px;
 }
 
-.lp-index__lang:active {
-  transform: scale(0.97);
-}
-
-.lp-index__lang b {
-  min-width: 22px;
+.lp-index__label {
+  color: #57606a;
   font-size: 13px;
 }
 
-.lp-index__lang span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.lp-index__select select {
+  min-height: 44px;
+  padding: 0 36px 0 12px;
+  font: inherit;
+  color: inherit;
+  border: 1px solid #c4c8cf;
+  border-radius: 8px;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2357606a' stroke-width='1.6'/%3E%3C/svg%3E") no-repeat right 14px center;
+  appearance: none;
+  cursor: pointer;
+}
+
+.lp-index__select select:focus-visible,
+.lp-index__go:focus-visible {
+  outline: 2px solid #0969da;
+  outline-offset: 2px;
+}
+
+.lp-index__go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 22px;
+  font-weight: 600;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 8px;
+  background: #1f883d;
+  transition: transform 0.1s ease, background-color 0.1s ease;
+}
+
+.lp-index__go:hover {
+  background: #1a7f37;
+}
+
+.lp-index__go:active {
+  transform: scale(0.97);
 }
 
 /* Телефон: картинка сверху во всю ширину */
