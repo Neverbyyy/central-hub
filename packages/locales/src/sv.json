@@ -167,6 +167,16 @@
         "title_2": "Möt alla djuren på gården",
         "title_3": "Odla, skörda och lek!",
         "title_4": "Lås upp hela gården i dag"
+      },
+      "onboarding": {
+        "step_1": {
+          "text": "Vinnare av flera priser för barnappar! Det här roliga och lärorika äventyret hjälper barn att utforska världen av gårdsdjur och vilda djur, upptäcka frukter och grönsaker och lära sig genom lek på ett glatt och interaktivt sätt.",
+          "title": "Älskad av föräldrar, godkänd av lärare"
+        },
+        "step_2": {
+          "text": "Lås upp en värld av kreativa och lärorika appar – allt på ett ställe! Upptäck färgläggning, sagor, racing, djur och mycket mer. Oändligt kul för pojkar och flickor!",
+          "title": "Mer än bara en gård! Njut av {count}+ appar"
+        }
       }
     }
   },

@@ -167,6 +167,16 @@
         "title_2": "Conosci tutti gli animali della fattoria",
         "title_3": "Coltiva, raccogli e gioca!",
         "title_4": "Sblocca tutta la fattoria oggi"
+      },
+      "onboarding": {
+        "step_1": {
+          "text": "Vincitore di diversi premi per app per bambini! Questa divertente e istruttiva avventura aiuta i più piccoli a scoprire il mondo degli animali domestici e selvatici, conoscere frutta e verdura e imparare giocando in modo allegro e interattivo.",
+          "title": "Adorato dai genitori, approvato dagli insegnanti"
+        },
+        "step_2": {
+          "text": "Scopri un mondo di app creative ed educative, tutte in un unico posto! Esplora pagine da colorare, fiabe, gare, animali e tanto altro. Divertimento senza fine per bambini e bambine!",
+          "title": "Non solo una fattoria! Divertiti con {count}+ app"
+        }
       }
     }
   },

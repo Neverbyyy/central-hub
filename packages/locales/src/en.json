@@ -169,6 +169,14 @@
         "title_4": "Unlock the whole farm today"
       },
       "onboarding": {
+        "step_1": {
+          "text": "Winner of multiple kids’ app awards, this fun and educational adventure helps young learners explore the world of farm and wild animals, discover fruits and vegetables, and learn through play in a joyful, interactive way.",
+          "title": "Loved by parents, approved by teachers"
+        },
+        "step_2": {
+          "text": "Unlock a world of creative and educational apps — all in one place! Explore coloring pages, fairy tales, racing, animals, and more. Endless fun for boys and girls!",
+          "title": "More than just Farm! Enjoy {count}+ apps"
+        },
         "title_1": "onboarding title"
       }
     }

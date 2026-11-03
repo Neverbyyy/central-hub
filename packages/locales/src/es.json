@@ -167,6 +167,16 @@
         "title_2": "Conoce a todos los animales de la granja",
         "title_3": "¡Cultiva, cosecha y juega!",
         "title_4": "Desbloquea toda la granja hoy"
+      },
+      "onboarding": {
+        "step_1": {
+          "text": "¡Ganadora de varios premios a las mejores apps infantiles! Esta divertida y educativa aventura ayuda a los niños a explorar el mundo de los animales de granja y salvajes, descubrir frutas y verduras y aprender jugando de una forma alegre e interactiva.",
+          "title": "Amado por los padres, aprobado por los maestros"
+        },
+        "step_2": {
+          "text": "¡Descubre un mundo de apps creativas y educativas, todo en un solo lugar! Explora dibujos para colorear, cuentos, carreras, animales y mucho más. ¡Diversión sin fin para niños y niñas!",
+          "title": "¡Mucho más que una granja! Disfruta {count}+ apps"
+        }
       }
     }
   },

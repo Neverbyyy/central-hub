@@ -167,6 +167,16 @@
         "title_2": "Ontmoet alle dieren op de boerderij",
         "title_3": "Kweek, oogst en speel!",
         "title_4": "Ontgrendel vandaag de hele boerderij"
+      },
+      "onboarding": {
+        "step_1": {
+          "text": "Winnaar van meerdere kinderapp-prijzen! Dit leuke en leerzame avontuur helpt kinderen de wereld van boerderij- en wilde dieren te ontdekken, fruit en groenten te leren kennen en al spelend te leren op een vrolijke, interactieve manier.",
+          "title": "Gewaardeerd door ouders, goedgekeurd door leraren"
+        },
+        "step_2": {
+          "text": "Ontgrendel een wereld vol creatieve en leerzame apps – allemaal op één plek! Ontdek kleurplaten, sprookjes, races, dieren en nog veel meer. Eindeloos plezier voor jongens en meisjes!",
+          "title": "Meer dan alleen een boerderij! Geniet van {count}+ apps"
+        }
       }
     }
   },
