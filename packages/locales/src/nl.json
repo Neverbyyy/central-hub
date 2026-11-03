@@ -12,6 +12,7 @@
       "continue": {
         "default": "Doorgaan"
       },
+      "play_free": "Gratis spelen!",
       "restore": "Herstel aankopen",
       "try_free": "Gratis proberen",
       "try_free_days": "Probeer {days} dag GRATIS | Probeer {days} dagen GRATIS",
@@ -20,6 +21,7 @@
       "whats_included": "Wat is inbegrepen"
     },
     "legal": {
+      "all_rights_reserved": "Alle rechten voorbehouden",
       "cancel_anytime": "Op ieder moment opzegbaar",
       "no_payment_now": "Je betaalt nu niets"
     },
@@ -115,6 +117,11 @@
         "label": "Sluiten"
       }
     },
+    "rating": {
+      "aria": {
+        "label": "Beoordeling: {rating} van 5"
+      }
+    },
     "slides": {
       "dot": {
         "label": "Dia {number}"
@@ -131,6 +138,11 @@
       },
       "google_play": {
         "label": "Ontdek het op Google Play"
+      }
+    },
+    "video": {
+      "play": {
+        "label": "Video afspelen"
       }
     }
   },
@@ -155,6 +167,86 @@
         "title_2": "Ontmoet alle dieren op de boerderij",
         "title_3": "Kweek, oogst en speel!",
         "title_4": "Ontgrendel vandaag de hele boerderij"
+      }
+    }
+  },
+  "web": {
+    "lp_cars2": {
+      "faq": {
+        "item_1": {
+          "answer": "Ja. Volledige toegang tot het spel is voor altijd gratis, zonder verborgen kosten.",
+          "question": "Is het spel echt gratis?"
+        },
+        "item_2": {
+          "answer": "Download het spel in de App Store of Google Play, registreer je en speel.",
+          "question": "Hoe begin ik met spelen?"
+        },
+        "item_3": {
+          "answer": "Voor kinderen vanaf 2 jaar. De eenvoudige bediening ontwikkelt fijne motoriek en verbeelding.",
+          "question": "Voor welke leeftijd is het spel?"
+        },
+        "item_4": {
+          "answer": "Ja. Na het downloaden werkt het spel offline: handig op reis.",
+          "question": "Kun je spelen zonder internet?"
+        },
+        "item_5": {
+          "answer": "Op iPhone en iPad via de App Store, en op Android-telefoons en -tablets via Google Play.",
+          "question": "Op welke apparaten werkt het?"
+        },
+        "title": "Vragen en antwoorden"
+      },
+      "features": {
+        "item_1": {
+          "text": "Ontwikkelt fijne motoriek en verbeelding",
+          "title": "Voor kinderen vanaf 2 jaar"
+        },
+        "item_2": {
+          "text": "Van een grote brandweerwagen tot een snelle superheldenauto",
+          "title": "Meer dan 75 auto’s"
+        },
+        "item_3": {
+          "text": "Miljoenen kinderen en ouders vertrouwen ons.",
+          "title": "Gemaakt voor kinderen"
+        },
+        "item_4": {
+          "text": "Geen internet? Geen probleem! Je kunt offline spelen.",
+          "title": "Speel offline"
+        }
+      },
+      "footer": {
+        "copyright": "© {year}, Amaya Kids"
+      },
+      "header": {
+        "logo": "Amaya Kids"
+      },
+      "hero": {
+        "adv_1": "Voor altijd, zonder verborgen kosten.",
+        "adv_2": "Registreer je, download en speel!",
+        "stores_note": "In de App Store en Google Play",
+        "text": "Je hebt nu GRATIS volledige toegang tot Kids Cars 2!",
+        "title": "Gefeliciteerd!"
+      },
+      "meta": {
+        "description": "Meer dan 75 auto’s, races en een wasstraat voor kinderen vanaf 2 jaar. Werkt offline. Gratis in de App Store en Google Play.",
+        "title": "Kids Cars 2 – gratis spelen · Amaya Kids"
+      },
+      "reviews": {
+        "item_1": {
+          "author": "LoveYourLife",
+          "text": "Onze tweeling is dol op de verschillende voertuigen en opdrachten. Je kunt op meerdere apparaten spelen, dus geen ruzie meer om de telefoon: één kan altijd op de tablet spelen."
+        },
+        "item_2": {
+          "author": "Aunt Stacy M",
+          "text": "Mijn neefje van 4 is dol op dit spel. Een van de beste autospellen voor de kleintjes! Het is heel makkelijk te spelen en hij kiest graag verschillende auto’s en vrachtwagens. Er is zelfs een wasstraat, en je kunt je auto of vrachtwagen verven. Een geweldig autospel voor kinderen vanaf 3 jaar!"
+        },
+        "item_3": {
+          "author": "kimkim57",
+          "text": "Mijn kleindochter is 2. Ze speelt dit spel heel goed en besteedt er veel tijd aan. Ze is zo blij als ze het einde van de hindernisbaan haalt en als beloning op de foto gaat."
+        },
+        "item_4": {
+          "author": "LostHero",
+          "text": "Allerlei voertuigen op één plek, en niet zonder reden! Leuke spellen, en je kunt zelfs zonder internet spelen: heel handig op lange reizen."
+        }
       }
     }
   }

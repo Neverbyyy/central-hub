@@ -12,6 +12,7 @@
       "continue": {
         "default": "Continua"
       },
+      "play_free": "Gioca gratis!",
       "restore": "Ripristina gli acquisti",
       "try_free": "Prova gratis",
       "try_free_days": "Prova {days} giorno GRATIS | Prova {days} giorni GRATIS",
@@ -20,6 +21,7 @@
       "whats_included": "Cosa è incluso"
     },
     "legal": {
+      "all_rights_reserved": "Tutti i diritti riservati",
       "cancel_anytime": "Disdici quando vuoi",
       "no_payment_now": "Nessun pagamento ora"
     },
@@ -115,6 +117,11 @@
         "label": "Chiudi"
       }
     },
+    "rating": {
+      "aria": {
+        "label": "Valutazione: {rating} su 5"
+      }
+    },
     "slides": {
       "dot": {
         "label": "Slide {number}"
@@ -131,6 +138,11 @@
       },
       "google_play": {
         "label": "Disponibile su Google Play"
+      }
+    },
+    "video": {
+      "play": {
+        "label": "Riproduci video"
       }
     }
   },
@@ -155,6 +167,86 @@
         "title_2": "Conosci tutti gli animali della fattoria",
         "title_3": "Coltiva, raccogli e gioca!",
         "title_4": "Sblocca tutta la fattoria oggi"
+      }
+    }
+  },
+  "web": {
+    "lp_cars2": {
+      "faq": {
+        "item_1": {
+          "answer": "Sì. L’accesso completo al gioco è gratuito per sempre, senza costi nascosti.",
+          "question": "Il gioco è davvero gratis?"
+        },
+        "item_2": {
+          "answer": "Scarica il gioco da App Store o Google Play, registrati e gioca.",
+          "question": "Come si inizia a giocare?"
+        },
+        "item_3": {
+          "answer": "Per bambini dai 2 anni. I comandi semplici sviluppano la motricità fine e l’immaginazione.",
+          "question": "Per quale età è il gioco?"
+        },
+        "item_4": {
+          "answer": "Sì. Una volta scaricato, il gioco funziona offline: comodo in viaggio.",
+          "question": "Si può giocare senza internet?"
+        },
+        "item_5": {
+          "answer": "Su iPhone e iPad da App Store, e su smartphone e tablet Android da Google Play.",
+          "question": "Su quali dispositivi funziona?"
+        },
+        "title": "Domande e risposte"
+      },
+      "features": {
+        "item_1": {
+          "text": "Sviluppa la motricità fine e l’immaginazione",
+          "title": "Per bambini dai 2 anni"
+        },
+        "item_2": {
+          "text": "Dal grande camion dei pompieri alla veloce auto del supereroe",
+          "title": "Oltre 75 auto"
+        },
+        "item_3": {
+          "text": "Milioni di bambini e genitori si fidano di noi.",
+          "title": "Pensato per i bambini"
+        },
+        "item_4": {
+          "text": "Niente internet? Nessun problema! Puoi giocare offline.",
+          "title": "Gioca offline"
+        }
+      },
+      "footer": {
+        "copyright": "© {year}, Amaya Kids"
+      },
+      "header": {
+        "logo": "Amaya Kids"
+      },
+      "hero": {
+        "adv_1": "Per sempre, senza costi nascosti.",
+        "adv_2": "Registrati, scarica e gioca!",
+        "stores_note": "Disponibile su App Store e Google Play",
+        "text": "Ora hai accesso completo GRATIS all’app Kids Cars 2!",
+        "title": "Complimenti!"
+      },
+      "meta": {
+        "description": "Oltre 75 auto, gare e un autolavaggio per bambini dai 2 anni. Funziona offline. Scaricalo gratis da App Store e Google Play.",
+        "title": "Kids Cars 2: gioca gratis · Amaya Kids"
+      },
+      "reviews": {
+        "item_1": {
+          "author": "LoveYourLife",
+          "text": "I nostri gemelli adorano i diversi veicoli e le missioni. Si può giocare su più dispositivi, quindi niente più litigi per il telefono: uno può sempre giocare sul tablet."
+        },
+        "item_2": {
+          "author": "Aunt Stacy M",
+          "text": "Mio nipote di 4 anni adora questo gioco. Uno dei migliori giochi di auto per i più piccoli! È facilissimo e lui adora scegliere auto e camion diversi. C’è perfino l’autolavaggio, e si può dipingere l’auto o il camion. Un ottimo gioco di auto per bambini dai 3 anni!"
+        },
+        "item_3": {
+          "author": "kimkim57",
+          "text": "Mia nipote ha 2 anni. Gioca benissimo a questo gioco e ci passa tanto tempo. È felicissima quando arriva alla fine del percorso a ostacoli e si fa una foto come premio."
+        },
+        "item_4": {
+          "author": "LostHero",
+          "text": "Tutti i tipi di veicoli in un unico posto, e non a caso! Giochi divertenti, e si può giocare anche senza internet: comodissimo nei viaggi lunghi."
+        }
       }
     }
   }

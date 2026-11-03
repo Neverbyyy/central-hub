@@ -12,6 +12,7 @@
       "continue": {
         "default": "Continue"
       },
+      "play_free": "Play for free!",
       "restore": "Restore purchases",
       "try_free": "Try for free",
       "try_free_days": "Try FREE for {days} day | Try FREE for {days} days",
@@ -20,13 +21,14 @@
       "whats_included": "What’s included"
     },
     "legal": {
+      "all_rights_reserved": "All rights reserved",
       "cancel_anytime": "Cancel anytime",
       "no_payment_now": "No payment now"
     },
     "link": {
       "more_plans": "More plans",
       "privacy_policy": "Privacy Policy",
-      "terms_of_use": "Terms of Useasd"
+      "terms_of_use": "Terms of Use"
     },
     "period": {
       "per_month": "per month",
@@ -115,6 +117,11 @@
         "label": "Close"
       }
     },
+    "rating": {
+      "aria": {
+        "label": "Rated {rating} out of 5"
+      }
+    },
     "slides": {
       "dot": {
         "label": "Slide {number}"
@@ -131,6 +138,11 @@
       },
       "google_play": {
         "label": "Get it on Google Play"
+      }
+    },
+    "video": {
+      "play": {
+        "label": "Play video"
       }
     }
   },
@@ -158,6 +170,86 @@
       },
       "onboarding": {
         "title_1": "onboarding title"
+      }
+    }
+  },
+  "web": {
+    "lp_cars2": {
+      "faq": {
+        "item_1": {
+          "answer": "Yes. Full access to the game is free forever, with no hidden payments.",
+          "question": "Is the game really free?"
+        },
+        "item_2": {
+          "answer": "Download the game from the App Store or Google Play, sign up and play.",
+          "question": "How do I start playing?"
+        },
+        "item_3": {
+          "answer": "For kids aged 2 and up. Simple controls help develop fine motor skills and imagination.",
+          "question": "What age is it for?"
+        },
+        "item_4": {
+          "answer": "Yes. Once downloaded, the game works offline, which is handy on trips.",
+          "question": "Can I play without the internet?"
+        },
+        "item_5": {
+          "answer": "On iPhone and iPad from the App Store, and on Android phones and tablets from Google Play.",
+          "question": "Which devices does it work on?"
+        },
+        "title": "Questions and answers"
+      },
+      "features": {
+        "item_1": {
+          "text": "Develops fine motor skills and imagination",
+          "title": "For kids aged 2+"
+        },
+        "item_2": {
+          "text": "From a big fire truck to a speedy superhero car",
+          "title": "75+ cars"
+        },
+        "item_3": {
+          "text": "Millions of kids and their parents trust us.",
+          "title": "Made for kids"
+        },
+        "item_4": {
+          "text": "No internet? No problem! You can play offline.",
+          "title": "Play offline"
+        }
+      },
+      "footer": {
+        "copyright": "© {year}, Amaya Kids"
+      },
+      "header": {
+        "logo": "Amaya Kids"
+      },
+      "hero": {
+        "adv_1": "Forever, no hidden payments.",
+        "adv_2": "Sign up, download and play!",
+        "stores_note": "Available on the App Store and Google Play",
+        "text": "You now have FREE full access to the Kids Cars 2 app!",
+        "title": "Congrats!"
+      },
+      "meta": {
+        "description": "75+ cars, races and a car wash for kids aged 2 and up. Works offline. Download for free on the App Store and Google Play.",
+        "title": "Kids Cars 2 — play for free · Amaya Kids"
+      },
+      "reviews": {
+        "item_1": {
+          "author": "LoveYourLife",
+          "text": "Our twins love all the different vehicles and tasks. You can play on several devices, so there are no more fights over the phone: one of them can always play on the tablet."
+        },
+        "item_2": {
+          "author": "Aunt Stacy M",
+          "text": "My 4-year-old nephew loves this game. It’s one of the best car games for little ones! It’s very easy to play, and he loves choosing different cars and trucks. There’s even a car wash, and you can paint and draw on your car or truck. A great car game for kids aged 3 and up!"
+        },
+        "item_3": {
+          "author": "kimkim57",
+          "text": "My granddaughter is 2. She plays this game really well and spends a lot of time on it. She’s so happy when she reaches the end of the obstacle course and gets her photo taken as a reward."
+        },
+        "item_4": {
+          "author": "LostHero",
+          "text": "All kinds of vehicles in one place, and for good reason! Fun games, and you can even play without the internet, which is really handy on long trips."
+        }
       }
     }
   }

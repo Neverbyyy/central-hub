@@ -12,6 +12,7 @@
       "continue": {
         "default": "Fortsätt"
       },
+      "play_free": "Spela gratis!",
       "restore": "Återställa köp",
       "try_free": "Prova gratis",
       "try_free_days": "Prova GRATIS i {days} dag | Prova GRATIS i {days} dagar",
@@ -20,6 +21,7 @@
       "whats_included": "Vad som ingår"
     },
     "legal": {
+      "all_rights_reserved": "Alla rättigheter förbehållna",
       "cancel_anytime": "Avsluta när som helst",
       "no_payment_now": "Ingen betalning nu"
     },
@@ -115,6 +117,11 @@
         "label": "Stäng"
       }
     },
+    "rating": {
+      "aria": {
+        "label": "Betyg: {rating} av 5"
+      }
+    },
     "slides": {
       "dot": {
         "label": "Bild {number}"
@@ -131,6 +138,11 @@
       },
       "google_play": {
         "label": "Ladda ned på Google Play"
+      }
+    },
+    "video": {
+      "play": {
+        "label": "Spela upp video"
       }
     }
   },
@@ -155,6 +167,86 @@
         "title_2": "Möt alla djuren på gården",
         "title_3": "Odla, skörda och lek!",
         "title_4": "Lås upp hela gården i dag"
+      }
+    }
+  },
+  "web": {
+    "lp_cars2": {
+      "faq": {
+        "item_1": {
+          "answer": "Ja. Full tillgång till spelet är gratis för alltid, utan dolda avgifter.",
+          "question": "Är spelet verkligen gratis?"
+        },
+        "item_2": {
+          "answer": "Ladda ner spelet från App Store eller Google Play, registrera dig och spela.",
+          "question": "Hur börjar jag spela?"
+        },
+        "item_3": {
+          "answer": "För barn från 2 år. Enkla kontroller utvecklar finmotorik och fantasi.",
+          "question": "Vilken ålder passar spelet för?"
+        },
+        "item_4": {
+          "answer": "Ja. När spelet är nedladdat fungerar det offline – smidigt på resor.",
+          "question": "Kan man spela utan internet?"
+        },
+        "item_5": {
+          "answer": "På iPhone och iPad via App Store och på Android-telefoner och surfplattor via Google Play.",
+          "question": "Vilka enheter fungerar det på?"
+        },
+        "title": "Frågor och svar"
+      },
+      "features": {
+        "item_1": {
+          "text": "Utvecklar finmotorik och fantasi",
+          "title": "För barn från 2 år"
+        },
+        "item_2": {
+          "text": "Från en stor brandbil till en snabb superhjältebil",
+          "title": "Över 75 bilar"
+        },
+        "item_3": {
+          "text": "Miljontals barn och föräldrar litar på oss.",
+          "title": "Gjort för barn"
+        },
+        "item_4": {
+          "text": "Inget internet? Inga problem! Du kan spela offline.",
+          "title": "Spela offline"
+        }
+      },
+      "footer": {
+        "copyright": "© {year}, Amaya Kids"
+      },
+      "header": {
+        "logo": "Amaya Kids"
+      },
+      "hero": {
+        "adv_1": "För alltid, utan dolda avgifter.",
+        "adv_2": "Registrera dig, ladda ner och spela!",
+        "stores_note": "Finns på App Store och Google Play",
+        "text": "Nu har du full tillgång till Kids Cars 2 GRATIS!",
+        "title": "Grattis!"
+      },
+      "meta": {
+        "description": "Över 75 bilar, race och en biltvätt för barn från 2 år. Fungerar offline. Ladda ner gratis på App Store och Google Play.",
+        "title": "Kids Cars 2 – spela gratis · Amaya Kids"
+      },
+      "reviews": {
+        "item_1": {
+          "author": "LoveYourLife",
+          "text": "Våra tvillingar älskar alla olika fordon och uppdrag. Man kan spela på flera enheter, så vi bråkar inte längre om telefonen: en kan alltid spela på surfplattan."
+        },
+        "item_2": {
+          "author": "Aunt Stacy M",
+          "text": "Min 4-åriga brorson älskar det här spelet. Ett av de bästa bilspelen för de små! Det är väldigt lätt att spela, och han älskar att välja olika bilar och lastbilar. Det finns till och med en biltvätt, och man kan måla bilen eller lastbilen. Ett toppenbilspel för barn från 3 år!"
+        },
+        "item_3": {
+          "author": "kimkim57",
+          "text": "Mitt barnbarn är 2 år. Hon spelar riktigt bra och lägger mycket tid på spelet. Hon blir så glad när hon når slutet av hinderbanan och blir fotograferad som belöning."
+        },
+        "item_4": {
+          "author": "LostHero",
+          "text": "Alla sorters fordon på ett ställe, och inte utan anledning! Roliga spel, och man kan till och med spela utan internet – väldigt smidigt på långa resor."
+        }
       }
     }
   }
