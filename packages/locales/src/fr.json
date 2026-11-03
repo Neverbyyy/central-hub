@@ -258,6 +258,66 @@
           "text": "Tous les véhicules au même endroit, et ce n’est pas pour rien ! Des jeux amusants, et on peut même jouer sans internet : très pratique pour les longs trajets."
         }
       }
+    },
+    "lp_farm": {
+      "faq": {
+        "item_1": {
+          "answer": "Pour les tout-petits dès 1 an : de grandes images colorées, des gestes simples et des cris d’animaux familiers.",
+          "question": "Pour quel âge ?"
+        },
+        "item_2": {
+          "answer": "Le nom et le cri des animaux, et où ils vivent : à la ferme, dans la forêt et dans la jungle.",
+          "question": "Qu’apprendra mon enfant ?"
+        },
+        "item_3": {
+          "answer": "Oui. Une fois téléchargé, le jeu fonctionne hors ligne : pratique en voyage.",
+          "question": "Peut-on jouer sans internet ?"
+        },
+        "item_4": {
+          "answer": "Oui. Le jeu est certifié kidSAFE et nous ne partageons jamais vos données.",
+          "question": "Est-ce sûr pour mon enfant ?"
+        },
+        "item_5": {
+          "answer": "Sur iPhone et iPad via l’App Store, et sur les téléphones et tablettes Android via Google Play.",
+          "question": "Sur quels appareils fonctionne-t-il ?"
+        },
+        "title": "Questions et réponses"
+      },
+      "footer": {
+        "copyright": "© {year}, Amaya Kids"
+      },
+      "header": {
+        "logo": "Amaya Kids"
+      },
+      "hero": {
+        "adv_1": "De vrais cris d’animaux",
+        "adv_2": "Pour les enfants dès 1 an",
+        "stores_note": "Sur l’App Store et Google Play",
+        "text": "Découvrez les animaux de la ferme et de la jungle dans Kids First Animals !",
+        "title": "Bonjour les animaux !"
+      },
+      "meta": {
+        "description": "Animaux de la ferme, de la forêt et de la jungle avec de vrais cris, pour les enfants dès 1 an. Sur l’App Store et Google Play.",
+        "title": "Kids First Animals : jouez avec les animaux · Amaya Kids"
+      },
+      "reviews": {
+        "item_1": {
+          "author": "Dr.gil",
+          "text": "J’adore ce jeu de ferme pour les tout-petits ! Les graphismes sont adorables et les commandes très simples. Une super façon de faire découvrir la vie à la ferme aux enfants. Je recommande vivement !"
+        },
+        "item_2": {
+          "author": "theRoyalKings",
+          "text": "Ma fille de 16 mois adore et joue seule après que je lui ai montré. Une super distraction quand ils s’ennuient."
+        },
+        "item_3": {
+          "author": "Awledt",
+          "text": "Mon petit-fils de 18 mois ADORE ce jeu ! Je le recommande vivement."
+        },
+        "item_4": {
+          "author": "_lilly._",
+          "text": "Mon enfant d’un an adore ! Je recommande sans hésiter !"
+        }
+      }
     }
   }
 }

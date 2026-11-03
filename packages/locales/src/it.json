@@ -258,6 +258,66 @@
           "text": "Tutti i tipi di veicoli in un unico posto, e non a caso! Giochi divertenti, e si può giocare anche senza internet: comodissimo nei viaggi lunghi."
         }
       }
+    },
+    "lp_farm": {
+      "faq": {
+        "item_1": {
+          "answer": "Per i più piccoli da 1 anno: immagini grandi e colorate, tocchi semplici e versi di animali familiari.",
+          "question": "Per che età è?"
+        },
+        "item_2": {
+          "answer": "I nomi e i versi degli animali e dove vivono: in fattoria, nel bosco e nella giungla.",
+          "question": "Cosa imparerà mio figlio?"
+        },
+        "item_3": {
+          "answer": "Sì. Una volta scaricato, il gioco funziona offline: comodo in viaggio.",
+          "question": "Si può giocare senza internet?"
+        },
+        "item_4": {
+          "answer": "Sì. Il gioco ha la certificazione kidSAFE e non condividiamo mai i tuoi dati.",
+          "question": "È sicuro per mio figlio?"
+        },
+        "item_5": {
+          "answer": "Su iPhone e iPad da App Store, e su smartphone e tablet Android da Google Play.",
+          "question": "Su quali dispositivi funziona?"
+        },
+        "title": "Domande e risposte"
+      },
+      "footer": {
+        "copyright": "© {year}, Amaya Kids"
+      },
+      "header": {
+        "logo": "Amaya Kids"
+      },
+      "hero": {
+        "adv_1": "Versi veri degli animali",
+        "adv_2": "Per bambini da 1 anno",
+        "stores_note": "Disponibile su App Store e Google Play",
+        "text": "Scopri gli animali della fattoria e della giungla in Kids First Animals!",
+        "title": "Ciao, animali!"
+      },
+      "meta": {
+        "description": "Animali della fattoria, del bosco e della giungla con versi veri per bambini da 1 anno. Scaricalo da App Store e Google Play.",
+        "title": "Kids First Animals: gioca con gli animali · Amaya Kids"
+      },
+      "reviews": {
+        "item_1": {
+          "author": "Dr.gil",
+          "text": "Adoro questo gioco sulla fattoria per i più piccoli! La grafica è adorabile e i comandi sono semplicissimi. Un modo fantastico per far conoscere ai bambini la vita in fattoria. Consigliatissimo!"
+        },
+        "item_2": {
+          "author": "theRoyalKings",
+          "text": "Mia figlia di 16 mesi lo adora e gioca da sola dopo che gliel’ho mostrato. Un’ottima distrazione quando si annoiano."
+        },
+        "item_3": {
+          "author": "Awledt",
+          "text": "Mio nipote di 18 mesi ADORA questo gioco! Lo consiglio vivamente."
+        },
+        "item_4": {
+          "author": "_lilly._",
+          "text": "Il mio bimbo di un anno lo adora! Lo consiglio sicuramente!"
+        }
+      }
     }
   }
 }

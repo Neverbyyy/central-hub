@@ -258,6 +258,66 @@
           "text": "Allerlei voertuigen op één plek, en niet zonder reden! Leuke spellen, en je kunt zelfs zonder internet spelen: heel handig op lange reizen."
         }
       }
+    },
+    "lp_farm": {
+      "faq": {
+        "item_1": {
+          "answer": "Voor de kleintjes vanaf 1 jaar: grote, kleurrijke plaatjes, eenvoudig tikken en bekende dierengeluiden.",
+          "question": "Voor welke leeftijd is het?"
+        },
+        "item_2": {
+          "answer": "De namen en geluiden van dieren en waar ze wonen: op de boerderij, in het bos en in de jungle.",
+          "question": "Wat leert mijn kind?"
+        },
+        "item_3": {
+          "answer": "Ja. Na het downloaden werkt het spel offline: handig op reis.",
+          "question": "Kun je spelen zonder internet?"
+        },
+        "item_4": {
+          "answer": "Ja. Het spel is kidSAFE-gecertificeerd en we delen je gegevens nooit.",
+          "question": "Is het veilig voor mijn kind?"
+        },
+        "item_5": {
+          "answer": "Op iPhone en iPad via de App Store, en op Android-telefoons en -tablets via Google Play.",
+          "question": "Op welke apparaten werkt het?"
+        },
+        "title": "Vragen en antwoorden"
+      },
+      "footer": {
+        "copyright": "© {year}, Amaya Kids"
+      },
+      "header": {
+        "logo": "Amaya Kids"
+      },
+      "hero": {
+        "adv_1": "Echte dierengeluiden",
+        "adv_2": "Voor kinderen vanaf 1 jaar",
+        "stores_note": "In de App Store en Google Play",
+        "text": "Maak kennis met boerderij- en jungledieren in Kids First Animals!",
+        "title": "Hallo, dieren!"
+      },
+      "meta": {
+        "description": "Dieren van de boerderij, het bos en de jungle met echte geluiden voor kinderen vanaf 1 jaar. Download in App Store en Google Play.",
+        "title": "Kids First Animals – speel met dieren · Amaya Kids"
+      },
+      "reviews": {
+        "item_1": {
+          "author": "Dr.gil",
+          "text": "Ik vind dit boerderijspel voor de kleintjes geweldig! De graphics zijn schattig en de bediening is eenvoudig. Een mooie manier om kinderen kennis te laten maken met het boerenleven. Echt een aanrader!"
+        },
+        "item_2": {
+          "author": "theRoyalKings",
+          "text": "Mijn dochter van 16 maanden is er dol op en speelt zelf nadat ik het haar had laten zien. Een fijne afleiding als ze zich vervelen."
+        },
+        "item_3": {
+          "author": "Awledt",
+          "text": "Mijn kleinzoon van 18 maanden is GEK op dit spel! Echt een aanrader."
+        },
+        "item_4": {
+          "author": "_lilly._",
+          "text": "Mijn eenjarige is er dol op! Zeker een aanrader!"
+        }
+      }
     }
   }
 }
