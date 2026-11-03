@@ -34,7 +34,6 @@ useSeoMeta({ robots: 'noindex, nofollow' })
   <main class="lp-index">
     <header class="lp-index__header">
       <h1>Лендинги Amaya</h1>
-      <p>Стенд: страницы закрыты от поисковиков. Выберите язык и откройте лендинг — ссылку можно отправить.</p>
     </header>
 
     <ul class="lp-index__list">
@@ -102,13 +101,8 @@ useSeoMeta({ robots: 'noindex, nofollow' })
 }
 
 .lp-index__header h1 {
-  margin: 0;
+  margin: 0 0 20px;
   font-size: 26px;
-}
-
-.lp-index__header p {
-  margin: 6px 0 24px;
-  color: #57606a;
 }
 
 .lp-index__list {
