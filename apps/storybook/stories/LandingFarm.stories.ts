@@ -1,8 +1,9 @@
-// Лендинг Farm — только здесь, в Storybook: макета нет, страница собрана из блоков Cars 2 без новых блоков
-// (конфиг — stories/landings/farm/config.ts). Пока тексты web.lp_farm.* не заведены и не утверждены, на их месте ключи
+// Лендинг Farm целиком — та же страница, что в apps/landings (/farm), с тем же конфигом и артом.
+// Язык — из тулбара, размер — телефон 375, iPad 768, десктоп. Кнопки здесь в стор не уводят: на компьютере
+// кнопка прокручивает к значкам сторов, а нажатия видны в консоли (track)
 import { LkPage } from '@amaya/landing-kit'
 import type { StoryObj } from '@storybook/vue3-vite'
-import { farm } from './landings/farm/config'
+import { farm } from '../../landings/app/landings/farm/config'
 
 export default {
   title: 'Лендинги/Farm',

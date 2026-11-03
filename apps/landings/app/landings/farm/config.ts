@@ -1,14 +1,15 @@
-// Лендинг Farm — страница в Storybook, не в apps/landings: макета лендинга Farm нет (Антон прислал только Cars 2),
-// поэтому он собран тем же подходом из блоков Cars 2 без новых блоков — проверка дизайн-системы, как в ТЗ.
-// Тема farm (палитра Amaya Plus из base). Арт: первый экран — арт онбординга Farm (награды и звери, Figma 8:1369),
-// преимущества — слайды Amaya Plus с их же текстами (common.plus.slide.*). Ролик — трейлер Farm (YouTube D92ck_F4PAw,
-// 640×360, 30 с), постер — кадр с 6-й секунды (амбар): на первом кадре в ролик впечатана кнопка «▶» игры, а у DsVideo своя.
-// Отзывы — настоящие из App Store, FAQ — по смыслу Cars 2 про Farm. Свои тексты — web.lp_farm.* (код сайта lp_farm заводится в справочнике сервиса).
+// Лендинг Farm (/farm). Макета нет (Антон прислал только Cars 2): собран из блоков Cars 2 без новых блоков —
+// проверка дизайн-системы, как в ТЗ; сначала был только историей Storybook, теперь — страница стенда (та же история
+// берёт этот конфиг). Тема farm (палитра Amaya Plus из base). Арт: первый экран — арт онбординга Farm (награды
+// и звери, Figma 8:1369), преимущества — слайды Amaya Plus с их же текстами (common.plus.slide.*). Ролик — трейлер Farm
+// (YouTube D92ck_F4PAw, 640×360, 30 с), постер — кадр с 6-й секунды (амбар): на первом кадре в ролик впечатана кнопка
+// «▶» игры, а у DsVideo своя. Отзывы — настоящие из App Store, FAQ — по смыслу Cars 2 про Farm. Тексты — web.lp_farm.*.
+// Значки сторов и логотип Amaya Kids — общие с Cars 2, из его папки (без копий)
 import type { LandingConfig } from '@amaya/landing-kit'
 import { imageSetFromFiles } from '@amaya/ui'
-import appStoreBadge from '../../../../landings/app/landings/cars2/art/app-store-badge.svg?url'
-import googlePlayBadge from '../../../../landings/app/landings/cars2/art/google-play-badge.svg?url'
-import logo from '../../../../landings/app/landings/cars2/art/logo.svg?url'
+import appStoreBadge from '../cars2/art/app-store-badge.svg?url'
+import googlePlayBadge from '../cars2/art/google-play-badge.svg?url'
+import logo from '../cars2/art/logo.svg?url'
 import video from './art/gameplay.mp4?url'
 
 const art = import.meta.glob<string>('./art/*.{png,webp}', { query: '?url', import: 'default', eager: true })

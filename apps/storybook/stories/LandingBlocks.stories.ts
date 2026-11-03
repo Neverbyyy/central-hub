@@ -1,5 +1,5 @@
 // Блоки лендинга, которым нужен арт лендинга игры (постер и ролик, значки сторов): у каждой темы — своя игра.
-// cars2 — лендинг Cars 2 (apps/landings), farm и base — лендинг Farm (палитра base — Amaya Plus, как у Farm).
+// cars2 — лендинг Cars 2, farm и base — лендинг Farm (оба в apps/landings; палитра base — Amaya Plus, как у Farm).
 // Тема колонки — атрибут data-ds-theme её корня (DsRoot): «Все три рядом» показывает каждую игру в своей теме.
 // Остальные истории блоков — рядом с компонентами в packages/ui
 import type { LandingConfig } from '@amaya/landing-kit'
@@ -8,7 +8,7 @@ import { useStoryTexts } from '@amaya/ui/stories'
 import type { StoryObj } from '@storybook/vue3-vite'
 import { computed, onMounted, ref } from 'vue'
 import { cars2 } from '../../landings/app/landings/cars2/config'
-import { farm } from './landings/farm/config'
+import { farm } from '../../landings/app/landings/farm/config'
 
 export default {
   title: 'Блоки лендинга/Видео и сторы'

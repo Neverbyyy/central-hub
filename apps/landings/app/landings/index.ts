@@ -2,5 +2,6 @@
 // (страницы для сборки nuxt.config находит по папкам)
 import type { LandingConfig } from '@amaya/landing-kit'
 import { cars2 } from './cars2/config'
+import { farm } from './farm/config'
 
-export const LANDINGS: Record<string, LandingConfig> = { cars2 }
+export const LANDINGS: Record<string, LandingConfig> = { cars2, farm }
