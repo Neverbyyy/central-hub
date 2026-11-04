@@ -226,6 +226,42 @@
       "footer": {
         "copyright": "© {year}, Amaya Kids"
       },
+      "go": {
+        "features": {
+          "title": "Por que os pais dizem sim"
+        },
+        "finish": {
+          "text": "Mais de 75 carros esperam na garagem",
+          "title": "Preparar, apontar, já!"
+        },
+        "hero": {
+          "hint": "Toque aqui!",
+          "scene_label": "Guaxinim mecânico e carros na estrada. Toque e ele comemora",
+          "text": "Mais de 75 carros, corridas e lava-jato para crianças a partir de 2 anos",
+          "title": "Bi-bi! Vamos lá!"
+        },
+        "meta": {
+          "title": "Kids Cars 2: bi-bi, vamos lá! · Amaya Kids"
+        },
+        "reviews": {
+          "title": "O que os pais dizem"
+        },
+        "video": {
+          "title": "Veja o jogo em ação"
+        },
+        "wash": {
+          "again": "Sujar de novo",
+          "clean_title": "Brilhando!",
+          "done": "No jogo tem um lava-jato de verdade",
+          "label": "Carro de polícia com lama. Deslize ou pressione Enter para lavá-lo",
+          "text": "Deslize o dedo no carro para lavá-lo",
+          "title": "Ah, não, está cheio de lama!"
+        },
+        "worlds": {
+          "text": "Cidade, zoológico, Natal, Halloween, monster trucks e muito mais",
+          "title": "Escolha seu mundo"
+        }
+      },
       "header": {
         "logo": "Amaya Kids"
       },

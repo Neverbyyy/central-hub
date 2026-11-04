@@ -226,6 +226,42 @@
       "footer": {
         "copyright": "© {year}, Amaya Kids"
       },
+      "go": {
+        "features": {
+          "title": "Pourquoi les parents disent oui"
+        },
+        "finish": {
+          "text": "Plus de 75 voitures t’attendent au garage",
+          "title": "À vos marques, prêts, partez !"
+        },
+        "hero": {
+          "hint": "Appuie ici !",
+          "scene_label": "Raton laveur mécanicien et voitures sur la route. Appuyez et il se réjouit",
+          "text": "Plus de 75 voitures, des courses et une station de lavage dès 2 ans",
+          "title": "Tut-tut ! C’est parti !"
+        },
+        "meta": {
+          "title": "Kids Cars 2 : tut-tut, c’est parti ! · Amaya Kids"
+        },
+        "reviews": {
+          "title": "Ce que disent les parents"
+        },
+        "video": {
+          "title": "Découvrez le jeu en action"
+        },
+        "wash": {
+          "again": "La salir encore",
+          "clean_title": "Toute propre !",
+          "done": "Le jeu a une vraie station de lavage",
+          "label": "Voiture de police pleine de boue. Balayez ou appuyez sur Entrée pour la laver",
+          "text": "Passe le doigt sur la voiture pour la laver",
+          "title": "Oh non, elle est pleine de boue !"
+        },
+        "worlds": {
+          "text": "Ville, zoo, Noël, Halloween, monster trucks et plus encore",
+          "title": "Choisis ton monde"
+        }
+      },
       "header": {
         "logo": "Amaya Kids"
       },

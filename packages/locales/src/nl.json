@@ -226,6 +226,42 @@
       "footer": {
         "copyright": "© {year}, Amaya Kids"
       },
+      "go": {
+        "features": {
+          "title": "Waarom ouders ja zeggen"
+        },
+        "finish": {
+          "text": "Meer dan 75 auto’s wachten in de garage",
+          "title": "Klaar voor de start? Af!"
+        },
+        "hero": {
+          "hint": "Tik hier!",
+          "scene_label": "Wasbeer-monteur en auto’s op de weg. Tik en hij juicht",
+          "text": "Meer dan 75 auto’s, races en een wasstraat vanaf 2 jaar",
+          "title": "Toet-toet! We gaan!"
+        },
+        "meta": {
+          "title": "Kids Cars 2 – toet-toet, daar gaan we! · Amaya Kids"
+        },
+        "reviews": {
+          "title": "Dit zeggen ouders"
+        },
+        "video": {
+          "title": "Bekijk de game in actie"
+        },
+        "wash": {
+          "again": "Maak hem weer vies",
+          "clean_title": "Brandschoon!",
+          "done": "In de game zit een echte wasstraat",
+          "label": "Modderige politieauto. Veeg of druk op Enter om hem te wassen",
+          "text": "Veeg over de auto om hem te wassen",
+          "title": "O nee, helemaal onder de modder!"
+        },
+        "worlds": {
+          "text": "Stad, dierentuin, kerst, halloween, monstertrucks en meer",
+          "title": "Kies je wereld"
+        }
+      },
       "header": {
         "logo": "Amaya Kids"
       },

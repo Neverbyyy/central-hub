@@ -226,6 +226,42 @@
       "footer": {
         "copyright": "© {year}, Amaya Kids"
       },
+      "go": {
+        "features": {
+          "title": "Warum Eltern Ja sagen"
+        },
+        "finish": {
+          "text": "Über 75 Autos warten in der Garage",
+          "title": "Auf die Plätze, fertig, los!"
+        },
+        "hero": {
+          "hint": "Tipp hier!",
+          "scene_label": "Waschbär-Mechaniker und Autos auf der Straße. Tippen, und er jubelt",
+          "text": "Über 75 Autos, Rennen und eine Waschanlage für Kinder ab 2",
+          "title": "Tut-tut! Los geht’s!"
+        },
+        "meta": {
+          "title": "Kids Cars 2 – tut-tut, los geht’s! · Amaya Kids"
+        },
+        "reviews": {
+          "title": "Das sagen Eltern"
+        },
+        "video": {
+          "title": "So sieht das Spiel aus"
+        },
+        "wash": {
+          "again": "Wieder schmutzig machen",
+          "clean_title": "Blitzblank!",
+          "done": "Im Spiel gibt es eine echte Waschanlage",
+          "label": "Schmutziges Polizeiauto. Wischen oder Enter drücken, um es zu waschen",
+          "text": "Wische über das Auto und wasche es",
+          "title": "Oh nein, alles voller Matsch!"
+        },
+        "worlds": {
+          "text": "Stadt, Zoo, Weihnachten, Halloween, Monstertrucks und mehr",
+          "title": "Wähle deine Welt"
+        }
+      },
       "header": {
         "logo": "Amaya Kids"
       },

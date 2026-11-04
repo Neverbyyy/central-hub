@@ -227,6 +227,42 @@
       "footer": {
         "copyright": "© {year}, Amaya Kids"
       },
+      "go": {
+        "features": {
+          "title": "Why parents say yes"
+        },
+        "finish": {
+          "text": "75+ cars are waiting in the garage",
+          "title": "Ready, steady, go!"
+        },
+        "hero": {
+          "hint": "Tap here!",
+          "scene_label": "Raccoon mechanic and cars on the road. Tap and he’ll cheer",
+          "text": "75+ cars, races and a car wash for kids aged 2+",
+          "title": "Beep-beep! Let’s go!"
+        },
+        "meta": {
+          "title": "Kids Cars 2 — beep-beep, let’s go! · Amaya Kids"
+        },
+        "reviews": {
+          "title": "What parents say"
+        },
+        "video": {
+          "title": "See the game in action"
+        },
+        "wash": {
+          "again": "Get it muddy again",
+          "clean_title": "Squeaky clean!",
+          "done": "There’s a real car wash in the game",
+          "label": "Muddy police car. Swipe or press Enter to wash it",
+          "text": "Swipe across the car to wash it",
+          "title": "Oh no, it’s all muddy!"
+        },
+        "worlds": {
+          "text": "City, zoo, Christmas, Halloween, monster trucks and more",
+          "title": "Pick your world"
+        }
+      },
       "header": {
         "logo": "Amaya Kids"
       },
