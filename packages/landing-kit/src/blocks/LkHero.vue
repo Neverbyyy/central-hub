@@ -1,18 +1,18 @@
 <script setup lang="ts">
 /**
- * Первый экран: арт (живой Rive — во весь арт или элементом в углу — проявляется после загрузки страницы), голубая «капля» с заголовком,
+ * Первый экран: арт (живой Rive — во весь арт — проявляется после загрузки страницы), голубая «капля» с заголовком,
  * подзаголовком, строкой про сторы, главной кнопкой и значками сторов, и две цветные плашки-преимущества:
  * на телефоне — внизу «капли», от 640 px — по её бокам, как в макете 768.
  * «Капля» и плашки — фигуры из макета (Figma 38:174, 38:179, 38:182), цвет — из темы; длинный текст растягивает
  * «каплю» вниз, плашки держатся за её низ (телефон) или верх (широкий экран).
  */
 import { DsButton, DsImage, DsRive, DsStoreBadges, type DsStore } from '@amaya/ui'
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useLanding } from '../useLanding'
 import LkInteractive from './LkInteractive.vue'
 
-const { config, links, storesId, cta, storeClick } = useLanding()
+const { config, links, storesId, markHeroLoaded, cta, storeClick } = useLanding()
 const { t } = useI18n()
 const hero = config.hero
 
@@ -23,9 +23,11 @@ const badges = computed(() => ({
 
 const onStore = (store: DsStore) => storeClick(store, 'hero')
 
-// Живой элемент в углу: над картинкой справа вверху, над «каплей» — не мешает ни заголовку, ни кнопке
-const corner = hero.rive?.layout === 'corner'
-const CORNER = 'ds:absolute ds:end-3 ds:top-2 ds:h-lp-deco-h ds:w-lp-deco-w ds:wide:end-10 ds:wide:top-3 ds:wide:h-lp-deco-h-wide ds:wide:w-lp-deco-w-wide'
+// Страница собрана заранее: картинка могла загрузиться до гидратации, и события load уже не будет
+const art = ref<HTMLElement | null>(null)
+onMounted(() => {
+  if (art.value?.querySelector('img')?.complete) markHeroLoaded()
+})
 
 const BLOB = 'M215.919 0C85.234 0 0 46.269 0 158.35C0 252.382 6.107 343 215.919 343C372.665 343 398.826 258.305 398.826 181.415C398.826 87.383 351.123 0 215.919 0Z'
 const ADVANTAGES = [
@@ -40,7 +42,10 @@ const ADVANTAGES = [
     class="ds:relative ds:pb-24 ds:wide:pb-4"
   >
     <!-- Арт: картинка — сразу (она же LCP), Rive — потом поверх -->
-    <div class="ds:relative ds:h-lp-hero-h ds:overflow-hidden ds:wide:h-lp-hero-h-wide">
+    <div
+      ref="art"
+      class="ds:relative ds:h-lp-hero-h ds:overflow-hidden ds:wide:h-lp-hero-h-wide"
+    >
       <DsImage
         class="ds:absolute ds:inset-0"
         :set="hero.art"
@@ -48,16 +53,18 @@ const ADVANTAGES = [
         fit="cover"
         position="right-bottom"
         priority="high"
+        @load="markHeroLoaded"
+        @error="markHeroLoaded"
       />
       <LkInteractive v-if="hero.rive">
-        <div :class="corner ? CORNER : 'ds:absolute ds:inset-0'">
+        <div class="ds:absolute ds:inset-0">
           <DsRive
             class="ds:size-full"
             :src="hero.rive.src"
             :artboard="hero.rive.artboard"
             :state-machine="hero.rive.stateMachine"
-            :fit="corner ? 'contain' : 'cover'"
-            :alignment="corner ? 'topCenter' : 'bottomCenter'"
+            fit="cover"
+            alignment="bottomCenter"
             alt=""
             data-hero-rive
           />

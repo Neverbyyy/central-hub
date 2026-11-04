@@ -1,8 +1,6 @@
 // Правила дизайн-системы одним набором — для eslint.config.mjs пакетов и для apps/landings (у него свой конфиг Nuxt)
 import ds from './ds.mjs'
 
-const NO_TEXT = 'Текст в шаблоне — только ключом из сервиса: {{ t(\'web.lp_cars2.hero.title\') }} или проп от экрана'
-
 /** Всё, что уходит в продукты: компоненты, шаблоны, блоки, экраны — без текста в шаблоне, классы ds:, только токены. */
 export const designSystemRules = {
   plugins: { ds },
@@ -25,4 +23,3 @@ export const screenRules = {
   }
 }
 
-export { NO_TEXT }

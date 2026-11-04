@@ -3,9 +3,11 @@
 // `pnpm l10n pull`, руками их не правят (`pnpm l10n check` это ловит). Формат — вложенный JSON для vue-i18n.
 // Тексты попадают в Storybook, пейволлы и лендинги при сборке — сервис во время работы никто не спрашивает.
 // Здесь — все языки сразу (Storybook, эмулятор: язык переключают на лету); лендингам — @amaya/locales/lazy
+import { sortLanguages } from './languages'
 import type { Messages } from './types'
 
 export type { Messages } from './types'
+export { languageLabel } from './languages'
 export { pluralRules } from './plural'
 
 // Языки берутся из файлов набора: добавили язык в сервисе — после pull он появится и здесь
@@ -15,7 +17,7 @@ export const messages: Record<string, Messages> = Object.fromEntries(
   Object.entries(files).map(([path, content]) => [path.slice(2, -'.json'.length), content])
 )
 
-export const locales = Object.keys(messages)
+export const locales = sortLanguages(Object.keys(messages))
 
 /** Плоский список «ключ → текст» одного языка: common.button.continue.default → Continue. */
 export function flatMessages(tree: Messages = {}, prefix = ''): Record<string, string> {

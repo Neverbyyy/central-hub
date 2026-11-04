@@ -8,6 +8,7 @@
  * Когда использовать: несколько равноправных слайдов. Ряд карточек разной ширины — DsCarousel.
  */
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useInView } from '../composables/useInView'
 import DsDots from './DsDots.vue'
 
 const props = withDefaults(defineProps<{
@@ -36,7 +37,6 @@ const active = ref(0)
 let timer: ReturnType<typeof setInterval> | undefined
 let touching = false
 let visible = true
-let observer: IntersectionObserver | undefined
 
 const reducedMotion = () => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
 
@@ -81,21 +81,13 @@ watch(() => props.resetKey, () => {
   start()
 })
 
-onMounted(() => {
-  if (typeof IntersectionObserver !== 'undefined' && track.value) {
-    observer = new IntersectionObserver(([entry]) => {
-      visible = !!entry?.isIntersecting
-      start()
-    })
-    observer.observe(track.value)
-  }
+useInView(track, (inView) => {
+  visible = inView
   start()
 })
 
-onBeforeUnmount(() => {
-  stop()
-  observer?.disconnect()
-})
+onMounted(start)
+onBeforeUnmount(stop)
 
 defineExpose({ goTo })
 </script>

@@ -4,7 +4,7 @@
 `src/variants/ios/as/<игра>/ds1/<экран>/`
 
 ```
-index.vue    шаблон (Pw*) с конфигом; пропсы env (PaywallEnv), theme?, forcePurchasing? — как у pw-switch/index.vue
+index.vue    шаблон (Pw*) с конфигом; пропсы ScreenProps (env, theme?, forcePurchasing?) — как у pw-switch/index.vue
 config.ts    тема, продукты по сегментам, ключи текстов, арт (imageSetFromFiles по папке art/)
 presets.ts   данные приложения для проверки: default, wasTrial, noProduct, другой сегмент, евро
 art/         картинки по конвенции <имя>-{small,medium,large}{,@2x}.{png,webp}

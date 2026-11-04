@@ -2,6 +2,7 @@
 // small — по умолчанию, medium — от 844 px, large — iPad: от 844 px и от 600 px в высоту (как у токенов).
 // Лендингу (портретный телефон и планшет) нужен ещё wide — от 640 px, брейкпоинт раскладки ds:wide:;
 // его берёт только imageSetFromFiles, если файлы -wide есть: арт телефона и планшета обрезан по-разному
+import breakpoints from '@amaya/tokens/breakpoints.json'
 
 export interface DsImageVariant {
   png?: string
@@ -17,12 +18,15 @@ export interface DsImageSet {
   large?: DsImageVariant
 }
 
-// large — как размеры iPad у токенов: от 844 px в ширину и от 600 px в высоту (широкое низкое окно берёт арт medium)
-export const IMAGE_MEDIA = {
-  large: '(min-width: 844px) and (min-height: 600px)',
-  medium: '(min-width: 844px)',
-  wide: '(min-width: 640px)'
-} as const
+// Условия выбора размера — те же брейкпоинты, что у токенов (@amaya/tokens/breakpoints.json). large — и ширина,
+// и высота: широкое низкое окно берёт арт medium
+const media = (name: string) => {
+  const list: { name: string, min: number, minHeight?: number }[] = [...breakpoints.sizes, ...breakpoints.layout]
+  const { min, minHeight } = list.find(item => item.name === name)!
+  return `(min-width: ${min}px)${minHeight ? ` and (min-height: ${minHeight}px)` : ''}`
+}
+
+export const IMAGE_MEDIA = { large: media('large'), medium: media('medium'), wide: media('wide') }
 
 /** 12 адресов по конвенции: imageSet('/images/cars2/art') → /images/cars2/art-small.png, …-large@2x.webp. */
 export function imageSet(base: string): DsImageSet {

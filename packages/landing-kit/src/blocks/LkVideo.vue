@@ -5,7 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { track } from '../track'
 import { useLanding } from '../useLanding'
 
-const { config } = useLanding()
+const { config, heroLoaded } = useLanding()
 const { t } = useI18n()
 const onPlay = () => track('video_play', { landing: config.id })
 </script>
@@ -18,6 +18,7 @@ const onPlay = () => track('video_play', { landing: config.id })
     <DsVideo
       :src="config.video.src"
       :poster="config.video.poster"
+      :load-poster="heroLoaded"
       :label="t(config.video.label)"
       @play="onPlay"
     />

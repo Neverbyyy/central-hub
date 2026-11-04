@@ -4,6 +4,7 @@ JSON в формате W3C Design Tokens → `dist/theme.css` (тема Tailwind
 `dist/tokens.json` (Storybook). Сборка — `pnpm --filter @amaya/tokens build`, тесты — `packages/tokens/test`.
 
 ```
+src/breakpoints.json       брейкпоинты: токены, варианты ds:large и ds:wide, media картинок — всё отсюда
 src/primitives.json        палитра, градиенты, тени, шрифты — компоненты их не видят
 src/theme/base.json        смысловые токены: color.*, surface.*, shadow.*, font.*, case.* (base = стиль Amaya Plus)
 src/theme/<тема>.json      только отличия темы игры (cars2, farm)

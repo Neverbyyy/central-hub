@@ -6,7 +6,8 @@
  * Когда использовать: геймплей на лендинге. Подпись кнопки для скринридера — снаружи (ds.video.play.label).
  * Вид: скругление radius.lp-video, тени shadow.lp-video, рамка color.lp.video-line, кнопка color.video.*.
  */
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { ref } from 'vue'
+import { useInView } from '../composables/useInView'
 import { usePressed } from '../composables/usePressed'
 import type { DsImageSet } from '../image'
 import DsIcon from './DsIcon.vue'
@@ -17,10 +18,13 @@ const props = withDefaults(defineProps<{
   poster: DsImageSet
   // Подпись кнопки «▶»
   label: string
+  // false — постер пока не грузить: первому экрану нужна сеть. Место под видео уже занято
+  loadPoster?: boolean
   // Место под видео занято до загрузки — страница не прыгает
   ratio?: string
   type?: string
 }>(), {
+  loadPoster: true,
   ratio: '16 / 9',
   type: 'video/mp4'
 })
@@ -33,7 +37,6 @@ const started = ref(false)
 // Постер держится, пока не пошли кадры: без чёрного прямоугольника, пока ролик грузится
 const playing = ref(false)
 const { pressed, handlers } = usePressed()
-let observer: IntersectionObserver | undefined
 
 function start() {
   if (started.value || !video.value) return
@@ -44,14 +47,9 @@ function start() {
   emit('play')
 }
 
-onMounted(() => {
-  if (typeof IntersectionObserver === 'undefined' || !root.value) return
-  observer = new IntersectionObserver(([entry]) => {
-    if (!entry?.isIntersecting && video.value && !video.value.paused) video.value.pause()
-  })
-  observer.observe(root.value)
+useInView(root, (visible) => {
+  if (!visible && video.value && !video.value.paused) video.value.pause()
 })
-onBeforeUnmount(() => observer?.disconnect())
 </script>
 
 <template>
@@ -76,7 +74,7 @@ onBeforeUnmount(() => observer?.disconnect())
         >
       </video>
       <DsImage
-        v-if="!playing"
+        v-if="loadPoster && !playing"
         class="ds:pointer-events-none ds:absolute ds:inset-0"
         :set="poster"
         alt=""

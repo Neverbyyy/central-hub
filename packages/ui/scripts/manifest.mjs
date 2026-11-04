@@ -62,6 +62,17 @@ function member(text) {
   return { name: match[1].replace(/'/g, ''), required: !match[2], type: match[3].replace(/\s+/g, ' ').trim() }
 }
 
+/** Пропсы из тела объекта или типа: записи, которые читаются как «имя: тип». */
+const propsOf = body => entries(body)
+  .map(({ text, comment }) => ({ ...member(text), comment }))
+  .filter(prop => prop.name)
+
+/** Общие пропсы экранов: шаблоны пишут defineProps<ScreenProps & { … }>, а объявлены они в config.ts paywall-kit. */
+function screenProps() {
+  const config = readFileSync(join(ROOT, 'packages/paywall-kit/src/config.ts'), 'utf8')
+  return propsOf(balanced(config, config.indexOf('{', config.indexOf('interface ScreenProps'))))
+}
+
 function describe(file, source) {
   const { descriptor } = parse(readFileSync(file, 'utf8'), { filename: file })
   const script = descriptor.scriptSetup?.content ?? ''
@@ -72,9 +83,10 @@ function describe(file, source) {
   const propsAt = script.indexOf('defineProps<')
   const props = propsAt < 0
     ? []
-    : entries(balanced(script, script.indexOf('{', propsAt)))
-        .map(({ text, comment }) => ({ ...member(text), comment }))
-        .filter(prop => prop.name)
+    : [
+        ...(script.startsWith('ScreenProps', propsAt + 'defineProps<'.length) ? screenProps() : []),
+        ...propsOf(balanced(script, script.indexOf('{', propsAt)))
+      ]
   const defaultsAt = script.indexOf('withDefaults(')
   if (defaultsAt >= 0) {
     // Второй аргумент withDefaults: после закрытия defineProps<…>()

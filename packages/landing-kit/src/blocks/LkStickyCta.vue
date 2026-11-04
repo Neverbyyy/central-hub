@@ -3,25 +3,18 @@
  * Закреплённая кнопка внизу экрана телефона: выезжает, когда первый экран ушёл из вида, и прячется, когда он
  * вернулся. Только transform. От 640 px не показывается. Включается в конфиге (stickyCta) — у Cars 2 выключена.
  */
-import { DsButton } from '@amaya/ui'
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { DsButton, useInView } from '@amaya/ui'
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useLanding } from '../useLanding'
 
 const { config, cta } = useLanding()
 const { t } = useI18n()
 const shown = ref(false)
-let observer: IntersectionObserver | undefined
 
-onMounted(() => {
-  const hero = document.getElementById(`${config.id}-hero`)
-  if (!hero || typeof IntersectionObserver === 'undefined') return
-  observer = new IntersectionObserver(([entry]) => {
-    shown.value = !entry?.isIntersecting
-  })
-  observer.observe(hero)
+useInView(() => document.getElementById(`${config.id}-hero`), (heroVisible) => {
+  shown.value = !heroVisible
 })
-onBeforeUnmount(() => observer?.disconnect())
 </script>
 
 <template>

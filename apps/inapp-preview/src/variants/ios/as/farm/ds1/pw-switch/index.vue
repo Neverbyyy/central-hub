@@ -1,24 +1,14 @@
 <script setup lang="ts">
 // Пейволл Farm «On start» (pw-switch): шаблон PwPlusSplit с конфигом этого экрана, устроен как вариант InApp
-import { PwPlusSplit, type PaywallEnv } from '@amaya/paywall-kit'
-import type { DsTheme } from '@amaya/ui'
+import { PwPlusSplit, type ScreenProps } from '@amaya/paywall-kit'
 import { config } from './config'
 
-withDefaults(defineProps<{
-  env: PaywallEnv
-  theme?: DsTheme
-  forcePurchasing?: boolean
-}>(), {
-  theme: undefined,
-  forcePurchasing: false
-})
+defineProps<ScreenProps>()
 </script>
 
 <template>
   <PwPlusSplit
-    :env="env"
+    v-bind="$props"
     :config="config"
-    :theme="theme"
-    :force-purchasing="forcePurchasing"
   />
 </template>

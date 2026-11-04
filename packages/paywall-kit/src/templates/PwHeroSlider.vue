@@ -8,22 +8,15 @@
  * Логика экрана — usePaywall; тексты — ключи сервиса из конфига; цены — из стора.
  */
 import { perWeek } from '@amaya/pricing'
-import { DsBox, DsButton, DsCarousel, DsCheckMark, DsCloseButton, DsFit, DsGameTitle, DsIconButton, DsImage, DsLink, DsPlanPicker, DsPopup, DsPriceTag, DsRive, DsRoot, DsText, DsBenefitList, DsBadge, type DsPlan, type DsTheme } from '@amaya/ui'
+import { DsButton, DsCarousel, DsCloseButton, DsFit, DsGameTitle, DsIconButton, DsImage, DsLink, DsPriceTag, DsRive, DsRoot, type DsPlan } from '@amaya/ui'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { resolveSegment, type HeroSliderConfig, type HeroUnlock } from '../config'
-import type { PaywallEnv } from '../env'
+import { resolveSegment, type HeroSliderConfig, type HeroUnlock, type ScreenProps } from '../config'
 import { usePaywall } from '../usePaywall'
+import HeroInfo from './hero/HeroInfo.vue'
+import HeroPlans from './hero/HeroPlans.vue'
 
-const props = withDefaults(defineProps<{
-  env: PaywallEnv
-  config: HeroSliderConfig
-  theme?: DsTheme
-  forcePurchasing?: boolean
-}>(), {
-  theme: undefined,
-  forcePurchasing: false
-})
+const props = defineProps<ScreenProps & { config: HeroSliderConfig }>()
 
 const { t } = useI18n()
 const tx = computed(() => props.config.texts)
@@ -107,8 +100,6 @@ const buyPopup = () => {
   if (popupPlan.value) paywall.purchase(popupPlan.value.key)
 }
 
-const TAG_TONES = ['green', 'red', 'purple', 'blue', 'yellow'] as const
-
 // Сколько высоты нужно ряду в его размерах (для DsFit): колонка главной карточки — карточка, кнопка, «More plans» —
 // плюс поле ряда сверху и немного воздуха снизу. Наборы машин ниже колонки, их высота не решает
 const main = ref<HTMLElement | null>(null)
@@ -119,9 +110,6 @@ const neededHeight = () => {
   const top = row ? Number.parseFloat(getComputedStyle(row).paddingTop) || 0 : 0
   return column.offsetHeight + top * 2
 }
-// Попап тарифов: его естественная высота вместе с роботом над ним
-const sheet = ref<HTMLElement | null>(null)
-const popupHeight = () => sheet.value?.offsetHeight ?? 0
 </script>
 
 <template>
@@ -233,88 +221,10 @@ const popupHeight = () => sheet.value?.offsetHeight ?? 0
                   :sub="priceSub"
                 />
 
-                <!-- Оборот: что входит в подписку -->
-                <div
-                  class="ds:mt-auto ds:flex ds:w-full ds:items-stretch ds:px-3 ds:pb-9 ds:transition-[opacity,translate] ds:duration-(--ds-duration-base) ds:ease-standard"
-                  :class="infoOpen ? 'ds:opacity-100 ds:translate-y-0' : 'ds:pointer-events-none ds:opacity-0 ds:translate-y-4'"
-                  :aria-hidden="!infoOpen || undefined"
-                >
-                  <DsBox
-                    surface="card"
-                    :padding="3"
-                    class="ds:relative ds:me-1 ds:w-1/3 ds:shrink-0"
-                  >
-                    <DsCheckMark class="ds:absolute ds:end-2 ds:top-2" />
-                    <DsImage
-                      class="ds:mx-auto ds:size-8 ds:overflow-hidden ds:rounded-tag"
-                      :set="config.art.gameIcon"
-                      alt=""
-                      loading="lazy"
-                    />
-                    <DsText
-                      variant="list"
-                      class="ds:mt-2 ds:font-extrabold"
-                    >
-                      {{ t(tx.infoCars) }}
-                    </DsText>
-                    <DsBenefitList
-                      class="ds:mt-1"
-                      marker="check"
-                      tone="primary"
-                      :items="[t(tx.infoNoAds), t(tx.infoNoPayments)]"
-                    />
-                  </DsBox>
-                  <DsBox
-                    surface="card"
-                    :padding="3"
-                    class="ds:relative ds:min-w-0 ds:flex-1"
-                  >
-                    <DsCheckMark class="ds:absolute ds:end-2 ds:top-2" />
-                    <div class="ds:flex ds:items-center ds:justify-center ds:pe-4">
-                      <DsImage
-                        v-for="(icon, index) in config.art.appIcons"
-                        :key="index"
-                        class="ds:mx-0.5 ds:size-7 ds:overflow-hidden ds:rounded-tag"
-                        :set="icon"
-                        alt=""
-                        loading="lazy"
-                      />
-                    </div>
-                    <DsText
-                      variant="list"
-                      class="ds:mt-2 ds:font-extrabold"
-                    >
-                      {{ t(tx.infoApps, { count: config.appsCount }) }}
-                    </DsText>
-                    <DsText
-                      variant="list"
-                      class="ds:mt-1"
-                    >
-                      <i18n-t
-                        :keypath="tx.infoAudience"
-                        tag="span"
-                        scope="global"
-                      >
-                        <template #boys>
-                          <span class="ds:font-black ds:text-highlight-boys">{{ t(tx.infoBoys) }}</span>
-                        </template>
-                        <template #girls>
-                          <span class="ds:font-black ds:text-highlight-girls">{{ t(tx.infoGirls) }}</span>
-                        </template>
-                      </i18n-t>
-                    </DsText>
-                    <div class="ds:mt-1.5 ds:flex ds:flex-wrap">
-                      <DsBadge
-                        v-for="(tag, index) in tx.tags"
-                        :key="tag"
-                        class="ds:mb-0.5 ds:me-0.5"
-                        :tone="TAG_TONES[index % TAG_TONES.length]"
-                      >
-                        {{ t(tag) }}
-                      </DsBadge>
-                    </div>
-                  </DsBox>
-                </div>
+                <HeroInfo
+                  :config="config"
+                  :open="infoOpen"
+                />
               </div>
 
               <!-- Белая рамка поверх фона -->
@@ -432,111 +342,17 @@ const popupHeight = () => sheet.value?.offsetHeight ?? 0
       />
     </div>
 
-    <!-- Попап «More Plans» -->
-    <DsPopup
+    <HeroPlans
+      v-model:selected="popupSelected"
+      :config="config"
       :open="popupOpen"
-      :label="t(tx.plans)"
+      :plans="popupPlans"
+      :button-text="popupButton"
+      :busy="busy"
+      :loading="popupOpen && !!purchasing"
       @close="popupOpen = false"
-    >
-      <!-- Попап прижат к низу и тоже уменьшается целиком, если выше экрана (iPhone SE в альбомной).
-           Пустой верх не ловит касания — тап по затемнению закрывает попап -->
-      <div class="ds:pointer-events-none ds:h-vh">
-        <DsFit
-          class="ds:size-full"
-          :measure="popupHeight"
-        >
-          <div class="ds:flex ds:h-full ds:flex-col ds:justify-end">
-            <div
-              ref="sheet"
-              class="ds:pointer-events-auto ds:relative ds:pt-16"
-            >
-              <DsImage
-                class="pw-hero__popup-top ds:pointer-events-none ds:absolute ds:start-1/2 ds:top-0 ds:z-10 ds:-translate-x-1/2"
-                :set="config.art.popup.top"
-                alt=""
-              />
-              <div class="pw-hero__sheet ds:relative ds:overflow-hidden ds:rounded-t-hero">
-                <DsImage
-                  class="ds:absolute ds:inset-0"
-                  :set="config.art.popup.bg"
-                  alt=""
-                  fit="cover"
-                />
-                <DsImage
-                  class="pw-hero__popup-left ds:pointer-events-none ds:absolute ds:bottom-0 ds:start-0"
-                  :set="config.art.popup.left"
-                  alt=""
-                />
-                <DsImage
-                  class="pw-hero__popup-right ds:pointer-events-none ds:absolute ds:bottom-0 ds:end-0"
-                  :set="config.art.popup.right"
-                  alt=""
-                />
-                <DsImage
-                  class="pw-hero__popup-balloon ds:pointer-events-none ds:absolute ds:start-0"
-                  :set="config.art.popup.balloon"
-                  alt=""
-                />
-                <DsImage
-                  class="pw-hero__popup-key ds:pointer-events-none ds:absolute ds:end-0"
-                  :set="config.art.popup.key"
-                  alt=""
-                />
-
-                <div class="ds:relative ds:flex ds:flex-col ds:items-center ds:px-6 ds:pb-8 ds:pt-3">
-                  <DsGameTitle variant="title-lg">
-                    <em>{{ t(tx.titleLead) }}</em>
-                    {{ ' ' }}
-                    <i18n-t
-                      :keypath="tx.titleAnd"
-                      tag="span"
-                      scope="global"
-                    >
-                      <template #apps>
-                        <em>{{ t(tx.titleApps, { count: config.appsCount }) }}</em>
-                      </template>
-                    </i18n-t>
-                  </DsGameTitle>
-                  <DsGameTitle
-                    as="p"
-                    variant="title-md"
-                  >
-                    {{ t(tx.titleTail) }}
-                  </DsGameTitle>
-
-                  <DsPlanPicker
-                    v-model="popupSelected"
-                    class="ds:mt-4"
-                    :plans="popupPlans"
-                    direction="row"
-                    layout="stack"
-                    indicator="radio"
-                    :label="t(tx.plans)"
-                    :disabled="busy"
-                  />
-                  <DsButton
-                    class="ds:mt-4"
-                    :loading="popupOpen && !!purchasing"
-                    :loading-label="popupButton"
-                    @click="buyPopup"
-                  >
-                    {{ popupButton }}
-                  </DsButton>
-                </div>
-              </div>
-              <div class="ds:absolute ds:end-1.5 ds:top-18 ds:z-10">
-                <DsCloseButton
-                  tone="alt"
-                  :label="t(tx.close)"
-                  :delay="0"
-                  @close="popupOpen = false"
-                />
-              </div>
-            </div>
-          </div>
-        </DsFit>
-      </div>
-    </DsPopup>
+      @buy="buyPopup"
+    />
   </DsRoot>
 </template>
 
@@ -563,38 +379,6 @@ const popupHeight = () => sheet.value?.offsetHeight ?? 0
   left: -4%;
   top: -12%;
   width: 28%;
-}
-
-/* Попап: светлая кромка и цветная полоса сверху — слоем поверх фоновой картинки */
-.pw-hero__sheet::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  box-shadow: inset 0 0.375rem 0 var(--ds-color-popup-rim), inset 0 0.75rem 0 var(--ds-color-popup-edge);
-  pointer-events: none;
-}
-
-.pw-hero__popup-top {
-  width: 14%;
-}
-
-.pw-hero__popup-left {
-  width: 31%;
-}
-
-.pw-hero__popup-right {
-  width: 27%;
-}
-
-.pw-hero__popup-balloon {
-  top: 10%;
-  width: 16%;
-}
-
-.pw-hero__popup-key {
-  top: 25%;
-  width: 8%;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,0 +1,10 @@
+{
+  "sizes": [
+    { "name": "small", "min": 0 },
+    { "name": "medium", "min": 844 },
+    { "name": "large", "min": 844, "minHeight": 600 }
+  ],
+  "layout": [
+    { "name": "wide", "min": 640 }
+  ]
+}

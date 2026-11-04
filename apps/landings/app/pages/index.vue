@@ -13,9 +13,6 @@ const { t } = useI18n()
 // Заголовок карточки — title лендинга из сервиса (на английском, как /cars2)
 await useLocale('en')
 
-// Порядок — как в сервисе локализации (английский — /cars2 без языка в пути); новый язык — в конец
-const ORDER = ['en', 'ru', 'de', 'es', 'it', 'pt', 'fr', 'sv', 'nl']
-const languages = [...ORDER.filter(lang => locales.includes(lang)), ...locales.filter(lang => !ORDER.includes(lang))]
 const nativeName = (lang: string) => {
   const name = new Intl.DisplayNames([lang], { type: 'language' }).of(lang) ?? lang
   return name.charAt(0).toUpperCase() + name.slice(1)
@@ -69,7 +66,7 @@ useSeoMeta({ robots: 'noindex, nofollow' })
                 :aria-label="`Язык лендинга ${landing.id}`"
               >
                 <option
-                  v-for="lang in languages"
+                  v-for="lang in locales"
                   :key="lang"
                   :value="lang"
                 >

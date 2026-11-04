@@ -1397,6 +1397,13 @@
           "comment": "Подпись кнопки «▶»"
         },
         {
+          "name": "loadPoster",
+          "required": false,
+          "type": "boolean",
+          "comment": "false — постер пока не грузить: первому экрану нужна сеть. Место под видео уже занято",
+          "default": "true"
+        },
+        {
           "name": "ratio",
           "required": false,
           "type": "string",
@@ -1435,24 +1442,22 @@
           "comment": ""
         },
         {
-          "name": "config",
-          "required": true,
-          "type": "HeroSliderConfig",
-          "comment": ""
-        },
-        {
           "name": "theme",
           "required": false,
           "type": "DsTheme",
-          "comment": "",
-          "default": "undefined"
+          "comment": "Другая тема поверх конфига — для Storybook"
         },
         {
           "name": "forcePurchasing",
           "required": false,
           "type": "boolean",
-          "comment": "",
-          "default": "false"
+          "comment": "Для Storybook: показать «идёт покупка»"
+        },
+        {
+          "name": "config",
+          "required": true,
+          "type": "HeroSliderConfig",
+          "comment": ""
         }
       ],
       "emits": [],
@@ -1473,24 +1478,22 @@
           "comment": ""
         },
         {
-          "name": "config",
-          "required": true,
-          "type": "PlusConfig",
-          "comment": ""
-        },
-        {
           "name": "theme",
           "required": false,
           "type": "DsTheme",
-          "comment": "Другая тема поверх конфига — для Storybook",
-          "default": "undefined"
+          "comment": "Другая тема поверх конфига — для Storybook"
         },
         {
           "name": "forcePurchasing",
           "required": false,
           "type": "boolean",
-          "comment": "Для Storybook: показать «идёт покупка»",
-          "default": "false"
+          "comment": "Для Storybook: показать «идёт покупка»"
+        },
+        {
+          "name": "config",
+          "required": true,
+          "type": "PlusConfig",
+          "comment": ""
         }
       ],
       "emits": [],
@@ -1564,7 +1567,7 @@
       "package": "@amaya/landing-kit",
       "group": "Блоки лендинга",
       "file": "packages/landing-kit/src/blocks/LkHero.vue",
-      "description": "Первый экран: арт (живой Rive — во весь арт или элементом в углу — проявляется после загрузки страницы), голубая «капля» с заголовком, подзаголовком, строкой про сторы, главной кнопкой и значками сторов, и две цветные плашки-преимущества: на телефоне — внизу «капли», от 640 px — по её бокам, как в макете 768. «Капля» и плашки — фигуры из макета (Figma 38:174, 38:179, 38:182), цвет — из темы; длинный текст растягивает «каплю» вниз, плашки держатся за её низ (телефон) или верх (широкий экран).",
+      "description": "Первый экран: арт (живой Rive — во весь арт — проявляется после загрузки страницы), голубая «капля» с заголовком, подзаголовком, строкой про сторы, главной кнопкой и значками сторов, и две цветные плашки-преимущества: на телефоне — внизу «капли», от 640 px — по её бокам, как в макете 768. «Капля» и плашки — фигуры из макета (Figma 38:174, 38:179, 38:182), цвет — из темы; длинный текст растягивает «каплю» вниз, плашки держатся за её низ (телефон) или верх (широкий экран).",
       "props": [],
       "emits": [],
       "slots": []

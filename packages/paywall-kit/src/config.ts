@@ -1,6 +1,16 @@
 // Конфиг экрана: новый пейволл — это конфиг (тема, шаблон, продукты, ключи текстов, картинки), а не копия вёрстки.
 // Тексты — только ключи сервиса локализации; шаблон переводит их сам через vue-i18n приложения.
 import type { DsImageSet, DsTheme } from '@amaya/ui'
+import type { PaywallEnv } from './env'
+
+/** Пропсы целого экрана: их передают эмулятор и истории Storybook. */
+export interface ScreenProps {
+  env: PaywallEnv
+  // Другая тема поверх конфига — для Storybook
+  theme?: DsTheme
+  // Для Storybook: показать «идёт покупка»
+  forcePurchasing?: boolean
+}
 
 /**
  * Сегмент цен из имени варианта InApp: ios_as_farm_tm4_varb_ut1_pw_trio_v1 → ut1. У InApp у одного экрана

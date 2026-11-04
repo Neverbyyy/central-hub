@@ -9,21 +9,30 @@
 // Значение темы T на размере B: T/B → T/small → base/B → base/small. Если тема задала токен, его лесенку
 // по размерам задаёт она сама: Cars 2 на 844 берёт свой small (в макетах 667 и 844 — одни стили SM/*).
 
+import breakpoints from '../src/breakpoints.json' with { type: 'json' }
+
 // Tailwind собирается с prefix(ds): переменные темы у него --ds-*, переопределения пишем в те же имена
-export const PREFIX = 'ds'
+const PREFIX = 'ds'
 export const THEMES = ['base', 'cars2', 'farm']
-// Брейкпоинты как в макетах и в InApp: 667 (по умолчанию) / 844 / 1024. Телефон в альбомной ниже 600 px, поэтому
+// Брейкпоинты — один источник на токены, варианты Tailwind и картинки (src/breakpoints.json).
+// Размеры как в макетах и в InApp: 667 (по умолчанию) / 844 / 1024. Телефон в альбомной ниже 600 px, поэтому
 // размеры iPad (large) — на экране от 600 px в высоту и от 844 px в ширину: так их получают и Android-планшеты
 // (960×600) и высокое окно 900×860, которым телефонные 18 px малы, а арт телефона растягивается. Широкое,
-// но низкое окно (вебвью в половину экрана, окно браузера) получает размеры телефона — иначе макет iPad не помещается
-export const BREAKPOINTS = [
-  { name: 'small', min: 0 },
-  { name: 'medium', min: 844 },
-  { name: 'large', min: 844, minHeight: 600 }
-]
+// но низкое окно (вебвью в половину экрана, окно браузера) получает размеры телефона — иначе макет iPad не помещается.
+// layout — брейкпоинты раскладки, размеры токенов от них не меняются: wide — лендинг в две колонки от 640 px
+export const BREAKPOINTS = breakpoints.sizes
 
 /** Условие @media брейкпоинта: «(min-width: 844px) and (min-height: 600px)». */
-export const mediaQuery = ({ min, minHeight }) => `(min-width: ${min}px)${minHeight ? ` and (min-height: ${minHeight}px)` : ''}`
+const mediaQuery = ({ min, minHeight }) => `(min-width: ${min}px)${minHeight ? ` and (min-height: ${minHeight}px)` : ''}`
+
+/**
+ * Варианты Tailwind, которые нельзя задать переменной темы: у large есть высота, wide не меняет токены.
+ * ds:medium: — обычный брейкпоинт темы.
+ */
+export const variantsCss = () => {
+  const variants = [...BREAKPOINTS.filter(bp => bp.minHeight), ...breakpoints.layout]
+  return `/* Собрано скриптом packages/tokens/scripts/build.mjs из src/breakpoints.json — не править руками. */\n${variants.map(bp => `@custom-variant ${bp.name} (@media ${mediaQuery(bp)});`).join('\n')}\n`
+}
 // Шаг отступов: ds:p-4 = 16px — сетка 4 px, без произвольных пикселей
 const SPACING = '4px'
 // Стандартные значения Tailwind в этих пространствах выключены: остаются только наши токены

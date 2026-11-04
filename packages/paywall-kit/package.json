@@ -2,6 +2,7 @@
   "name": "@amaya/paywall-kit",
   "private": true,
   "type": "module",
+  "sideEffects": false,
   "description": "Пейволлы и онбординги: связь с окружением (InApp), общая логика экрана и шаблоны из компонентов Ds*",
   "exports": {
     ".": "./src/index.ts",
@@ -12,7 +13,6 @@
     "typecheck": "vue-tsc --noEmit"
   },
   "dependencies": {
-    "@amaya/icons": "workspace:*",
     "@amaya/pricing": "workspace:*",
     "@amaya/ui": "workspace:*"
   },

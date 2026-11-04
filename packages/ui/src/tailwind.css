@@ -10,6 +10,8 @@
 
 @import '@amaya/tokens/theme.css';
 @import '@amaya/tokens/overrides.css';
+/* Варианты ds:large: (iPad: ширина и высота) и ds:wide: (раскладка лендинга от 640 px) — брейкпоинты из токенов */
+@import '@amaya/tokens/variants.css';
 @import './styles/reset.css';
 @import './styles/webview.css';
 
@@ -18,14 +20,6 @@
 @utility surface-* {
   background: --value(--surface-*);
 }
-
-/* Брейкпоинт iPad: от 844 px в ширину и от 600 px в высоту — как у размеров токенов (packages/tokens/scripts/tokens.mjs,
-   BREAKPOINTS). Телефон в альбомной ниже 600, так что это планшеты и высокие окна. ds:medium: — от 844 px в ширину */
-@custom-variant large (@media (min-width: 844px) and (min-height: 600px));
-
-/* Раскладка лендинга: от 640 px — колонки и блоки как в макете 768 (две карточки по 286 рядом). Это раскладка,
-   а не размеры токенов: портретный планшет 768 по ширине ещё «маленький» для брейкпоинтов 844 и iPad */
-@custom-variant wide (@media (min-width: 640px));
 
 /* Регистр из темы: Farm пишет заголовки и кнопки капсом, Cars 2 — нет. Тексты в сервисе — в обычном регистре */
 @utility case-* {

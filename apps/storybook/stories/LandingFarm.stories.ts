@@ -1,22 +1,10 @@
-// Лендинг Farm целиком — та же страница, что в apps/landings (/farm), с тем же конфигом и артом.
-// Язык — из тулбара, размер — телефон 375, iPad 768, десктоп. Кнопки здесь в стор не уводят: на компьютере
-// кнопка прокручивает к значкам сторов, а нажатия видны в консоли (track)
-import { LkPage } from '@amaya/landing-kit'
-import { NO_SCREEN_STATE, NO_THEME } from '@amaya/ui/stories'
-import type { StoryObj } from '@storybook/vue3-vite'
+// Лендинг Farm целиком — страница /farm из apps/landings
 import { farm } from '../../landings/app/landings/farm/config'
+import { landingMeta, landingStory } from './landingStory'
 
 export default {
   title: 'Лендинги/Farm',
-  parameters: { layout: 'fullscreen', themes: false },
-  globals: { viewport: { value: 'phonePortraitS', isRotated: false }, ...NO_THEME, ...NO_SCREEN_STATE }
+  ...landingMeta
 }
 
-export const Farm: StoryObj = {
-  name: 'Farm',
-  render: () => ({
-    components: { LkPage },
-    setup: () => ({ config: farm }),
-    template: '<LkPage :config="config" />'
-  })
-}
+export const Farm = landingStory(farm)

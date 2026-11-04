@@ -9,24 +9,13 @@
  * Раскладка — две половины экрана (телефон в альбомной, iPad); в портретной — слайды сверху, тарифы снизу.
  */
 import { perWeek } from '@amaya/pricing'
-import { DsBenefitList, DsButton, DsCloseButton, DsFit, DsImage, DsLegalLinks, DsPlanPicker, DsRoot, DsSlides, DsText, DsTrialToggle, type DsPlan, type DsTheme } from '@amaya/ui'
+import { DsBenefitList, DsButton, DsCloseButton, DsFit, DsImage, DsLegalLinks, DsPlanPicker, DsRoot, DsSlides, DsText, DsTrialToggle, type DsPlan } from '@amaya/ui'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { PLUS_TEXTS, resolveSegment, type PlusConfig, type PlusSwitchProducts, type PlusTrioProducts } from '../config'
-import type { PaywallEnv } from '../env'
+import { PLUS_TEXTS, resolveSegment, type PlusConfig, type PlusSwitchProducts, type PlusTrioProducts, type ScreenProps } from '../config'
 import { usePaywall } from '../usePaywall'
 
-const props = withDefaults(defineProps<{
-  env: PaywallEnv
-  config: PlusConfig
-  // Другая тема поверх конфига — для Storybook
-  theme?: DsTheme
-  // Для Storybook: показать «идёт покупка»
-  forcePurchasing?: boolean
-}>(), {
-  theme: undefined,
-  forcePurchasing: false
-})
+const props = defineProps<ScreenProps & { config: PlusConfig }>()
 
 const { t } = useI18n()
 const tx = computed(() => ({ ...PLUS_TEXTS, ...props.config.texts }))

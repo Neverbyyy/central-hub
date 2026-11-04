@@ -2,7 +2,7 @@
 // Страница собирается заранее (prerender), поэтому платформу и UTM видно только в браузере: до гидрации ссылки
 // значков — без меток, после — с метками из адреса. Кнопка: iPhone и iPad — App Store, Android — Google Play,
 // компьютер — прокрутка к значкам сторов (там обе ссылки)
-import { inject, onMounted, provide, ref, type InjectionKey, type Ref } from 'vue'
+import { inject, onBeforeUnmount, onMounted, provide, ref, type InjectionKey, type Ref } from 'vue'
 import type { LandingConfig } from './config'
 import { detectPlatform, type Platform } from './platform'
 import { storeLinks, type StoreUrls } from './store'
@@ -16,11 +16,17 @@ export interface Landing {
   links: Ref<StoreUrls>
   // id блока со значками сторов — к нему прокручивает кнопка на компьютере
   storesId: string
+  // Картинка первого экрана загрузилась: блоки ниже него начинают свои
+  heroLoaded: Ref<boolean>
+  markHeroLoaded: () => void
   cta: (source: string) => void
   storeClick: (store: StoreName, source: string) => void
 }
 
 const KEY: InjectionKey<Landing> = Symbol('landing')
+
+// Сколько картинки ниже первого экрана ждут его картинку: событие могло потеряться, а первого экрана может не быть
+const HERO_WAIT = 3000
 
 /**
  * Строка запроса, с которой пришёл человек. На собранной заранее странице роутер Nuxt при гидрации на время
@@ -43,10 +49,20 @@ export function provideLanding(config: LandingConfig): Landing {
   const links = ref<StoreUrls>({ ...config.stores })
   const storesId = `${config.id}-stores`
 
+  // Картинки преимуществ и постер не делят сеть с картинкой первого экрана: на мобильном интернете они отодвигают LCP.
+  // Отложенный loading="lazy" здесь не помогает: браузер берёт всё в большом запасе вокруг экрана
+  const heroLoaded = ref(false)
+  const markHeroLoaded = () => {
+    heroLoaded.value = true
+  }
+  let heroTimer: ReturnType<typeof setTimeout> | undefined
+  onBeforeUnmount(() => clearTimeout(heroTimer))
+
   onMounted(() => {
     platform.value = detectPlatform(navigator)
     links.value = storeLinks(config.stores, currentSearch())
     track('landing_open', { landing: config.id, platform: platform.value })
+    heroTimer = setTimeout(markHeroLoaded, HERO_WAIT)
   })
 
   function cta(source: string) {
@@ -67,7 +83,7 @@ export function provideLanding(config: LandingConfig): Landing {
     track('store_click', { landing: config.id, store, source })
   }
 
-  const landing: Landing = { config, platform, links, storesId, cta, storeClick }
+  const landing: Landing = { config, platform, links, storesId, heroLoaded, markHeroLoaded, cta, storeClick }
   provide(KEY, landing)
   return landing
 }

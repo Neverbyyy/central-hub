@@ -10,7 +10,8 @@
     "preview": "nuxt preview --port 3021",
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
-    "typecheck": "nuxt typecheck"
+    "typecheck": "nuxt typecheck",
+    "check": "node scripts/check.mjs"
   },
   "dependencies": {
     "@amaya/landing-kit": "workspace:*",

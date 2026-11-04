@@ -6,7 +6,9 @@
   "exports": {
     "./theme.css": "./dist/theme.css",
     "./overrides.css": "./dist/overrides.css",
+    "./variants.css": "./dist/variants.css",
     "./tokens.json": "./dist/tokens.json",
+    "./breakpoints.json": "./src/breakpoints.json",
     "./fonts.css": "./src/fonts.css"
   },
   "scripts": {

@@ -2,6 +2,7 @@
   "name": "@amaya/landing-kit",
   "private": true,
   "type": "module",
+  "sideEffects": false,
   "description": "Лендинги: переход в стор с UTM, одна функция track, конфиг страницы и блоки из компонентов Ds*",
   "exports": {
     ".": "./src/index.ts"

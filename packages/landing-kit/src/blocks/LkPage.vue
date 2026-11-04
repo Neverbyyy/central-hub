@@ -6,6 +6,7 @@
  * Когда использовать: страница лендинга (apps/landings) и её история в Storybook. Новый лендинг — новый конфиг.
  */
 import { DsRoot } from '@amaya/ui'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { LandingConfig } from '../config'
 import { provideLanding } from '../useLanding'
@@ -21,8 +22,9 @@ import LkVideo from './LkVideo.vue'
 
 const props = defineProps<{ config: LandingConfig }>()
 
-provideLanding(props.config)
+const { heroLoaded } = provideLanding(props.config)
 const { locale } = useI18n()
+const fontLater = computed(() => (heroLoaded.value ? '' : 'lk-page--font-later'))
 </script>
 
 <template>
@@ -47,6 +49,7 @@ const { locale } = useI18n()
           <div
             v-if="config.reviews"
             class="ds:pt-22 ds:wide:pt-19"
+            :class="fontLater"
           >
             <LkReviews />
           </div>
@@ -62,8 +65,17 @@ const { locale } = useI18n()
           />
         </div>
       </main>
-      <LkFooter />
+      <LkFooter :class="fontLater" />
     </div>
     <LkStickyCta v-if="config.stickyCta" />
   </DsRoot>
 </template>
+
+<style scoped>
+/* Open Sans нужен только отзывам и футеру, но браузер запрашивает его сразу: 47 КБ делят сеть с картинкой первого
+   экрана. Пока она грузится, этот шрифт им не назначен. Замена идёт за пределами экрана, поэтому ничего не прыгает.
+   Класс на этих двух блоках, а не на корне: иначе его снятие пересчитывает стили всей страницы */
+.lk-page--font-later {
+  --ds-font-lp-body: Arial, sans-serif;
+}
+</style>

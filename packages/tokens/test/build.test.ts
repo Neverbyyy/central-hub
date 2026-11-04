@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { BREAKPOINTS, buildTokens, cssValue, flatten, THEMES, themeVar } from '../scripts/tokens.mjs'
+import { BREAKPOINTS, buildTokens, cssValue, flatten, THEMES, themeVar, variantsCss } from '../scripts/tokens.mjs'
 
 const primitives = {
   color: { $type: 'color', orange: { 500: { $value: '#FF8D24' } }, green: { 500: { $value: '#64BF07' } } },
@@ -101,6 +101,13 @@ describe('токены дизайн-системы', () => {
     expect(size.cars2).toEqual({ small: '26px', medium: '26px', large: '40px' })
     expect(size.base).toEqual({ small: '16px', medium: '20px', large: '32px' })
     expect(size.farm).toEqual(size.base)
+  })
+
+  it('варианты Tailwind — из breakpoints.json: у large есть высота, wide — раскладка; medium — обычный брейкпоинт темы', () => {
+    const css = variantsCss()
+    expect(css).toContain('@custom-variant large (@media (min-width: 844px) and (min-height: 600px));')
+    expect(css).toContain('@custom-variant wide (@media (min-width: 640px));')
+    expect(css).not.toContain('@custom-variant medium')
   })
 
   it('битая ссылка, новый токен в теме или в размерах — понятная ошибка', () => {

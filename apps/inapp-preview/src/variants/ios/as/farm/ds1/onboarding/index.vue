@@ -6,21 +6,14 @@
  * Шаблона под онбординг нет, поэтому экран собран из Ds* и usePaywall: «готов» — после шрифта и арта обоих шагов
  * (второй шаг появляется сразу, без догрузки), повторное открытие — снова с первого шага.
  */
-import { usePaywall, type PaywallEnv } from '@amaya/paywall-kit'
-import { DsButton, DsCloseButton, DsFit, DsImage, DsLegalLinks, DsRoot, DsText, type DsTheme } from '@amaya/ui'
+import { usePaywall, type ScreenProps } from '@amaya/paywall-kit'
+import { DsButton, DsCloseButton, DsFit, DsImage, DsLegalLinks, DsRoot, DsText } from '@amaya/ui'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { config } from './config'
 
-const props = withDefaults(defineProps<{
-  env: PaywallEnv
-  theme?: DsTheme
-  // Тот же набор пропсов, что у пейволлов (история и эмулятор передают его всем экранам); покупки здесь нет
-  forcePurchasing?: boolean
-}>(), {
-  theme: undefined,
-  forcePurchasing: false
-})
+// Те же пропсы, что у пейволлов: история и эмулятор передают их всем экранам; покупки здесь нет
+const props = defineProps<ScreenProps>()
 
 const { t } = useI18n()
 

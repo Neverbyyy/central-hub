@@ -53,6 +53,15 @@ export default defineNuxtModule({
       { name: 'imageSetFromFiles', from: '@amaya/ui' }
     ])
 
+    // Флаги vue-i18n: без них он проверяет их на лету и старый API остаётся в сборке (у нас везде legacy: false)
+    nuxt.options.vite.define = {
+      ...nuxt.options.vite.define,
+      __VUE_I18N_LEGACY_API__: false,
+      __VUE_I18N_FULL_INSTALL__: true,
+      __INTLIFY_PROD_DEVTOOLS__: false,
+      __INTLIFY_DROP_MESSAGE_COMPILER__: false
+    }
+
     addPlugin(resolve('./runtime/i18n'))
     addPlugin(resolve('./runtime/fonts'))
     addPlugin({ src: resolve('./runtime/rive.client'), mode: 'client' })

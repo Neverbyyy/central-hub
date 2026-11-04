@@ -9,7 +9,7 @@ import { useI18n } from 'vue-i18n'
 import { useLanding } from '../useLanding'
 import LkCta from './LkCta.vue'
 
-const { config } = useLanding()
+const { config, heroLoaded } = useLanding()
 const { t } = useI18n()
 </script>
 
@@ -24,6 +24,7 @@ const { t } = useI18n()
       >
         <div class="ds:h-lp-feature-img-h ds:w-lp-feature-img-w ds:wide:h-lp-feature-img-h-wide ds:wide:w-lp-feature-img-w-wide">
           <DsImage
+            v-if="heroLoaded"
             :set="feature.art"
             alt=""
             loading="lazy"

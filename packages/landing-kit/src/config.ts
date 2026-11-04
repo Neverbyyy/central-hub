@@ -37,9 +37,8 @@ export interface LandingConfig {
   header: { logo: string, logoLabel: string }
   hero: {
     art: DsImageSet
-    // Живой арт поверх картинки, появляется после загрузки страницы. cover — во весь арт (картинка — постер),
-    // corner — небольшой элемент в верхнем углу поверх картинки. Только если он есть в макете
-    rive?: { src: string, artboard?: string, stateMachine?: string, layout?: 'cover' | 'corner' }
+    // Живой арт во весь арт поверх картинки (она — постер), появляется после загрузки страницы. Только если он есть в макете
+    rive?: { src: string, artboard?: string, stateMachine?: string }
     title: string
     text: string
     note: string

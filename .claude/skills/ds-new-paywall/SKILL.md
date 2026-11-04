@@ -11,7 +11,7 @@ description: Собрать новый пейволл или онбординг 
    попап + карусель) — экран = `index.vue` с шаблоном и `config.ts` (типы — `packages/paywall-kit/src/config.ts`).
    Не подходит — экран из компонентов Ds* с `usePaywall` (готовность, покупка, повторное открытие) по образцу шаблона.
 2. **Папка** `apps/inapp-preview/src/variants/ios/as/<игра>/ds1/<экран>/` — как вариант InApp: `index.vue` (пропсы
-   `env`, `theme?`, `forcePurchasing?`), `config.ts`, `presets.ts`, `art/`. Общее для игры — `<игра>/ds1/common/`.
+   `ScreenProps`: `env`, `theme?`, `forcePurchasing?`), `config.ts`, `presets.ts`, `art/`. Общее для игры — `<игра>/ds1/common/`.
 3. **Продукты** — ID как в InApp, по сегментам (`t1`, `u`, `ut1`, `wout1` — из имени варианта). Цены — строки стора
    из данных приложения; «в неделю» и скидки — `@amaya/pricing`.
 4. **Тексты** — ключи (`ds-add-strings`): общие тарифы/кнопки — `common.*`, своё — `app.<игра>.<экран>.*`.

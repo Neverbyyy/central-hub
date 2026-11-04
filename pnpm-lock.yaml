@@ -310,9 +310,6 @@ importers:
 
   packages/paywall-kit:
     dependencies:
-      '@amaya/icons':
-        specifier: workspace:*
-        version: link:../icons
       '@amaya/pricing':
         specifier: workspace:*
         version: link:../pricing

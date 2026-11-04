@@ -382,10 +382,6 @@
     "lp-quote-w": { "$value": 38, "$description": "Лендинг: кавычка в карточке отзыва" },
     "lp-quote-h": { "$value": 32 },
     "lp-star": { "$value": 23, "$description": "Звезда рейтинга (DsRating)" },
-    "lp-deco-w": { "$value": 90, "$description": "Лендинг: живой элемент в углу первого экрана (hero.rive с layout corner, пропорции 361×610), телефон" },
-    "lp-deco-h": { "$value": 152 },
-    "lp-deco-w-wide": { "$value": 112, "$description": "Лендинг: то же от 640 px" },
-    "lp-deco-h-wide": { "$value": 190 },
     "lp-play": { "$value": 64, "$description": "Кнопка «▶» на постере видео (DsVideo)" }
   },
   "radius": {

@@ -7,6 +7,7 @@
  * тексты рядом, ключами из сервиса. Нажатия внутри — Listeners файла; прокрутку страницы они не держат.
  */
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useInView } from '../composables/useInView'
 import type { DsImageSet } from '../image'
 import { loadRive, type RiveInstance, type RiveRuntime } from '../rive'
 import DsImage from './DsImage.vue'
@@ -67,7 +68,6 @@ let visible = false
 let started = false
 // Номер загрузки: ответ от прошлого файла, пришедший после смены src или размонтирования, не применяется
 let generation = 0
-let observer: IntersectionObserver | undefined
 let resizer: ResizeObserver | undefined
 
 const layout = (module: RiveRuntime) => new module.Layout({
@@ -154,25 +154,18 @@ async function create() {
   rive = instance
 }
 
-onMounted(() => {
-  if (typeof IntersectionObserver === 'undefined' || !root.value) {
-    visible = true
+// С запасом 200 px: файл начинает грузиться чуть раньше, чем анимация въедет в экран
+useInView(root, (inView) => {
+  visible = inView
+  if (visible && !started) {
     started = true
     create()
-    return
   }
-  // С запасом 200 px: файл начинает грузиться чуть раньше, чем анимация въедет в экран
-  observer = new IntersectionObserver(([entry]) => {
-    visible = !!entry?.isIntersecting
-    if (visible && !started) {
-      started = true
-      create()
-    }
-    play()
-  }, { rootMargin: '200px' })
-  observer.observe(root.value)
+  play()
+}, { rootMargin: '200px' })
 
-  if (typeof ResizeObserver !== 'undefined') {
+onMounted(() => {
+  if (typeof ResizeObserver !== 'undefined' && root.value) {
     resizer = new ResizeObserver(() => {
       if (rive && ready) rive.resizeDrawingSurfaceToCanvas(pixelRatio())
     })
@@ -190,7 +183,6 @@ watch(() => props.autoplay, play)
 
 onBeforeUnmount(() => {
   generation++
-  observer?.disconnect()
   resizer?.disconnect()
   destroy()
 })

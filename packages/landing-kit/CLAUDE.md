@@ -8,6 +8,9 @@
 - Главная кнопка — `useLanding().cta(source)`: iOS → App Store, Android → Google Play, компьютер — прокрутка к значкам.
   UTM из адреса — `storeLinks` (`src/store.ts`): App Store — `utm_*` и `ct`, Google Play — `referrer`.
 - Все нажатия — через `track(event, props)` (`src/track.ts`); аналитику подключает `setTrackHandler`.
+- Порядок загрузки: сначала картинка первого экрана. Картинки преимуществ, постер и Open Sans (он нужен только отзывам и
+  футеру) ждут `heroLoaded` из `useLanding()`, иначе делят с ней сеть на мобильном интернете. Новый блок с тяжёлым
+  содержимым ниже первого экрана ждёт так же; запасной выход — таймаут в `provideLanding`.
 - Интерактив (Rive, GSAP) — только внутри `LkInteractive`: монтируется через 2,5 с после загрузки, на медленной сети
   не грузится; под ним всегда картинка.
 - Вид — токены `lp.*` (`color.lp.*`, `surface.cta-lp`, `text.lp-*`, `spacing.lp-*`), раскладка от 640 px — `ds:wide:`.

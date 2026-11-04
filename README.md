@@ -589,12 +589,13 @@ configureRive({ wasmUrl: wasm, wasmFallbackUrl: wasmFallback })
 - `apps/landings` (Nuxt 4), стенд — https://landings-six-henna.vercel.app. `/` — оглавление: все лендинги, у каждого
   выбор языка списком и «Открыть» (служебная страница, без правил дизайн-системы). Лендинги — `/cars2` и `/farm` (английский),
   `/cars2/<язык>`, `/farm/<язык>` — остальные 8. Farm — без макета, из блоков Cars 2 без новых блоков (значки сторов
-  и логотип — общие, из папки Cars 2). Страницы собираются заранее
+  и логотип — общие, `app/shared/art`). Страницы собираются заранее
   (prerender: лендинги — папки `app/landings/<путь>`, языки — файлы `packages/locales/src`). Закрыты от индексации:
   meta robots, заголовок `X-Robots-Tag`, `robots.txt`. Арт лендинга — в его папке (`app/landings/cars2/art`):
-  картинки по конвенции, ролик геймплея и значки сторов — копии из Pages Hub. Rive на первом экране у Cars 2 нет
+  картинки по конвенции и ролик геймплея; значки сторов — копии из Pages Hub. Rive на первом экране у Cars 2 нет
   (в макете его нет); включается конфигом `hero.rive`.
-  `pnpm --filter @amaya/landings dev` — порт 3020.
+  `pnpm --filter @amaya/landings dev` — порт 3020; `pnpm --filter @amaya/landings check` — проверки в браузере по всем
+  лендингам после сборки: сторы и UTM, `track`, FAQ, видео, порядок загрузки, 404, noindex, все языки, ширина 320–1440.
 
 **Тексты** — только ключи из сервиса. Набор выгрузки `ds` (`common.`, `ds.`, `app.cars2.`, `app.farm.`, `web.lp_`,
 `brand.`) кладёт утверждённые тексты в `packages/locales/src/<язык>.json`. `web.lp_` — все лендинги сразу: код

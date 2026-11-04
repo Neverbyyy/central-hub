@@ -24,6 +24,7 @@ tools/eslint          правила дизайн-системы; tools/figma �
 `pnpm install` · `pnpm build` (всё, с кешем turbo) · `pnpm test` · `pnpm storybook` (6006) ·
 `pnpm --filter @amaya/landings dev` (3020) · `pnpm --filter @amaya/inapp-preview dev` (6020, эмулятор InApp) ·
 `pnpm --filter @amaya/inapp-preview scenarios` (сценарии ТЗ для пейволлов и онбординга) ·
+`pnpm --filter @amaya/landings check` (проверки лендингов в браузере, после сборки) ·
 `pnpm turbo run lint typecheck --filter=@amaya/storybook... --filter=@amaya/inapp-preview... --filter=@amaya/landings...` ·
 `pnpm --filter @amaya/ui manifest` — пересобрать манифест после правки компонента.
 

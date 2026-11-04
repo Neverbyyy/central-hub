@@ -1,4 +1,4 @@
-import { messages, pluralRules } from '@amaya/locales'
+import { languageLabel, locales, messages, pluralRules } from '@amaya/locales'
 import '@amaya/tokens/fonts.css'
 import { configureRive, DS_THEMES, DsRoot } from '@amaya/ui'
 import { setup, type Decorator, type Preview } from '@storybook/vue3-vite'
@@ -11,11 +11,6 @@ import './preview.css'
 
 // wasm Rive — со своего адреса, а не с unpkg (так по умолчанию делает рантайм): без внешней сети и без лишнего запроса
 configureRive({ wasmUrl: riveWasm, wasmFallbackUrl: riveWasmFallback })
-
-// Те же 9 языков, что в сервисе. Утверждённых текстов набора ds на каком-то языке может ещё не быть —
-// тогда vue-i18n показывает английский
-const LANGUAGES = ['en', 'ru', 'de', 'es', 'it', 'pt', 'fr', 'sv', 'nl']
-const languageNames = new Intl.DisplayNames(['ru'], { type: 'language' })
 
 // Тексты — из сервиса, через `pnpm l10n pull` (@amaya/locales). Компоненты сами не переводят: тексты им передаёт история
 const i18n = createI18n({ legacy: false, locale: 'en', fallbackLocale: 'en', messages, pluralRules, missingWarn: false, fallbackWarn: false })
@@ -94,7 +89,7 @@ const preview: Preview = {
         title: 'Язык',
         icon: 'globe',
         dynamicTitle: true,
-        items: LANGUAGES.map(code => ({ value: code, title: `${code.toUpperCase()} — ${languageNames.of(code)}` }))
+        items: locales.map(code => ({ value: code, title: languageLabel(code) }))
       }
     },
     screen: {
