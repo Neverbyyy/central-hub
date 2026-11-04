@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Часть шаблона PwHeroSlider: попап «More Plans». Какие тарифы показать и что купить, решает шаблон
-import { DsButton, DsCloseButton, DsFit, DsGameTitle, DsImage, DsPlanPicker, DsPopup, type DsPlan } from '@amaya/ui'
+import { DsButton, DsCarousel, DsCloseButton, DsFit, DsGameTitle, DsImage, DsPlanPicker, DsPopup, type DsPlan } from '@amaya/ui'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { HeroSliderConfig } from '../../config'
@@ -102,17 +102,26 @@ const height = () => sheet.value?.offsetHeight ?? 0
                   {{ t(config.texts.titleTail) }}
                 </DsGameTitle>
 
-                <DsPlanPicker
-                  class="ds:mt-4"
-                  :model-value="selected"
-                  :plans="plans"
-                  direction="row"
-                  layout="stack"
-                  indicator="radio"
-                  :label="t(config.texts.plans)"
-                  :disabled="busy"
-                  @update:model-value="emit('update:selected', $event)"
-                />
+                <!-- Ряд шире попапа (телефон в портрете) листается пальцем во всю его ширину. Хватает места — стоит по
+                     центру: поля auto, а не justify-center, иначе начало ряда уходит за край, куда не прокрутить.
+                     Боковые отступы — у блока внутри: поле в конце прокрутки старые вебвью теряют -->
+                <DsCarousel
+                  class="ds:mt-4 ds:-mx-6 ds:self-stretch"
+                  hint
+                >
+                  <div class="ds:mx-auto ds:px-6">
+                    <DsPlanPicker
+                      :model-value="selected"
+                      :plans="plans"
+                      direction="row"
+                      layout="stack"
+                      indicator="radio"
+                      :label="t(config.texts.plans)"
+                      :disabled="busy"
+                      @update:model-value="emit('update:selected', $event)"
+                    />
+                  </div>
+                </DsCarousel>
                 <DsButton
                   class="ds:mt-4"
                   :loading="loading"

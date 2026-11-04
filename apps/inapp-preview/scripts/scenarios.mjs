@@ -168,6 +168,23 @@ try {
       }
       await page.close()
     }
+
+    // 6. Cars 2, телефон в портрете: тарифы шире попапа — ряд листается, начало не обрезано, коснулись — выехала целиком
+    if (screen.key === 'cars2') {
+      ;({ page, frame } = await emulator({ screen: screen.id, device: 'iphone8', orient: 'portrait' }))
+      await screen.change(frame)
+      await sleep(1500)
+      const cards = () => frame.$$eval('[role="radio"]', els => els.map(el => ({ left: el.getBoundingClientRect().left, right: el.getBoundingClientRect().right, checked: el.getAttribute('aria-checked') === 'true' })))
+      const width = (await inapp(page, () => window.__inapp.screen)).width
+      let row = await cards()
+      check(`${name} в портрете: начало ряда тарифов на экране, конец — за краем`, row[0].left >= 0 && row[row.length - 1].right > width, JSON.stringify(row))
+      await frame.$$eval('[role="radio"]', els => els[els.length - 1].click())
+      await sleep(900)
+      row = await cards()
+      const last = row[row.length - 1]
+      check(`${name} в портрете: коснулись последнего тарифа — выбран и виден целиком`, last.checked && last.left >= 0 && last.right <= width, JSON.stringify(row))
+      await page.close()
+    }
   }
 
   // Онбординг: два шага, двойной тап не проскакивает шаг, крестик — только на втором, «Continue» на втором закрывает
