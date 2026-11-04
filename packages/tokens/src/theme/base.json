@@ -323,6 +323,24 @@
       "video-line": {
         "$value": "{color.transparent}",
         "$description": "Рамка видео 1 px поверх картинки"
+      },
+      "sign": {
+        "$value": "{color.road.sign}",
+        "$description": "Дорожные блоки лендинга: жёлтые секции, разметка, шевроны"
+      },
+      "on-sign": {
+        "$value": "{color.road.asphalt}",
+        "$description": "Текст на жёлтой секции и на небе"
+      },
+      "sky": {
+        "$value": "{color.road.sky}",
+        "$description": "Небо над живой сценой первого экрана (LkRoadHero)"
+      }
+    },
+    "wipe": {
+      "mud": {
+        "$value": "{color.road.mud}",
+        "$description": "Грязь, которую стирают пальцем (DsWipe)"
       }
     },
     "video": {

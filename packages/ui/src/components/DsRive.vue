@@ -17,6 +17,8 @@ const props = withDefaults(defineProps<{
   src: string
   artboard?: string
   stateMachine?: string
+  // Отдельные анимации вместо стейт-машины: играют вместе, без вступления стейт-машины
+  animations?: string[]
   fit?: 'contain' | 'cover' | 'fill' | 'fitWidth' | 'fitHeight' | 'layout'
   alignment?: 'center' | 'topCenter' | 'bottomCenter' | 'centerLeft' | 'centerRight'
   // Картинка до первого кадра и вместо анимации, если та не загрузилась
@@ -32,6 +34,7 @@ const props = withDefaults(defineProps<{
 }>(), {
   artboard: undefined,
   stateMachine: undefined,
+  animations: undefined,
   fit: 'contain',
   alignment: 'center',
   poster: undefined,
@@ -93,8 +96,8 @@ function play() {
 }
 
 function start(instance: RiveInstance, id: number) {
-  // Не задана — первая стейт-машина артборда
-  machine = props.stateMachine ?? instance.stateMachineNames[0]
+  // Не задана — первая стейт-машина артборда; с отдельными анимациями её нет
+  machine = props.animations ? undefined : props.stateMachine ?? instance.stateMachineNames[0]
   if (props.bindViewModel) {
     const viewModel = instance.defaultViewModel()
     const viewModelInstance = viewModel?.defaultInstance() ?? viewModel?.instance()
@@ -103,7 +106,7 @@ function start(instance: RiveInstance, id: number) {
   instance.resizeDrawingSurfaceToCanvas(pixelRatio())
   ready = true
   // Создать стейт-машину и сразу решить, играть ли: вне экрана или при autoplay=false — первый кадр без движения
-  instance.play(machine ? [machine] : [])
+  instance.play(machine ? [machine] : props.animations ?? [])
   play()
   // Проявить после того, как кадр нарисован: иначе мелькнёт пустой холст
   requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -130,7 +133,8 @@ async function create() {
     canvas: canvas.value,
     artboard: props.artboard,
     // Заданная стейт-машина — сразу, как в InApp; запуск — после загрузки, когда видно, на экране ли анимация
-    stateMachines: props.stateMachine,
+    stateMachines: props.animations ? undefined : props.stateMachine,
+    animations: props.animations,
     autoplay: false,
     // Как в InApp: один общий контекст WebGL на все анимации экрана
     useOffscreenRenderer: true,

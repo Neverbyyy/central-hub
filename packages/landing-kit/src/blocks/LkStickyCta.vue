@@ -25,7 +25,7 @@ useInView(() => document.getElementById(`${config.id}-hero`), (heroVisible) => {
     :inert="shown ? undefined : true"
   >
     <DsButton
-      class="ds:mb-4"
+      class="ds:mb-4 ds:max-w-full"
       variant="lp"
       data-cta="sticky"
       @click="cta('sticky')"

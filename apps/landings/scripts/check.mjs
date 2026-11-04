@@ -121,6 +121,13 @@ async function open(path, { ua, width = 375, height = 812 } = {}) {
   return { page, requests, external, tracks, errors }
 }
 
+// Значок ведёт в новую вкладку: в настоящий стор не уходим, а адрес с метками проверен отдельно
+async function clickBadge(page, store) {
+  await page.evaluate(() => document.addEventListener('click', event => event.preventDefault()))
+  await page.click(`[data-store="${store}"]`)
+  await sleep(300)
+}
+
 const imagesLoaded = (page, selector) => page.$$eval(selector, images => images.length > 0 && images.every(image => image.complete && image.naturalWidth > 0))
 
 async function checkStores(id) {
@@ -129,20 +136,31 @@ async function checkStores(id) {
     const href = await page.$eval('[data-store="app-store"]', element => element.href)
     check(`${id}, iPhone: значок App Store с метками`, href.includes('utm_source=fb') && href.includes('ct=promo'), href)
     check(`${id}: track landing_open`, tracks.some(line => line.includes('landing_open')))
-    await page.click('[data-cta="hero"]')
-    await sleep(800)
-    check(`${id}, iPhone: кнопка ведёт в App Store с метками`, external.some(url => url.startsWith('https://apps.apple.com/') && url.includes('utm_campaign=promo')), external.join(' '))
-    check(`${id}: track cta_click`, tracks.some(line => line.includes('cta_click')))
+    // Кнопка на первом экране есть не у всех лендингов: без неё вход в стор — значки
+    if (await page.$('[data-cta="hero"]')) {
+      await page.click('[data-cta="hero"]')
+      await sleep(800)
+      check(`${id}, iPhone: кнопка ведёт в App Store с метками`, external.some(url => url.startsWith('https://apps.apple.com/') && url.includes('utm_campaign=promo')), external.join(' '))
+      check(`${id}: track cta_click`, tracks.some(line => line.includes('cta_click')))
+    } else {
+      await clickBadge(page, 'app-store')
+      check(`${id}: track store_click`, tracks.some(line => line.includes('store_click')))
+    }
     check(`${id}, iPhone: ошибок нет`, errors.length === 0, errors.join(' | ').slice(0, 300))
     await page.close()
   }
   {
-    const { page, external, errors } = await open(`/${id}/ru?utm_source=tiktok&utm_medium=cpc`, { ua: UA.android })
+    const { page, external, tracks, errors } = await open(`/${id}/ru?utm_source=tiktok&utm_medium=cpc`, { ua: UA.android })
     const href = await page.$eval('[data-store="google-play"]', element => element.href)
     check(`${id}, Android: метки в referrer Google Play`, new URL(href).searchParams.get('referrer') === 'utm_source=tiktok&utm_medium=cpc', href)
-    await page.click('[data-cta="features"]')
-    await sleep(800)
-    check(`${id}, Android: кнопка ведёт в Google Play`, external.some(url => url.startsWith('https://play.google.com/') && url.includes('referrer=')), external.join(' '))
+    if (await page.$('[data-cta="features"]')) {
+      await page.click('[data-cta="features"]')
+      await sleep(800)
+      check(`${id}, Android: кнопка ведёт в Google Play`, external.some(url => url.startsWith('https://play.google.com/') && url.includes('referrer=')), external.join(' '))
+    } else {
+      await clickBadge(page, 'google-play')
+      check(`${id}, Android: track store_click`, tracks.some(line => line.includes('store_click')))
+    }
     check(`${id}, Android: ошибок нет`, errors.length === 0, errors.join(' | ').slice(0, 300))
     await page.close()
   }
@@ -164,16 +182,18 @@ async function checkSticky(id) {
 async function checkDesktop(id) {
   const { page, requests, external, errors } = await open(`/${id}`, { width: 1440, height: 900 })
 
-  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
-  await sleep(400)
-  await page.click('[data-cta="final"]')
-  await sleep(1200)
-  const stores = await page.evaluate((storesId) => {
-    const box = document.getElementById(storesId).getBoundingClientRect()
-    return { inView: box.top >= 0 && box.bottom <= innerHeight, focus: document.activeElement?.getAttribute('data-store') }
-  }, `${id}-stores`)
-  check(`${id}, компьютер: кнопка прокручивает к значкам и ставит на них фокус`, stores.inView && stores.focus === 'app-store', JSON.stringify(stores))
-  check(`${id}, компьютер: в стор не уводит`, external.length === 0)
+  if (await page.$('[data-cta="final"]')) {
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+    await sleep(400)
+    await page.click('[data-cta="final"]')
+    await sleep(1200)
+    const stores = await page.evaluate((storesId) => {
+      const box = document.getElementById(storesId).getBoundingClientRect()
+      return { inView: box.top >= 0 && box.bottom <= innerHeight, focus: document.activeElement?.getAttribute('data-store') }
+    }, `${id}-stores`)
+    check(`${id}, компьютер: кнопка прокручивает к значкам и ставит на них фокус`, stores.inView && stores.focus === 'app-store', JSON.stringify(stores))
+    check(`${id}, компьютер: в стор не уводит`, external.length === 0)
+  }
 
   const focused = () => page.evaluate(() => [...document.querySelectorAll('[data-accordion-question]')].indexOf(document.activeElement))
   const questions = await page.$$('[data-accordion-question]')
@@ -221,10 +241,13 @@ async function checkLoadingOrder(id) {
   await page.setViewport({ width: 375, height: 812 })
   for (const visit of ['первое открытие', 'повторное открытие']) {
     await page.goto(`${base}/${id}`, { waitUntil: 'load' })
-    await sleep(1500)
+    await sleep(800)
+    // Картинки ленивые: на длинной странице браузер берёт их, только когда блок близко
+    await page.$eval('[data-feature]', element => element.scrollIntoView({ block: 'center' }))
+    await sleep(900)
     check(`${id}, ${visit}: картинки преимуществ загрузились`, await imagesLoaded(page, '[data-feature] img'))
   }
-  check(`${id}: шрифт футера подключился`, await page.$eval('footer', element => /Open Sans/.test(getComputedStyle(element).fontFamily)))
+  check(`${id}: шрифт футера подключился`, await page.$eval('footer', element => !getComputedStyle(element).fontFamily.startsWith('Arial')))
   await page.close()
 }
 
@@ -253,7 +276,7 @@ async function checkLanguages(id) {
 async function checkWidths(id) {
   for (const width of WIDTHS) {
     const { page } = await open(`/${id}/de`, { ua: width < 700 ? UA.iphone : undefined, width, height: 800 })
-    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
     check(`${id}, ${width} px, немецкий: без горизонтальной прокрутки`, overflow <= 0, `+${overflow}`)
     await page.close()
   }

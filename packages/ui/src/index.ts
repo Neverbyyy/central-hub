@@ -8,6 +8,7 @@ export { default as DsGameTitle } from './components/DsGameTitle.vue'
 export { default as DsOutlineText } from './components/DsOutlineText.vue'
 export { default as DsIcon } from './components/DsIcon.vue'
 export { default as DsImage } from './components/DsImage.vue'
+export { default as DsWipe } from './components/DsWipe.vue'
 export { default as DsBackground } from './components/DsBackground.vue'
 // Действия
 export { default as DsButton } from './components/DsButton.vue'

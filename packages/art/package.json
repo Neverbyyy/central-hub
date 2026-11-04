@@ -1,0 +1,23 @@
+{
+  "name": "@amaya/art",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "description": "Арт игр, общий для экранов и лендингов: один файл на все продукты. Уникальный арт лежит в папке экрана",
+  "exports": {
+    "./cars2": "./src/cars2.ts"
+  },
+  "scripts": {
+    "lint": "eslint . && node ../../tools/check-art.mjs",
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "@amaya/ui": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3",
+    "vite": "^7.3.2",
+    "vue": "^3.5.33",
+    "vue-tsc": "^3.2.7"
+  }
+}

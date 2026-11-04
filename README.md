@@ -12,6 +12,7 @@ packages/tokens/       токены: JSON из Figma → CSS-переменны�
 packages/ui/           компоненты Ds* и пресет Tailwind (префикс ds:, без глобального сброса)
 packages/paywall-kit/  пейволлы: связь с окружением (InApp), общая логика экрана, шаблоны и их конфиги
 packages/pricing/      цены из стора: «в неделю», «в месяц», скидка — в том же виде, что строка стора
+packages/art/          арт, общий для экранов и лендингов: один файл на все продукты
 packages/icons/        иконки дизайн-системы: пути SVG 24×24 для DsIcon
 packages/locales/      тексты набора ds из сервиса — кладёт pnpm l10n pull
 packages/l10n-core/    правила ключей и форматы файлов локалей — общие для сервера, CLI и MCP
@@ -594,6 +595,11 @@ configureRive({ wasmUrl: wasm, wasmFallbackUrl: wasmFallback })
   meta robots, заголовок `X-Robots-Tag`, `robots.txt`. Арт лендинга — в его папке (`app/landings/cars2/art`):
   картинки по конвенции и ролик геймплея; значки сторов — копии из Pages Hub. Rive на первом экране у Cars 2 нет
   (в макете его нет); включается конфигом `hero.rive`.
+  `/cars2-go` — второй лендинг Cars 2 «Поехали» со своим дизайном и темой `cars2-go`: живая сцена Rive, автомойка
+  пальцем (`DsWipe`), миры, финиш. Постеры — кадры той же `.riv`,
+  машина собрана из её слоёв; отзывы, FAQ, преимущества и ролик — общие с `/cars2`.
+  Новый лендинг — одна папка: реестр, сборка и Storybook находят её сами, арт — только webp и только то, чего нет в
+  `packages/art` (`tools/check-art.mjs` падает на копиях).
   `pnpm --filter @amaya/landings dev` — порт 3020; `pnpm --filter @amaya/landings check` — проверки в браузере по всем
   лендингам после сборки: сторы и UTM, `track`, FAQ, видео, порядок загрузки, 404, noindex, все языки, ширина 320–1440.
 

@@ -4,11 +4,11 @@ import { imageSetFromFiles } from '@amaya/ui'
 import { defineLanding } from '../../shared/landing'
 import video from './art/gameplay.mp4?url'
 
-const art = import.meta.glob<string>('./art/*.{png,webp}', { query: '?url', import: 'default', eager: true })
+const art = import.meta.glob<string>('./art/*.webp', { query: '?url', import: 'default', eager: true })
 const image = (name: string) => imageSetFromFiles(art, `./art/${name}`)
 const site = 'web.lp_cars2'
 
-export const cars2 = defineLanding({
+export default defineLanding({
   id: 'cars2',
   site,
   theme: 'cars2',

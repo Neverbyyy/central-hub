@@ -7,8 +7,8 @@ import { GAME_BACKDROP, WHITE_BACKDROP, NO_LOCALE, NO_SCREEN_STATE, NO_THEME } f
 import type { StoryObj } from '@storybook/vue3-vite'
 import { computed, ref, shallowRef, watch } from 'vue'
 
-const OWNERS = ['../../inapp-preview/src/variants/', '../../landings/app/landings/']
-const FILES = import.meta.glob<string>(['../rive/*.riv', '../../inapp-preview/src/variants/**/*.riv', '../../landings/app/landings/**/*.riv'], { query: '?url', import: 'default', eager: true })
+const OWNERS = ['../../inapp-preview/src/variants/', '../../landings/app/landings/', '../../../packages/art/']
+const FILES = import.meta.glob<string>(['../rive/*.riv', '../../inapp-preview/src/variants/**/*.riv', '../../landings/app/landings/**/*.riv', '../../../packages/art/**/*.riv'], { query: '?url', import: 'default', eager: true })
 // Имя в списке: файл из apps/storybook/rive — просто имя, файл экрана или лендинга — путь от его папки
 const label = (path: string) => {
   const owner = OWNERS.find(prefix => path.startsWith(prefix))

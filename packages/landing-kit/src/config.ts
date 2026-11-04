@@ -26,6 +26,22 @@ export interface LandingLink {
   href: string
 }
 
+/** Дорожная раскладка: своя подача поверх тех же данных лендинга. Есть в конфиге — LkPage рисует LkRoadLayout. */
+export interface LandingRoad {
+  // Живая сцена первого экрана: анимации idle играют постоянно, постер — config.hero.art, кадр из той же позы
+  scene: { src: string, artboard: string, idle: string[] }
+  wash: { art: DsImageSet, ratio: string, title: string, text: string, cleanTitle: string, done: string, again: string, label: string }
+  worlds: { title: string, text: string, items: DsImageSet[] }
+  featuresTitle: string
+  videoTitle: string
+  reviewsTitle: string
+  finish: {
+    title: string
+    text: string
+    balloons: { src: string, artboard: string, poster: DsImageSet, ratio: string }
+  }
+}
+
 export interface LandingConfig {
   // Путь лендинга: /cars2
   id: string
@@ -55,4 +71,5 @@ export interface LandingConfig {
   footer: { copyright: string, rights: string, links: LandingLink[] }
   // Закреплённая кнопка на телефоне, когда первый экран ушёл из вида
   stickyCta?: boolean
+  road?: LandingRoad
 }

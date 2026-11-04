@@ -17,6 +17,7 @@ import LkFooter from './LkFooter.vue'
 import LkHeader from './LkHeader.vue'
 import LkHero from './LkHero.vue'
 import LkReviews from './LkReviews.vue'
+import LkRoadLayout from './LkRoadLayout.vue'
 import LkStickyCta from './LkStickyCta.vue'
 import LkVideo from './LkVideo.vue'
 
@@ -31,9 +32,14 @@ const fontLater = computed(() => (heroLoaded.value ? '' : 'lk-page--font-later')
   <DsRoot
     :theme="config.theme"
     :lang="locale"
-    class="ds:min-h-vh ds:bg-lp-page ds:medium:py-8"
+    class="ds:min-h-vh ds:bg-lp-page"
+    :class="config.road ? '' : 'ds:medium:py-8'"
   >
-    <div class="ds:mx-auto ds:max-w-lp-column ds:overflow-hidden ds:bg-lp-surface ds:medium:rounded-lp-card">
+    <LkRoadLayout v-if="config.road" />
+    <div
+      v-else
+      class="ds:mx-auto ds:max-w-lp-column ds:overflow-hidden ds:bg-lp-surface ds:medium:rounded-lp-card"
+    >
       <LkHeader />
       <main>
         <LkHero />
@@ -67,7 +73,7 @@ const fontLater = computed(() => (heroLoaded.value ? '' : 'lk-page--font-later')
       </main>
       <LkFooter :class="fontLater" />
     </div>
-    <LkStickyCta v-if="config.stickyCta" />
+    <LkStickyCta v-if="config.stickyCta && !config.road" />
   </DsRoot>
 </template>
 

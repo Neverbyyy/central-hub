@@ -353,6 +353,7 @@ Rive-анимация из файла .riv: артборд и стейт-маш�
 | `src` | `string` |  | Адрес файла: import animation from './animation.riv?url' |
 | `artboard`? | `string` | `undefined` |  |
 | `stateMachine`? | `string` | `undefined` |  |
+| `animations`? | `string[]` | `undefined` |  |
 | `fit`? | `'contain' \| 'cover' \| 'fill' \| 'fitWidth' \| 'fitHeight' \| 'layout'` | `'contain'` |  |
 | `alignment`? | `'center' \| 'topCenter' \| 'bottomCenter' \| 'centerLeft' \| 'centerRight'` | `'center'` |  |
 | `poster`? | `DsImageSet` | `undefined` |  |
@@ -483,6 +484,22 @@ Rive-анимация из файла .riv: артборд и стейт-маш�
 
 События: `play()`
 
+### DsWipe
+
+`@amaya/ui` · Figma: Wipe · `packages/ui/src/components/DsWipe.vue`
+
+Картинка под слоем грязи: ведёшь пальцем — грязь стирается, как на автомойке в игре. Стёрто достаточно — слой уходит целиком, событие done. Без скрипта и пока блок не подъехал к экрану видна чистая картинка: ничего не ломается. Когда использовать: мини-интерактив на лендинге. Звук и похвала — снаружи, по событиям. label — подпись для скринридера. Вид: цвет грязи color.wipe.mud; грязь ложится только на непрозрачные части картинки. Палец: вертикальное движение прокручивает страницу как обычно, стирают движением вбок и наискосок (touch-action: pan-y). Клавиатура: Enter и пробел моют сразу.
+
+| Проп | Тип | По умолчанию | Пояснение |
+| --- | --- | --- | --- |
+| `set` | `DsImageSet` |  |  |
+| `label` | `string` |  |  |
+| `ratio`? | `string` | `undefined` | «56 / 52»: место занято до загрузки |
+| `threshold`? | `number` | `0.7` |  |
+| `resetKey`? | `number \| string` | `undefined` | Смена значения снова пачкает картинку |
+
+События: `start()` — Палец опустился: можно включать звук; `stroke(x: number, y: number)`; `stop()` — Палец поднялся или страницу начали прокручивать; `done()` — Картинка чистая
+
 ## Шаблоны пейволлов
 
 ### PwHeroSlider
@@ -512,6 +529,12 @@ Rive-анимация из файла .riv: артборд и стейт-маш�
 | `config` | `PlusConfig` |  |  |
 
 ## Блоки лендинга
+
+### LkBurst
+
+`@amaya/landing-kit` · Figma: Burst · `packages/landing-kit/src/blocks/LkBurst.vue`
+
+Звёздочки разлетаются от точки нажатия: отклик интерактива на касании, только transform и opacity. Когда использовать: внутри блока с position: relative; запуск — fire(x, y) через ref, координаты в px от угла блока. Цвет — color.lp.sign, размер — spacing.lp-road-star.
 
 ### LkCta
 
@@ -581,14 +604,64 @@ Rive-анимация из файла .riv: артборд и стейт-маш�
 
 Отзывы: карточки 286 px — одна колонка на телефоне, две от 640 px; кавычка, звёзды, текст и автор.
 
+### LkRoadFeatures
+
+`@amaya/landing-kit` · Figma: RoadFeatures · `packages/landing-kit/src/blocks/LkRoadFeatures.vue`
+
+Преимущества на дороге: заголовок для родителей и карточки-таблички вдоль разметки, картинки ждут первый экран. Когда использовать: лендинг с config.road. Цвета — color.lp.section, surface.lp-card.
+
+### LkRoadFinish
+
+`@amaya/landing-kit` · Figma: RoadFinish · `packages/landing-kit/src/blocks/LkRoadFinish.vue`
+
+Финиш внизу страницы: команда на старт и значки сторов, по бокам шарики. Шарики — картинка, поверх проявляется Rive (LkInteractive); вне экрана анимация стоит, не загрузилась — остаётся картинка. Когда использовать: лендинг с config.road. Цвета — color.lp.sign, размер шариков — spacing.lp-road-balloons-w.
+
+### LkRoadHero
+
+`@amaya/landing-kit` · Figma: RoadHero · `packages/landing-kit/src/blocks/LkRoadHero.vue`
+
+Первый экран дорожного лендинга: сверху логотип и заголовок на небе, под ними живая сцена, внизу на асфальте значки сторов — они видны и нажимаются сразу. Сцена — картинка (кадр той же анимации, она же LCP), поверх неё через LkInteractive проявляется Rive из той же позы и играет постоянно; вне экрана стоит, не загрузился — остаётся картинка. На телефоне сцена видна целиком, поэтому высота блока — по содержимому. На экране шире сцена заполняет его за текстом. Когда использовать: первый экран лендинга с config.road. Цвета — color.lp.sky, color.lp.section.
+
+### LkRoadLayout
+
+`@amaya/landing-kit` · Figma: RoadLayout · `packages/landing-kit/src/blocks/LkRoadLayout.vue`
+
+Дорожная раскладка лендинга: страница как поездка — живой первый экран, автомойка, миры, преимущества, видео, отзывы, FAQ и финиш. Блоки во всю ширину, между ними дорожные полосы. Вход в стор — значки; закреплённая кнопка — по stickyCta. Когда использовать: включается сама, если в конфиге есть road; LkPage выбирает раскладку.
+
+### LkRoadWash
+
+`@amaya/landing-kit` · Figma: RoadWash · `packages/landing-kit/src/blocks/LkRoadWash.vue`
+
+Мини-автомойка: грязная машина, которую ребёнок моет пальцем (DsWipe) — пена, шум воды, а когда чисто, машина радостно подпрыгивает. Интерактив не перекрывает значки сторов: это отдельный блок. Вне экрана подсказка стоит, звук только после касания. Когда использовать: лендинг с config.road. Цвета — color.lp.sign, color.lp.on-sign; размер — spacing.lp-road-truck-w.
+
+### LkRoadWorlds
+
+`@amaya/landing-kit` · Figma: RoadWorlds · `packages/landing-kit/src/blocks/LkRoadWorlds.vue`
+
+Миры игры: заголовок и ряд ярких карточек с наборами машин, ряд листается пальцем (DsCarousel) и намекает на это сам. Когда использовать: лендинг с config.road. Цвета — color.lp.section, размеры — spacing.lp-road-world-*.
+
 ### LkStickyCta
 
 `@amaya/landing-kit` · Figma: StickyCta · `packages/landing-kit/src/blocks/LkStickyCta.vue`
 
 Закреплённая кнопка внизу экрана телефона: выезжает, когда первый экран ушёл из вида, и прячется, когда он вернулся. Только transform. От 640 px не показывается. Включается в конфиге (stickyCta) — у Cars 2 выключена.
 
+### LkStripe
+
+`@amaya/landing-kit` · Figma: Stripe · `packages/landing-kit/src/blocks/LkStripe.vue`
+
+Дорожная полоса между блоками: шевроны ограждения, клетки финиша или прерывистая разметка посреди асфальта. Когда использовать: граница секций дорожного лендинга. Цвета — color.lp.sign, color.lp.section, высота spacing.lp-road-stripe-h.
+
+| Проп | Тип | По умолчанию | Пояснение |
+| --- | --- | --- | --- |
+| `kind`? | `'chevron' \| 'checker' \| 'dashes'` | `'chevron'` |  |
+
 ### LkVideo
 
 `@amaya/landing-kit` · Figma: Video · `packages/landing-kit/src/blocks/LkVideo.vue`
 
 Видео геймплея над синим блоком отзывов: до нажатия — постер, ролик не качается (DsVideo).
+
+| Проп | Тип | По умолчанию | Пояснение |
+| --- | --- | --- | --- |
+| `plain`? | `boolean` | `false` | Без отступа сверху и заезда на блок снизу: заголовок и фон — у раскладки |

@@ -9,14 +9,15 @@ apps/central-hub      сервис локализации (Nuxt 4) — текс�
 apps/storybook        витрина: пейволлы и лендинги целиком, компоненты, Rive, токены
 apps/inapp-preview    экраны пейволлов как варианты InApp: src/variants/ios/as/<игра>/ds1/<экран>/
 apps/landings         лендинги (Nuxt 4, prerender): app/landings/<путь>/config.ts + art/
-packages/tokens       токены → CSS-переменные и тема Tailwind; темы base, cars2, farm
+packages/tokens       токены → CSS-переменные и тема Tailwind; темы base, cars2, farm, cars2-go
 packages/ui           компоненты Ds* и пресет Tailwind (ds:); манифест — packages/ui/manifest.md
 packages/paywall-kit  интерфейс окружения InApp, usePaywall, шаблоны Pw*
 packages/landing-kit  конфиг лендинга, track, ссылки в сторы с UTM, блоки Lk*
 packages/nuxt         Nuxt-модуль: всё для лендинга одной строкой
 packages/locales      утверждённые тексты набора ds (pnpm l10n pull); руками не правится
+packages/art          арт, общий для экранов и лендингов: один файл на все продукты
 packages/icons, pricing, l10n-core, l10n-cli
-tools/eslint          правила дизайн-системы; tools/figma — дерево фрейма и выгрузка арта по REST
+tools/eslint          правила дизайн-системы; tools/figma — дерево фрейма и выгрузка арта по REST; tools/check-art.mjs — арт без копий
 ```
 
 ## Команды
@@ -41,6 +42,8 @@ tools/eslint          правила дизайн-системы; tools/figma �
    `ds:bg-[#…]`, `style="color: …"`. Нужного токена нет — добавь его в `packages/tokens` (значение — из Figma).
 4. **Картинки — `DsImage`** с набором по конвенции `<имя>-{small,wide,medium,large}{,@2x}.{png,webp}` из папки экрана:
    `imageSetFromFiles(import.meta.glob('./art/*.{png,webp}', { query: '?url', import: 'default', eager: true }), './art/имя')`.
+   Копий арта нет: нужно двум продуктам — `packages/art`; размер, который повторяет меньший, не храним (`DsImage` сам берёт
+   меньший); лендингу — только webp. Проверяет `tools/check-art.mjs`.
    `<img>`, `<video>`, `<canvas>` в экранах и блоках запрещены линтером: `DsImage`, `DsVideo`, `DsRive`.
 5. **Vue 3.3, как в InApp:** без `defineModel`, `useTemplateRef`, `useId`, деструктуризации пропсов (линтер).
    Без `gap` во flex (старые вебвью), `:has()`, container queries, `Array.prototype.at`.

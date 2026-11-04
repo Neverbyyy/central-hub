@@ -12,6 +12,7 @@
     "scenarios": "node scripts/scenarios.mjs"
   },
   "dependencies": {
+    "@amaya/art": "workspace:*",
     "@amaya/locales": "workspace:*",
     "@amaya/paywall-kit": "workspace:*",
     "@amaya/tokens": "workspace:*",

@@ -7,15 +7,15 @@ import { DsStoreBadges, DsVideo, type DsStore } from '@amaya/ui'
 import { useStoryTexts, NO_SCREEN_STATE } from '@amaya/ui/stories'
 import type { StoryObj } from '@storybook/vue3-vite'
 import { computed, onMounted, ref } from 'vue'
-import { cars2 } from '../../landings/app/landings/cars2/config'
-import { farm } from '../../landings/app/landings/farm/config'
+import { LANDINGS } from '../../landings/app/landings'
 
 export default {
   title: 'Блоки лендинга/Видео и сторы',
   globals: NO_SCREEN_STATE
 }
 
-const LANDINGS: Record<string, LandingConfig> = { cars2, farm, base: farm }
+const farm = LANDINGS.farm!
+const THEME_LANDINGS: Record<string, LandingConfig> = { cars2: LANDINGS.cars2!, farm, base: farm }
 
 /** Лендинг игры по теме колонки, в которой нарисована история. */
 function useThemeLanding() {
@@ -24,7 +24,7 @@ function useThemeLanding() {
   onMounted(() => {
     theme.value = box.value?.closest('[data-ds-theme]')?.getAttribute('data-ds-theme') ?? 'base'
   })
-  const landing = computed(() => LANDINGS[theme.value] ?? farm)
+  const landing = computed(() => THEME_LANDINGS[theme.value] ?? farm)
   return { box, landing }
 }
 

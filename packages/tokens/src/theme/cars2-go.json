@@ -1,0 +1,86 @@
+{
+  "$description": "Лендинг Cars 2 «Поехали»: асфальт, разметка, жёлтые знаки. Игра та же, вид свой: блоки читают те же токены lp.*",
+  "color": {
+    "$type": "color",
+    "title": {
+      "fill": {
+        "$value": "{color.road.asphalt}"
+      },
+      "accent": {
+        "$value": "{color.road.sign}"
+      },
+      "stroke": {
+        "$value": "{color.white}"
+      }
+    },
+    "lp": {
+      "page": {
+        "$value": "{color.road.asphalt-deep}"
+      },
+      "surface": {
+        "$value": "{color.road.asphalt}"
+      },
+      "section": {
+        "$value": "{color.road.asphalt}"
+      },
+      "footer": {
+        "$value": "{color.road.asphalt-deep}"
+      },
+      "text": {
+        "$value": "{color.road.asphalt}"
+      },
+      "deep": {
+        "$value": "{color.road.asphalt}"
+      },
+      "star": {
+        "$value": "{color.road.sign}"
+      },
+      "quote": {
+        "$value": "{color.road.sign}"
+      },
+      "video-line": {
+        "$value": "{color.white}"
+      }
+    }
+  },
+  "surface": {
+    "cta-lp": {
+      "$value": "{gradient.road.cta}"
+    },
+    "cta-lp-text": {
+      "$value": "{gradient.road.cta-text}"
+    },
+    "lp-card": {
+      "$value": "{gradient.road.card}"
+    }
+  },
+  "shadow": {
+    "cta-lp": {
+      "$value": "{shadow.road.cta}"
+    },
+    "cta-lp-text": {
+      "$value": "{shadow.road.cta-text}"
+    },
+    "lp-card": {
+      "$value": "{shadow.road.card}"
+    },
+    "lp-video": {
+      "$value": "{shadow.road.video}"
+    }
+  },
+  "font": {
+    "title": {
+      "$value": "{font.nunito}"
+    },
+    "body": {
+      "$value": "{font.nunito}"
+    },
+    "button": {
+      "$value": "{font.nunito}"
+    },
+    "lp-body": {
+      "$value": "{font.nunito}",
+      "$description": "Один шрифт на странице: Open Sans на дорогу не грузится"
+    }
+  }
+}

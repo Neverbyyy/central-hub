@@ -1014,6 +1014,13 @@
           "default": "undefined"
         },
         {
+          "name": "animations",
+          "required": false,
+          "type": "string[]",
+          "comment": "",
+          "default": "undefined"
+        },
+        {
           "name": "fit",
           "required": false,
           "type": "'contain' | 'cover' | 'fill' | 'fitWidth' | 'fitHeight' | 'layout'",
@@ -1428,6 +1435,72 @@
       "slots": []
     },
     {
+      "name": "DsWipe",
+      "figma": "Wipe",
+      "package": "@amaya/ui",
+      "group": "Компоненты",
+      "file": "packages/ui/src/components/DsWipe.vue",
+      "description": "Картинка под слоем грязи: ведёшь пальцем — грязь стирается, как на автомойке в игре. Стёрто достаточно — слой уходит целиком, событие done. Без скрипта и пока блок не подъехал к экрану видна чистая картинка: ничего не ломается. Когда использовать: мини-интерактив на лендинге. Звук и похвала — снаружи, по событиям. label — подпись для скринридера. Вид: цвет грязи color.wipe.mud; грязь ложится только на непрозрачные части картинки. Палец: вертикальное движение прокручивает страницу как обычно, стирают движением вбок и наискосок (touch-action: pan-y). Клавиатура: Enter и пробел моют сразу.",
+      "props": [
+        {
+          "name": "set",
+          "required": true,
+          "type": "DsImageSet",
+          "comment": ""
+        },
+        {
+          "name": "label",
+          "required": true,
+          "type": "string",
+          "comment": ""
+        },
+        {
+          "name": "ratio",
+          "required": false,
+          "type": "string",
+          "comment": "«56 / 52»: место занято до загрузки",
+          "default": "undefined"
+        },
+        {
+          "name": "threshold",
+          "required": false,
+          "type": "number",
+          "comment": "",
+          "default": "0.7"
+        },
+        {
+          "name": "resetKey",
+          "required": false,
+          "type": "number | string",
+          "comment": "Смена значения снова пачкает картинку",
+          "default": "undefined"
+        }
+      ],
+      "emits": [
+        {
+          "name": "start",
+          "args": "",
+          "comment": "Палец опустился: можно включать звук"
+        },
+        {
+          "name": "stroke",
+          "args": "x: number, y: number",
+          "comment": ""
+        },
+        {
+          "name": "stop",
+          "args": "",
+          "comment": "Палец поднялся или страницу начали прокручивать"
+        },
+        {
+          "name": "done",
+          "args": "",
+          "comment": "Картинка чистая"
+        }
+      ],
+      "slots": []
+    },
+    {
       "name": "PwHeroSlider",
       "figma": "HeroSlider",
       "package": "@amaya/paywall-kit",
@@ -1496,6 +1569,17 @@
           "comment": ""
         }
       ],
+      "emits": [],
+      "slots": []
+    },
+    {
+      "name": "LkBurst",
+      "figma": "Burst",
+      "package": "@amaya/landing-kit",
+      "group": "Блоки лендинга",
+      "file": "packages/landing-kit/src/blocks/LkBurst.vue",
+      "description": "Звёздочки разлетаются от точки нажатия: отклик интерактива на касании, только transform и opacity. Когда использовать: внутри блока с position: relative; запуск — fire(x, y) через ref, координаты в px от угла блока. Цвет — color.lp.sign, размер — spacing.lp-road-star.",
+      "props": [],
       "emits": [],
       "slots": []
     },
@@ -1623,6 +1707,72 @@
       "slots": []
     },
     {
+      "name": "LkRoadFeatures",
+      "figma": "RoadFeatures",
+      "package": "@amaya/landing-kit",
+      "group": "Блоки лендинга",
+      "file": "packages/landing-kit/src/blocks/LkRoadFeatures.vue",
+      "description": "Преимущества на дороге: заголовок для родителей и карточки-таблички вдоль разметки, картинки ждут первый экран. Когда использовать: лендинг с config.road. Цвета — color.lp.section, surface.lp-card.",
+      "props": [],
+      "emits": [],
+      "slots": []
+    },
+    {
+      "name": "LkRoadFinish",
+      "figma": "RoadFinish",
+      "package": "@amaya/landing-kit",
+      "group": "Блоки лендинга",
+      "file": "packages/landing-kit/src/blocks/LkRoadFinish.vue",
+      "description": "Финиш внизу страницы: команда на старт и значки сторов, по бокам шарики. Шарики — картинка, поверх проявляется Rive (LkInteractive); вне экрана анимация стоит, не загрузилась — остаётся картинка. Когда использовать: лендинг с config.road. Цвета — color.lp.sign, размер шариков — spacing.lp-road-balloons-w.",
+      "props": [],
+      "emits": [],
+      "slots": []
+    },
+    {
+      "name": "LkRoadHero",
+      "figma": "RoadHero",
+      "package": "@amaya/landing-kit",
+      "group": "Блоки лендинга",
+      "file": "packages/landing-kit/src/blocks/LkRoadHero.vue",
+      "description": "Первый экран дорожного лендинга: сверху логотип и заголовок на небе, под ними живая сцена, внизу на асфальте значки сторов — они видны и нажимаются сразу. Сцена — картинка (кадр той же анимации, она же LCP), поверх неё через LkInteractive проявляется Rive из той же позы и играет постоянно; вне экрана стоит, не загрузился — остаётся картинка. На телефоне сцена видна целиком, поэтому высота блока — по содержимому. На экране шире сцена заполняет его за текстом. Когда использовать: первый экран лендинга с config.road. Цвета — color.lp.sky, color.lp.section.",
+      "props": [],
+      "emits": [],
+      "slots": []
+    },
+    {
+      "name": "LkRoadLayout",
+      "figma": "RoadLayout",
+      "package": "@amaya/landing-kit",
+      "group": "Блоки лендинга",
+      "file": "packages/landing-kit/src/blocks/LkRoadLayout.vue",
+      "description": "Дорожная раскладка лендинга: страница как поездка — живой первый экран, автомойка, миры, преимущества, видео, отзывы, FAQ и финиш. Блоки во всю ширину, между ними дорожные полосы. Вход в стор — значки; закреплённая кнопка — по stickyCta. Когда использовать: включается сама, если в конфиге есть road; LkPage выбирает раскладку.",
+      "props": [],
+      "emits": [],
+      "slots": []
+    },
+    {
+      "name": "LkRoadWash",
+      "figma": "RoadWash",
+      "package": "@amaya/landing-kit",
+      "group": "Блоки лендинга",
+      "file": "packages/landing-kit/src/blocks/LkRoadWash.vue",
+      "description": "Мини-автомойка: грязная машина, которую ребёнок моет пальцем (DsWipe) — пена, шум воды, а когда чисто, машина радостно подпрыгивает. Интерактив не перекрывает значки сторов: это отдельный блок. Вне экрана подсказка стоит, звук только после касания. Когда использовать: лендинг с config.road. Цвета — color.lp.sign, color.lp.on-sign; размер — spacing.lp-road-truck-w.",
+      "props": [],
+      "emits": [],
+      "slots": []
+    },
+    {
+      "name": "LkRoadWorlds",
+      "figma": "RoadWorlds",
+      "package": "@amaya/landing-kit",
+      "group": "Блоки лендинга",
+      "file": "packages/landing-kit/src/blocks/LkRoadWorlds.vue",
+      "description": "Миры игры: заголовок и ряд ярких карточек с наборами машин, ряд листается пальцем (DsCarousel) и намекает на это сам. Когда использовать: лендинг с config.road. Цвета — color.lp.section, размеры — spacing.lp-road-world-*.",
+      "props": [],
+      "emits": [],
+      "slots": []
+    },
+    {
       "name": "LkStickyCta",
       "figma": "StickyCta",
       "package": "@amaya/landing-kit",
@@ -1634,13 +1784,40 @@
       "slots": []
     },
     {
+      "name": "LkStripe",
+      "figma": "Stripe",
+      "package": "@amaya/landing-kit",
+      "group": "Блоки лендинга",
+      "file": "packages/landing-kit/src/blocks/LkStripe.vue",
+      "description": "Дорожная полоса между блоками: шевроны ограждения, клетки финиша или прерывистая разметка посреди асфальта. Когда использовать: граница секций дорожного лендинга. Цвета — color.lp.sign, color.lp.section, высота spacing.lp-road-stripe-h.",
+      "props": [
+        {
+          "name": "kind",
+          "required": false,
+          "type": "'chevron' | 'checker' | 'dashes'",
+          "comment": "",
+          "default": "'chevron'"
+        }
+      ],
+      "emits": [],
+      "slots": []
+    },
+    {
       "name": "LkVideo",
       "figma": "Video",
       "package": "@amaya/landing-kit",
       "group": "Блоки лендинга",
       "file": "packages/landing-kit/src/blocks/LkVideo.vue",
       "description": "Видео геймплея над синим блоком отзывов: до нажатия — постер, ролик не качается (DsVideo).",
-      "props": [],
+      "props": [
+        {
+          "name": "plain",
+          "required": false,
+          "type": "boolean",
+          "comment": "Без отступа сверху и заезда на блок снизу: заголовок и фон — у раскладки",
+          "default": "false"
+        }
+      ],
       "emits": [],
       "slots": []
     }

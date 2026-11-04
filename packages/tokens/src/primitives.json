@@ -236,6 +236,24 @@
         "$value": "#015B7C",
         "$description": "Лендинг Cars 2: рамка видео 1 px (в макете — градиент #015B7C → #00365D внизу)"
       }
+    },
+    "road": {
+      "$description": "Лендинг Cars 2 «Поехали»: асфальт и разметка; значения подобраны под арт игры, макета нет",
+      "asphalt": {
+        "$value": "#2B2768"
+      },
+      "asphalt-deep": {
+        "$value": "#1F1B52"
+      },
+      "sign": {
+        "$value": "#FFCB2E"
+      },
+      "sky": {
+        "$value": "#39C2FF"
+      },
+      "mud": {
+        "$value": "#6B4423"
+      }
     }
   },
   "gradient": {
@@ -274,6 +292,17 @@
         "$value": "linear-gradient(180deg, #FFFFFF 0%, #D2F8FF 100%)",
         "$description": "Лендинг Cars 2: карточка отзыва"
       }
+    },
+    "road": {
+      "cta": {
+        "$value": "linear-gradient(180deg, #8CF000 0%, #37C400 100%)"
+      },
+      "cta-text": {
+        "$value": "linear-gradient(180deg, #FFFFFF 0%, #FFFFFF 100%)"
+      },
+      "card": {
+        "$value": "linear-gradient(180deg, #FFFFFF 0%, #FFFFFF 100%)"
+      }
     }
   },
   "shadow": {
@@ -310,6 +339,20 @@
       "lp-video": {
         "$value": "0 44px 50px 0 #00000033, 0 34px 25px -11px #00000040, 0 19px 14px -5px #00000040, 0 2px 1px 0 #00000066",
         "$description": "Лендинг Cars 2: тени видео (рамка — color.lp.video-line поверх картинки)"
+      }
+    },
+    "road": {
+      "cta": {
+        "$value": "0 6px 0 #1E8A00, 0 14px 24px -6px #1F1B5280"
+      },
+      "cta-text": {
+        "$value": "0 2px 0 #1E8A0099"
+      },
+      "card": {
+        "$value": "0 6px 0 #1F1B5240"
+      },
+      "video": {
+        "$value": "0 8px 0 #1F1B52"
       }
     }
   },

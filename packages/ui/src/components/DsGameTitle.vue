@@ -10,7 +10,7 @@
  */
 import DsOutlineText from './DsOutlineText.vue'
 
-type Variant = 'display-lg' | 'display-md' | 'title-lg' | 'title-md'
+type Variant = 'lp-hero' | 'display-lg' | 'display-md' | 'title-lg' | 'title-md'
 
 withDefaults(defineProps<{
   variant?: Variant
@@ -23,12 +23,14 @@ withDefaults(defineProps<{
 })
 
 const VARIANT: Record<Variant, string> = {
+  'lp-hero': 'ds:font-display ds:text-lp-hero-title',
   'display-lg': 'ds:font-display ds:text-display-lg',
   'display-md': 'ds:font-display ds:text-display-md',
   'title-lg': 'ds:font-title ds:text-title-lg ds:case-title-lg',
   'title-md': 'ds:font-title ds:text-title-md'
 }
 const LINE: Record<Variant, string> = {
+  'lp-hero': 'var(--ds-line-display)',
   'display-lg': 'var(--ds-line-display)',
   'display-md': 'var(--ds-line-display)',
   'title-lg': 'var(--ds-line-title)',

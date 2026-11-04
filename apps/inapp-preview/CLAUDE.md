@@ -7,10 +7,10 @@
 index.vue    шаблон (Pw*) с конфигом; пропсы ScreenProps (env, theme?, forcePurchasing?) — как у pw-switch/index.vue
 config.ts    тема, продукты по сегментам, ключи текстов, арт (imageSetFromFiles по папке art/)
 presets.ts   данные приложения для проверки: default, wasTrial, noProduct, другой сегмент, евро
-art/         картинки по конвенции <имя>-{small,medium,large}{,@2x}.{png,webp}
+art/         картинки по конвенции <имя>-{small,medium,large}{,@2x}.{png,webp}: размер, равный меньшему, не храним
 ```
 
-Общее для нескольких экранов игры (арт, пресеты, тексты Amaya Plus) — в `<игра>/ds1/common/` (так у Farm).
+Арт, нужный и лендингу, — в `packages/art`. Общее для нескольких экранов игры (арт, пресеты, тексты Amaya Plus) — в `<игра>/ds1/common/` (так у Farm).
 
 - Экран регистрируется в `src/variants/index.ts`: `id` — имя варианта как в InApp
   (`ios_as_farm_ds1_varb_ut1_pw_switch_v1`), `match` — шаблон имени, `load` и `presets` — ленивые импорты.

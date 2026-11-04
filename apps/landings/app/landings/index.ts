@@ -1,7 +1,10 @@
-// Реестр лендингов: путь → конфиг. Новый лендинг — папка app/landings/<путь> с config.ts и art, строка здесь
-// (страницы для сборки nuxt.config находит по папкам)
+// Реестр лендингов: путь → конфиг. Новый лендинг — папка app/landings/<путь> с config.ts, здесь ничего дописывать не нужно.
+// Страницы для сборки nuxt.config находит по тем же папкам, Storybook — тоже
 import type { LandingConfig } from '@amaya/landing-kit'
-import { cars2 } from './cars2/config'
-import { farm } from './farm/config'
 
-export const LANDINGS: Record<string, LandingConfig> = { cars2, farm }
+const configs = import.meta.glob<LandingConfig>('./*/config.ts', { eager: true, import: 'default' })
+
+// По имени папки: в путях дефис идёт раньше слеша, и cars2-go встал бы перед cars2
+export const LANDINGS: Record<string, LandingConfig> = Object.fromEntries(
+  Object.entries(configs).map(([path, config]) => [path.split('/')[1]!, config] as const).sort(([a], [b]) => a.localeCompare(b))
+)

@@ -7,7 +7,7 @@ JSON в формате W3C Design Tokens → `dist/theme.css` (тема Tailwind
 src/breakpoints.json       брейкпоинты: токены, варианты ds:large и ds:wide, media картинок — всё отсюда
 src/primitives.json        палитра, градиенты, тени, шрифты — компоненты их не видят
 src/theme/base.json        смысловые токены: color.*, surface.*, shadow.*, font.*, case.* (base = стиль Amaya Plus)
-src/theme/<тема>.json      только отличия темы игры (cars2, farm)
+src/theme/<тема>.json      только отличия темы (cars2, farm; cars2-go — второй лендинг Cars 2)
 src/size/base/small.json   text.*, spacing.*, radius.*, line.* — до 844 px; medium/large — отличия
 src/size/<тема>/<размер>   размеры темы, если свои
 ```

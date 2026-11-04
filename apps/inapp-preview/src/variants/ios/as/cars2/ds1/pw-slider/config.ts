@@ -1,8 +1,9 @@
 // Пейволл Cars 2 на дизайн-системе: редизайн InApp ios/as/cars2/tm11/pw-slider (вариант B).
 // Те же продукты, тот же смысл текстов, те же события — меняется только вид. Арт — из InApp, по конвенции 12 файлов
+// Анимация и карточки наборов — общие с лендингом, лежат в packages/art: при переносе в InApp забрать их оттуда
+import { CARS2_UNLOCKS, cars2Animation, cars2UnlockArt } from '@amaya/art/cars2'
 import type { HeroLive, HeroSliderConfig } from '@amaya/paywall-kit'
 import { imageSetFromFiles } from '@amaya/ui'
-import animation from './art/animation-paywall-cars.riv?url'
 
 const files = import.meta.glob<string>('./art/**/*.{png,webp}', { eager: true, query: '?url', import: 'default' })
 const art = (name: string) => imageSetFromFiles(files, `./art/${name}`)
@@ -13,11 +14,10 @@ const art = (name: string) => imageSetFromFiles(files, `./art/${name}`)
  * слой — положить в art/ как tiles-* и включить: art: { …, live: { ...live, overlay: art('tiles') } }.
  * Сравнить с картинкой — история «Пейволлы / Cars 2 · с Rive».
  */
-export const live: HeroLive = { src: animation, artboard: 'paywall-without-icons', stateMachine: 'State Machine 1' }
+export const live: HeroLive = { src: cars2Animation, artboard: 'paywall-without-icons', stateMachine: 'State Machine 1' }
 
 // Наборы машин в карусели — в порядке InApp
-const UNLOCKS = ['city', 'christmas', 'halloween', 'construction', 'modern', 'zoo', 'monstertrucks'] as const
-const unlockIds = Object.fromEntries(UNLOCKS.map(name => [name, `com.amayasoft.cars2.${name}.599`]))
+const unlockIds = Object.fromEntries(CARS2_UNLOCKS.map(name => [name, `com.amayasoft.cars2.${name}.599`]))
 
 export const config: HeroSliderConfig = {
   theme: 'cars2',
@@ -36,9 +36,9 @@ export const config: HeroSliderConfig = {
     'com.amayasoft.cars2.yearly.trial3.4999',
     'com.amayasoft.cars2.weekly.trial3.onstart'
   ],
-  unlocks: UNLOCKS.map(name => ({
+  unlocks: CARS2_UNLOCKS.map(name => ({
     key: name,
-    art: art(`unlock/${name}`),
+    art: cars2UnlockArt(name),
     sameProducts: [`com.amayasoft.cars2.${name}`, `com.amayasoft.cars2.${name}.499`]
   })),
   // Сегменты InApp (useConfig, ios.tm11.varb.*): t1 и u — одни цены, wout1 — дешевле

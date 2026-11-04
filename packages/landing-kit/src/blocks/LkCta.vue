@@ -13,6 +13,7 @@ const { t } = useI18n()
 <template>
   <div class="ds:flex ds:justify-center ds:px-6">
     <DsButton
+      class="ds:max-w-full"
       variant="lp"
       size="lg"
       :data-cta="source"
