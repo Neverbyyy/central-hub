@@ -226,6 +226,42 @@
       "footer": {
         "copyright": "© {year}, Amaya Kids"
       },
+      "go": {
+        "features": {
+          "title": "Por qué los padres dicen que sí"
+        },
+        "finish": {
+          "text": "Más de 75 coches te esperan en el garaje",
+          "title": "¡Preparados, listos, ya!"
+        },
+        "hero": {
+          "hint": "¡Toca aquí!",
+          "scene_label": "Mapache mecánico y coches en la carretera. Toca y lo celebrará",
+          "text": "Más de 75 coches, carreras y un lavadero para niños desde 2 años",
+          "title": "¡Bip-bip! ¡Vamos!"
+        },
+        "meta": {
+          "title": "Kids Cars 2: ¡bip-bip, vamos! · Amaya Kids"
+        },
+        "reviews": {
+          "title": "Lo que dicen los padres"
+        },
+        "video": {
+          "title": "Mira cómo es el juego"
+        },
+        "wash": {
+          "again": "Ensuciarlo otra vez",
+          "clean_title": "¡Reluciente!",
+          "done": "En el juego hay un lavadero de verdad",
+          "label": "Coche de policía con barro. Desliza o pulsa Intro para lavarlo",
+          "text": "Desliza el dedo por el coche para lavarlo",
+          "title": "¡Oh, no, está lleno de barro!"
+        },
+        "worlds": {
+          "text": "Ciudad, zoo, Navidad, Halloween, monster trucks y mucho más",
+          "title": "Elige tu mundo"
+        }
+      },
       "header": {
         "logo": "Amaya Kids"
       },

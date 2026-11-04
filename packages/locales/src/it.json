@@ -226,6 +226,42 @@
       "footer": {
         "copyright": "© {year}, Amaya Kids"
       },
+      "go": {
+        "features": {
+          "title": "Perché i genitori dicono sì"
+        },
+        "finish": {
+          "text": "Oltre 75 auto ti aspettano in garage",
+          "title": "Pronti, partenza, via!"
+        },
+        "hero": {
+          "hint": "Tocca qui!",
+          "scene_label": "Procione meccanico e auto sulla strada. Tocca e farà festa",
+          "text": "Oltre 75 auto, gare e un autolavaggio per bambini dai 2 anni",
+          "title": "Bip-bip! Si parte!"
+        },
+        "meta": {
+          "title": "Kids Cars 2: bip-bip, si parte! · Amaya Kids"
+        },
+        "reviews": {
+          "title": "Cosa dicono i genitori"
+        },
+        "video": {
+          "title": "Guarda il gioco in azione"
+        },
+        "wash": {
+          "again": "Sporcala di nuovo",
+          "clean_title": "Splendente!",
+          "done": "Nel gioco c’è un vero autolavaggio",
+          "label": "Auto della polizia infangata. Scorri o premi Invio per lavarla",
+          "text": "Passa il dito sull’auto per lavarla",
+          "title": "Oh no, è tutta infangata!"
+        },
+        "worlds": {
+          "text": "Città, zoo, Natale, Halloween, monster truck e altro ancora",
+          "title": "Scegli il tuo mondo"
+        }
+      },
       "header": {
         "logo": "Amaya Kids"
       },

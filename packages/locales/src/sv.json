@@ -226,6 +226,42 @@
       "footer": {
         "copyright": "© {year}, Amaya Kids"
       },
+      "go": {
+        "features": {
+          "title": "Därför säger föräldrar ja"
+        },
+        "finish": {
+          "text": "Över 75 bilar väntar i garaget",
+          "title": "Klara, färdiga, gå!"
+        },
+        "hero": {
+          "hint": "Tryck här!",
+          "scene_label": "Tvättbjörnsmekaniker och bilar på vägen. Tryck så jublar han",
+          "text": "Över 75 bilar, race och en biltvätt för barn från 2 år",
+          "title": "Tut-tut! Nu kör vi!"
+        },
+        "meta": {
+          "title": "Kids Cars 2 – tut-tut, nu kör vi! · Amaya Kids"
+        },
+        "reviews": {
+          "title": "Det här säger föräldrar"
+        },
+        "video": {
+          "title": "Se spelet i aktion"
+        },
+        "wash": {
+          "again": "Gör den smutsig igen",
+          "clean_title": "Skinande ren!",
+          "done": "I spelet finns en riktig biltvätt",
+          "label": "Lerig polisbil. Svep eller tryck på Enter för att tvätta den",
+          "text": "Dra fingret över bilen och tvätta den",
+          "title": "Åh nej, den är full av lera!"
+        },
+        "worlds": {
+          "text": "Stad, djurpark, jul, halloween, monstertruckar och mer",
+          "title": "Välj din värld"
+        }
+      },
       "header": {
         "logo": "Amaya Kids"
       },
