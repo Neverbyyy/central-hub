@@ -6,22 +6,16 @@
  * «Капля» и плашки — фигуры из макета (Figma 38:174, 38:179, 38:182), цвет — из темы; длинный текст растягивает
  * «каплю» вниз, плашки держатся за её низ (телефон) или верх (широкий экран).
  */
-import { DsButton, DsImage, DsRive, DsStoreBadges, type DsStore } from '@amaya/ui'
-import { computed, onMounted, ref } from 'vue'
+import { DsButton, DsImage, DsRive } from '@amaya/ui'
+import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useLanding } from '../useLanding'
 import LkInteractive from './LkInteractive.vue'
+import LkStores from './LkStores.vue'
 
-const { config, links, storesId, markHeroLoaded, cta, storeClick } = useLanding()
+const { config, storesId, markHeroLoaded, cta } = useLanding()
 const { t } = useI18n()
 const hero = config.hero
-
-const badges = computed(() => ({
-  appStore: { href: links.value.appStore, src: config.badges.appStore, label: t(config.badges.appStoreLabel) },
-  googlePlay: { href: links.value.googlePlay, src: config.badges.googlePlay, label: t(config.badges.googlePlayLabel) }
-}))
-
-const onStore = (store: DsStore) => storeClick(store, 'hero')
 
 // Страница собрана заранее: картинка могла загрузиться до гидратации, и события load уже не будет
 const art = ref<HTMLElement | null>(null)
@@ -98,6 +92,7 @@ const ADVANTAGES = [
             {{ t(hero.note) }}
           </p>
           <DsButton
+            v-if="config.cta"
             class="ds:mt-2"
             variant="lp"
             data-cta="hero"
@@ -109,10 +104,7 @@ const ADVANTAGES = [
             :id="storesId"
             class="ds:mt-4"
           >
-            <DsStoreBadges
-              v-bind="badges"
-              @click="onStore"
-            />
+            <LkStores source="hero" />
           </div>
         </div>
 

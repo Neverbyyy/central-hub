@@ -17,6 +17,7 @@ export default defineLanding({
   id: 'cars2-go',
   site: 'web.lp_cars2.go',
   shared: 'web.lp_cars2',
+  cta: false,
   theme: 'cars2-go',
   stores: cars2.stores,
   heroArt: image('hero'),

@@ -4,23 +4,16 @@
  * проявляется Rive (LkInteractive); вне экрана анимация стоит, не загрузилась — остаётся картинка.
  * Когда использовать: лендинг с config.road. Цвета — color.lp.sign, размер шариков — spacing.lp-road-balloons-w.
  */
-import { DsGameTitle, DsImage, DsRive, DsStoreBadges, type DsStore } from '@amaya/ui'
-import { computed } from 'vue'
+import { DsGameTitle, DsImage, DsRive } from '@amaya/ui'
 import { useI18n } from 'vue-i18n'
 import { useLanding } from '../useLanding'
 import LkInteractive from './LkInteractive.vue'
+import LkStores from './LkStores.vue'
 
-const { config, links, storeClick } = useLanding()
+const { config } = useLanding()
 const { t } = useI18n()
 const finish = config.road!.finish
 const SIDES = ['lk-road-finish__balloons--start', 'lk-road-finish__balloons--end']
-
-const badges = computed(() => ({
-  appStore: { href: links.value.appStore, src: config.badges.appStore, label: t(config.badges.appStoreLabel) },
-  googlePlay: { href: links.value.googlePlay, src: config.badges.googlePlay, label: t(config.badges.googlePlayLabel) }
-}))
-
-const onStore = (store: DsStore) => storeClick(store, 'final')
 </script>
 
 <template>
@@ -64,10 +57,7 @@ const onStore = (store: DsStore) => storeClick(store, 'final')
       </p>
     </div>
     <div class="ds:relative ds:mt-6 ds:flex ds:justify-center ds:px-6">
-      <DsStoreBadges
-        v-bind="badges"
-        @click="onStore"
-      />
+      <LkStores source="final" />
     </div>
   </section>
 </template>

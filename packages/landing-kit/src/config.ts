@@ -61,8 +61,8 @@ export interface LandingConfig {
     // Две цветные плашки-преимущества
     advantages: [string, string]
   }
-  // Текст главной кнопки
-  cta: string
+  // Текст главной кнопки; нет — кнопок нет, вход в стор только значками
+  cta?: string
   features: LandingFeature[]
   video?: { src: string, poster: DsImageSet, label: string }
   // Отзывы, видео и FAQ — по наличию: у лендинга без них блок не рисуется

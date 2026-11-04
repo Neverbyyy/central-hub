@@ -64,6 +64,6 @@ const road = config.road!
       <LkStripe kind="checker" />
     </main>
     <LkFooter />
-    <LkStickyCta v-if="config.stickyCta" />
+    <LkStickyCta v-if="config.stickyCta && config.cta" />
   </div>
 </template>

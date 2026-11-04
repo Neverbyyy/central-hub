@@ -14,6 +14,7 @@ const SLIDES = ['trusted', 'privacy', 'educational', 'offline']
 export default defineLanding({
   id: 'farm',
   site: 'web.lp_farm',
+  cta: false,
   theme: 'farm',
   stores: {
     // App Store — Pages Hub (useAppsInfo), Google Play — пакет Farm из данных InApp

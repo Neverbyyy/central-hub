@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/** Главная кнопка лендинга по центру: стор по платформе (useLanding().cta). source — откуда нажали, для track. */
+/** Главная кнопка лендинга по центру: стор по платформе (useLanding().cta). Без config.cta блока нет: вход в стор значками. */
 import { DsButton } from '@amaya/ui'
 import { useI18n } from 'vue-i18n'
 import { useLanding } from '../useLanding'
@@ -11,7 +11,10 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <div class="ds:flex ds:justify-center ds:px-6">
+  <div
+    v-if="config.cta"
+    class="ds:flex ds:justify-center ds:px-6"
+  >
     <DsButton
       class="ds:max-w-full"
       variant="lp"

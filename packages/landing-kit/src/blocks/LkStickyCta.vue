@@ -30,7 +30,7 @@ useInView(() => document.getElementById(`${config.id}-hero`), (heroVisible) => {
       data-cta="sticky"
       @click="cta('sticky')"
     >
-      {{ t(config.cta) }}
+      {{ t(config.cta!) }}
     </DsButton>
   </div>
 </template>

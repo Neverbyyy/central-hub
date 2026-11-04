@@ -540,7 +540,7 @@ Rive-анимация из файла .riv: артборд и стейт-маш�
 
 `@amaya/landing-kit` · Figma: Cta · `packages/landing-kit/src/blocks/LkCta.vue`
 
-Главная кнопка лендинга по центру: стор по платформе (useLanding().cta). source — откуда нажали, для track.
+Главная кнопка лендинга по центру: стор по платформе (useLanding().cta). Без config.cta блока нет: вход в стор значками.
 
 | Проп | Тип | По умолчанию | Пояснение |
 | --- | --- | --- | --- |
@@ -638,13 +638,23 @@ Rive-анимация из файла .riv: артборд и стейт-маш�
 
 `@amaya/landing-kit` · Figma: RoadWorlds · `packages/landing-kit/src/blocks/LkRoadWorlds.vue`
 
-Миры игры: заголовок и ряд ярких карточек с наборами машин, ряд листается пальцем (DsCarousel) и намекает на это сам. Когда использовать: лендинг с config.road. Цвета — color.lp.section, размеры — spacing.lp-road-world-*.
+Миры игры: заголовок и ряд ярких карточек с наборами машин. На телефоне и планшете ряд листается пальцем (DsCarousel) и намекает на это сам, на компьютере листать мышью неудобно: все карточки стоят в ряд по центру. Когда использовать: лендинг с config.road. Цвета — color.lp.section, размеры — spacing.lp-road-world-*.
 
 ### LkStickyCta
 
 `@amaya/landing-kit` · Figma: StickyCta · `packages/landing-kit/src/blocks/LkStickyCta.vue`
 
 Закреплённая кнопка внизу экрана телефона: выезжает, когда первый экран ушёл из вида, и прячется, когда он вернулся. Только transform. От 640 px не показывается. Включается в конфиге (stickyCta) — у Cars 2 выключена.
+
+### LkStores
+
+`@amaya/landing-kit` · Figma: Stores · `packages/landing-kit/src/blocks/LkStores.vue`
+
+Значки App Store и Google Play лендинга: адреса с UTM из адреса страницы, нажатие уходит в track. Когда использовать: везде, где на лендинге нужен вход в стор. source — какой блок, для аналитики.
+
+| Проп | Тип | По умолчанию | Пояснение |
+| --- | --- | --- | --- |
+| `source` | `string` |  |  |
 
 ### LkStripe
 

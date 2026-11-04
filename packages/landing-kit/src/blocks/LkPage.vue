@@ -19,6 +19,7 @@ import LkHero from './LkHero.vue'
 import LkReviews from './LkReviews.vue'
 import LkRoadLayout from './LkRoadLayout.vue'
 import LkStickyCta from './LkStickyCta.vue'
+import LkStores from './LkStores.vue'
 import LkVideo from './LkVideo.vue'
 
 const props = defineProps<{ config: LandingConfig }>()
@@ -49,8 +50,11 @@ const fontLater = computed(() => (heroLoaded.value ? '' : 'lk-page--font-later')
              уже стоит под преимуществами, а пустой синий фон с одной кнопкой выглядит как недогрузка -->
         <div
           v-if="config.video || config.reviews || config.faq"
-          class="ds:bg-lp-section ds:pb-24"
-          :class="config.video ? 'ds:-mt-lp-video-overlap ds:pt-lp-video-overlap ds:wide:-mt-lp-video-overlap-wide ds:wide:pt-lp-video-overlap-wide' : 'ds:pt-24'"
+          class="ds:bg-lp-section"
+          :class="[
+            config.cta ? 'ds:pb-24' : 'ds:pb-4',
+            config.video ? 'ds:-mt-lp-video-overlap ds:pt-lp-video-overlap ds:wide:-mt-lp-video-overlap-wide ds:wide:pt-lp-video-overlap-wide' : 'ds:pt-24'
+          ]"
         >
           <div
             v-if="config.reviews"
@@ -69,11 +73,19 @@ const fontLater = computed(() => (heroLoaded.value ? '' : 'lk-page--font-later')
             class="ds:mt-24"
             source="final"
           />
+          <!-- Кнопки нет: внизу длинной страницы вход в стор — значки. Они ниже кнопки, поэтому и отступы меньше:
+               снизу блока почти ничего, основной зазор даёт отступ футера -->
+          <div
+            v-if="!config.cta"
+            class="ds:mt-14 ds:flex ds:justify-center ds:px-6"
+          >
+            <LkStores source="final" />
+          </div>
         </div>
       </main>
       <LkFooter :class="fontLater" />
     </div>
-    <LkStickyCta v-if="config.stickyCta && !config.road" />
+    <LkStickyCta v-if="config.stickyCta && config.cta && !config.road" />
   </DsRoot>
 </template>
 

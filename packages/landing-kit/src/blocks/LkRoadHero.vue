@@ -6,22 +6,18 @@
  * На телефоне сцена видна целиком, поэтому высота блока — по содержимому. На экране шире сцена заполняет его за текстом.
  * Когда использовать: первый экран лендинга с config.road. Цвета — color.lp.sky, color.lp.section.
  */
-import { DsGameTitle, DsImage, DsRive, DsStoreBadges, type DsStore } from '@amaya/ui'
-import { computed, onMounted, ref } from 'vue'
+import { DsGameTitle, DsImage, DsRive } from '@amaya/ui'
+import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useLanding } from '../useLanding'
 import LkInteractive from './LkInteractive.vue'
+import LkStores from './LkStores.vue'
 import LkStripe from './LkStripe.vue'
 
-const { config, links, storesId, markHeroLoaded, storeClick } = useLanding()
+const { config, storesId, markHeroLoaded } = useLanding()
 const { t } = useI18n()
 const hero = config.hero
 const scene = config.road!.scene
-
-const badges = computed(() => ({
-  appStore: { href: links.value.appStore, src: config.badges.appStore, label: t(config.badges.appStoreLabel) },
-  googlePlay: { href: links.value.googlePlay, src: config.badges.googlePlay, label: t(config.badges.googlePlayLabel) }
-}))
 
 const art = ref<HTMLElement | null>(null)
 
@@ -29,8 +25,6 @@ const art = ref<HTMLElement | null>(null)
 onMounted(() => {
   if (art.value?.querySelector('img')?.complete) markHeroLoaded()
 })
-
-const onStore = (store: DsStore) => storeClick(store, 'hero')
 </script>
 
 <template>
@@ -96,10 +90,7 @@ const onStore = (store: DsStore) => storeClick(store, 'hero')
       :id="storesId"
       class="lk-road-hero__stores ds:flex ds:justify-center ds:bg-lp-section ds:px-6 ds:py-5 ds:phone-landscape:py-3"
     >
-      <DsStoreBadges
-        v-bind="badges"
-        @click="onStore"
-      />
+      <LkStores source="hero" />
     </div>
   </section>
 </template>

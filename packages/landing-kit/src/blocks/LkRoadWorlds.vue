@@ -1,6 +1,7 @@
 <script setup lang="ts">
 /**
- * Миры игры: заголовок и ряд ярких карточек с наборами машин, ряд листается пальцем (DsCarousel) и намекает на это сам.
+ * Миры игры: заголовок и ряд ярких карточек с наборами машин. На телефоне и планшете ряд листается пальцем (DsCarousel) и
+ * намекает на это сам, на компьютере листать мышью неудобно: все карточки стоят в ряд по центру.
  * Когда использовать: лендинг с config.road. Цвета — color.lp.section, размеры — spacing.lp-road-world-*.
  */
 import { DsCarousel, DsImage } from '@amaya/ui'
@@ -21,13 +22,13 @@ const worlds = config.road!.worlds
       {{ t(worlds.text) }}
     </p>
     <DsCarousel
-      class="ds:mt-6 ds:scroll-px-6 ds:px-6 ds:pb-3"
+      class="lk-road-worlds ds:mt-6 ds:scroll-px-6 ds:px-6 ds:pb-3"
       hint
     >
       <div
         v-for="(world, index) in worlds.items"
         :key="index"
-        class="ds:me-4 ds:h-lp-road-world-h ds:w-lp-road-world-w ds:shrink-0 ds:overflow-hidden ds:rounded-lp-card ds:bg-lp-on-section ds:shadow-(--ds-shadow-lp-card)"
+        class="lk-road-worlds__card ds:me-4 ds:h-lp-road-world-h ds:w-lp-road-world-w ds:shrink-0 ds:overflow-hidden ds:rounded-lp-card ds:bg-lp-on-section ds:shadow-(--ds-shadow-lp-card)"
         data-road-world
       >
         <DsImage
@@ -42,3 +43,25 @@ const worlds = config.road!.worlds
     </DsCarousel>
   </section>
 </template>
+
+<style scoped>
+/* Компьютер: карточки делят ширину поровну, но не больше своего размера, поэтому помещаются все и стоят по центру */
+@media (min-width: 1024px) {
+  .lk-road-worlds {
+    justify-content: center;
+  }
+
+  .lk-road-worlds .lk-road-worlds__card {
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+    max-width: var(--ds-spacing-lp-road-world-w);
+    height: auto;
+    aspect-ratio: 208 / 288;
+  }
+
+  .lk-road-worlds .lk-road-worlds__card:last-child {
+    margin-inline-end: 0;
+  }
+}
+</style>

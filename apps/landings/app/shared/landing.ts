@@ -44,6 +44,8 @@ function roadTexts(site: string, { scene, truck, truckRatio, worlds, balloons }:
 export interface LandingOptions extends Pick<LandingConfig, 'id' | 'theme' | 'stores' | 'features' | 'stickyCta'> {
   // Начало ключей сайта: web.lp_cars2
   site: string
+  // false — без кнопки «Play for free»: вход в стор только значками
+  cta?: false
   // Начало ключей, общих с другим лендингом той же игры: отзывы, FAQ, футер, описание. По умолчанию — site
   shared?: string
   heroArt: DsImageSet
@@ -55,7 +57,7 @@ export interface LandingOptions extends Pick<LandingConfig, 'id' | 'theme' | 'st
   road?: RoadOptions
 }
 
-export function defineLanding({ site, shared = site, heroArt, heroRive, video, reviews, faq, road, ...own }: LandingOptions): LandingConfig {
+export function defineLanding({ site, shared = site, cta, heroArt, heroRive, video, reviews, faq, road, ...own }: LandingOptions): LandingConfig {
   return {
     ...own,
     road: road && roadTexts(site, road),
@@ -75,7 +77,7 @@ export function defineLanding({ site, shared = site, heroArt, heroRive, video, r
       note: `${shared}.hero.stores_note`,
       advantages: [`${shared}.hero.adv_1`, `${shared}.hero.adv_2`]
     },
-    cta: 'common.button.play_free',
+    cta: cta === false ? undefined : 'common.button.play_free',
     video: { ...video, label: 'ds.video.play.label' },
     reviews: {
       items: numbers(reviews).map(n => ({ text: `${shared}.reviews.item_${n}.text`, author: `${shared}.reviews.item_${n}.author`, rating: 5 })),
