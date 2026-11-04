@@ -14,3 +14,8 @@ body,
   overflow: hidden;
   overscroll-behavior: none;
 }
+
+/* Вместо игры: где приложения нет — в рамке эмулятора и на странице «только экран» */
+.game-backdrop {
+  background: linear-gradient(160deg, #3b6f9e, #1e3348);
+}

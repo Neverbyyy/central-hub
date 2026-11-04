@@ -1,8 +1,10 @@
 <script setup lang="ts">
 // Рамка устройства эмулятора: вебвью в логическом размере, зоны Duo поверх него и заглушка «экран закрыт».
-// Экран уменьшается под свободное место, как в DevTools. Инструмент разработки: подписи по-русски, свой CSS
+// Экран уменьшается под свободное место, как в DevTools; screen.fill — без рамки, на всё место.
+// Инструмент разработки: подписи по-русски, свой CSS
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import type { Screen } from './devices'
+import ScreenClosed from './ScreenClosed.vue'
 
 const props = defineProps<{
   screen: Screen
@@ -23,6 +25,9 @@ const stageSize = ref({ width: 0, height: 0 })
 const scale = computed(() => Math.min(1, (stageSize.value.width - MARGIN) / props.screen.width, (stageSize.value.height - MARGIN) / props.screen.height))
 const radius = computed(() => props.screen.radii.map(value => `${value}px`).join(' '))
 const pose = computed(() => (props.zones ? props.screen.duo : undefined))
+const size = computed(() => (props.screen.fill
+  ? undefined
+  : { width: `${props.screen.width}px`, height: `${props.screen.height}px`, transform: `scale(${scale.value})`, borderRadius: radius.value }))
 
 let observer: ResizeObserver | undefined
 onMounted(() => {
@@ -45,8 +50,9 @@ defineExpose({ frame })
     class="emu-stage"
   >
     <div
-      class="emu-device"
-      :style="{ width: `${screen.width}px`, height: `${screen.height}px`, transform: `scale(${scale})`, borderRadius: radius }"
+      class="emu-device game-backdrop"
+      :class="{ 'emu-device--fill': screen.fill }"
+      :style="size"
     >
       <iframe
         v-if="src"
@@ -127,18 +133,11 @@ defineExpose({ frame })
           class="emu-zone--system"
         />
       </svg>
-      <div
+      <ScreenClosed
         v-if="closed"
-        class="emu-closed"
-      >
-        <p>Экран закрыт{{ shown ? '' : ' и не показывался' }}</p>
-        <button
-          type="button"
-          @click="$emit('open')"
-        >
-          Открыть снова
-        </button>
-      </div>
+        :never-shown="!shown"
+        @open="$emit('open')"
+      />
     </div>
   </main>
 </template>
@@ -149,6 +148,8 @@ defineExpose({ frame })
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Страница заходит под вырез, а экран в iframe про него не знает: сам iframe держим в безопасной зоне */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   overflow: hidden;
   background: #2a2d33;
 }
@@ -157,9 +158,13 @@ defineExpose({ frame })
   position: relative;
   flex-shrink: 0;
   overflow: hidden;
-  /* Под вебвью — игра: экран InApp прозрачный, как в приложении */
-  background: linear-gradient(160deg, #3b6f9e, #1e3348);
   box-shadow: 0 0 0 10px #0d0e10, 0 20px 60px rgb(0 0 0 / 0.5);
+}
+
+.emu-device--fill {
+  width: 100%;
+  height: 100%;
+  box-shadow: none;
 }
 
 .emu-frame {
@@ -197,21 +202,5 @@ defineExpose({ frame })
   fill: rgb(20 20 20 / 0.9);
   stroke: rgb(142 68 173 / 0.9);
   stroke-width: 2;
-}
-
-.emu-closed {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  color: #fff;
-  background: rgb(0 0 0 / 0.55);
-}
-
-.emu-closed p {
-  margin: 0;
 }
 </style>

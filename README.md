@@ -552,8 +552,13 @@ configureRive({ wasmUrl: wasm, wasmFallbackUrl: wasmFallback })
   - лог всего, что экран отправил бы в InApp (события аналитики раскрыты из base64). Подозрительное подсвечено:
     дубли, второй `buy` до итога, `ready` до данных или повторный; «закрылся без ready» — пояснение для «нет продукта».
 - Всё состояние — в адресе: «Ссылка на сценарий» откроет тот же экран, пресет, язык и устройство (для Антона).
-- «Только экран» — `?variant=…&preset=default&lang=de`: без панели, данные пресета, покупка «проходит» через 1,5 с —
-  для проверки на телефоне (`pnpm … dev` слушает сеть: `http://<IP компьютера>:6020/…`).
+- С телефона — тот же адрес (`https://inapp-preview.vercel.app`, локально `pnpm … dev` слушает сеть:
+  `http://<IP компьютера>:6020`). Экран занимает весь телефон, настоящего размера и с настоящим поворотом; панель —
+  по язычку у левого края: снизу в портрете, сбоку в альбоме. Покупка спрашивает итог плашкой поверх экрана.
+  Адресная строка съедает высоту: на Android — «На весь экран» в панели, на iPhone — «На экран Домой». Тот же вид —
+  на планшете и в окне уже 760 px.
+- «Только экран» — `?variant=…&preset=default&lang=de`: без панели, данные пресета, покупка «проходит» через 1,5 с.
+  Экран закрылся — «Открыть снова» откроет его заново, как новый, без перезагрузки.
 
 **Сценарии ТЗ — автопрогоном по эмулятору:** `pnpm --filter @amaya/inapp-preview scenarios` (сам поднимает vite;
 `node apps/inapp-preview/scripts/scenarios.mjs --url http://localhost:6020 [--only cars2|farm-start|farm-click|onboarding]`).
@@ -681,8 +686,9 @@ Vercel: Root Directory — `apps/central-hub`, переменные окруже
 - Build Command — `cd ../.. && pnpm turbo run build --filter=@amaya/inapp-preview`, Output Directory — `dist`;
 - переменная `ENABLE_EXPERIMENTAL_COREPACK=1`, секреты не нужны.
 
-Это статика: корень `/` — эмулятор с панелью, ссылка вида `/?variant=ios_as_farm_ds1_varb_ut1_pw_switch_v1&preset=default`
-— экран для телефона. Собранный эмулятор проходит `scenarios --url <адрес>` так же, как dev.
+Это статика: корень `/` — эмулятор, на телефоне он сам перестраивается; ссылка вида
+`/?variant=ios_as_farm_ds1_varb_ut1_pw_switch_v1&preset=default` — экран без эмулятора. Собранный эмулятор проходит
+`scenarios --url <адрес>` так же, как dev.
 
 **Ссылки в сервисе** — карточки «Дизайн-система» (https://amaya-storybook.vercel.app), «Эмулятор InApp»
 (https://inapp-preview.vercel.app) и «Лендинги» (https://landings-six-henna.vercel.app) на главной (`app/pages/index.vue`) и пункты Ctrl+K — адреса прямо в коде,

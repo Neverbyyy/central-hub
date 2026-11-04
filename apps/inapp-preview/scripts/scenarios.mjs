@@ -187,6 +187,49 @@ try {
     }
   }
 
+  // Эмулятор на телефоне: экран на всё окно, панель — по кнопке, итог покупки — плашкой поверх экрана
+  if (!only || only === 'cars2') {
+    const name = 'Эмулятор на телефоне'
+    const { page, frame } = await emulator({ screen: 'ios_as_cars2_ds1_varb_t1_pw_slider_v1' }, { width: 390, height: 844, isMobile: true, hasTouch: true })
+    const iframe = await page.$eval('iframe', el => ({ width: el.getBoundingClientRect().width, height: el.getBoundingClientRect().height }))
+    check(`${name}: экран на всё окно`, iframe.width === 390 && iframe.height === 844, JSON.stringify(iframe))
+    const panelTop = () => page.$eval('.emu-panel', el => el.getBoundingClientRect().top)
+    check(`${name}: панель скрыта`, await panelTop() >= 844)
+    await page.tap('.emu-menu')
+    await sleep(400)
+    check(`${name}: кнопка открывает панель`, await panelTop() < 844)
+    await page.tap('.emu-head button')
+    await sleep(400)
+    check(`${name}: панель закрывается`, await panelTop() >= 844)
+    await tapCta(frame)
+    await sleep(300)
+    check(`${name}: покупка спрашивает итог плашкой`, await page.$('.emu > .emu-purchase') !== null)
+    await page.tap('.emu-purchase .emu-ok')
+    await sleep(600)
+    check(`${name}: итог дошёл до экрана`, (await state(page)).purchasing === null, JSON.stringify(await state(page)))
+    await page.close()
+  }
+
+  // «Только экран», без приложения: закрылся — кнопка открывает его снова, как новый, без перезагрузки
+  if (!only || only === 'cars2') {
+    const name = 'Только экран'
+    const page = await browser.newPage()
+    page.on('pageerror', error => errors.push(error.message))
+    await page.setViewport({ width: 844, height: 390 })
+    await page.goto(`${base}/?variant=ios_as_cars2_ds1_varb_t1_pw_slider_v1&preset=default`, { waitUntil: 'load' })
+    await page.waitForSelector('[data-pw="close"][data-shown]', { timeout: 8000 })
+    // Попап оставлен открытым: новый экран должен открыться без него. Под затемнением попапа клик мышью до крестика не дойдёт
+    await page.evaluate(() => document.querySelector('[data-pw="more"]').click())
+    await sleep(300)
+    await page.evaluate(() => document.querySelector('[data-pw="close"]').click())
+    const notice = await page.waitForSelector('.screen-closed', { timeout: 2000 }).catch(() => null)
+    check(`${name}: закрылся — есть кнопка «Открыть снова»`, notice !== null)
+    await page.click('.screen-closed button')
+    await sleep(300)
+    check(`${name}: открылся снова, как новый`, await page.$('[data-opened]') !== null && await page.$('.screen-closed') === null && await page.$('[role="dialog"]') === null)
+    await page.close()
+  }
+
   // Онбординг: два шага, двойной тап не проскакивает шаг, крестик — только на втором, «Continue» на втором закрывает
   if (!only || only === 'onboarding') {
     const name = 'Онбординг Farm'

@@ -3,6 +3,8 @@
  * Эмулятор InApp: слева экран в рамке устройства, справа — то, что делает приложение. Экран живёт в iframe и говорит
  * по настоящему протоколу InApp (uniwebview://, postMessage как в режиме hyper), поэтому проверяется ровно то, что
  * пойдёт в приложение. Всё состояние — в адресе: ссылкой можно поделиться, она откроет тот же сценарий.
+ * На телефоне и планшете (compact) экран занимает всё место, панель открывается кнопкой: снизу в портрете, сбоку
+ * в альбоме. Покупка спрашивает итог плашкой поверх экрана, панель для этого открывать не нужно.
  * Инструмент разработки, как Storybook: подписи по-русски, свой CSS, правила дизайн-системы на него не действуют.
  */
 import { languageLabel, locales } from '@amaya/locales'
@@ -25,7 +27,15 @@ const PHASES: Record<HostState['phase'], string> = {
   closed: 'Закрыт'
 }
 
-const { screenId, presetName, lang, deviceId, orientation, outcome, autoOpen, zones, scenarioUrl, screenOnlyUrl } = useScenario()
+// Палец вместо мыши или окно уже панели с экраном
+const compactQuery = matchMedia('(pointer: coarse), (max-width: 760px)')
+const compact = ref(compactQuery.matches)
+const panelOpen = ref(false)
+const onCompact = () => {
+  compact.value = compactQuery.matches
+}
+
+const { screenId, presetName, lang, deviceId, orientation, outcome, autoOpen, zones, scenarioUrl, screenOnlyUrl } = useScenario(compact.value ? 'here' : undefined)
 
 const entry = computed(() => screens.find(item => item.id === screenId.value)!)
 const presets = shallowRef<Record<string, ScreenPreset>>({})
@@ -81,6 +91,10 @@ const onMessage = (event: MessageEvent) => {
   if (message?.instance === 'inapp' && typeof message.url === 'string') host.receive(message.url)
 }
 
+// Адресная строка съедает высоту, и экран уменьшается. На iPhone браузер этого не умеет: там — «На экран Домой»
+const canFullscreen = computed(() => compact.value && document.fullscreenEnabled)
+const toggleFullscreen = () => (document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen())
+
 const copied = ref('')
 async function copy(text: string, what: string) {
   try {
@@ -116,13 +130,20 @@ const api = {
 
 onMounted(() => {
   window.addEventListener('message', onMessage)
+  compactQuery.addEventListener('change', onCompact)
   ;(window as unknown as { __inapp?: typeof api }).__inapp = api
 })
-onBeforeUnmount(() => window.removeEventListener('message', onMessage))
+onBeforeUnmount(() => {
+  window.removeEventListener('message', onMessage)
+  compactQuery.removeEventListener('change', onCompact)
+})
 </script>
 
 <template>
-  <div class="emu">
+  <div
+    class="emu"
+    :class="{ 'emu--compact': compact, 'emu--open': compact && panelOpen }"
+  >
     <DeviceFrame
       ref="deviceFrame"
       :screen="screen"
@@ -134,8 +155,33 @@ onBeforeUnmount(() => window.removeEventListener('message', onMessage))
       @open="host.open()"
     />
 
+    <template v-if="compact">
+      <button
+        type="button"
+        class="emu-menu"
+        aria-label="Открыть панель эмулятора"
+        @click="panelOpen = true"
+      >
+        ☰
+      </button>
+      <div
+        class="emu-scrim"
+        @click="panelOpen = false"
+      />
+    </template>
+
     <aside class="emu-panel">
-      <h1>Эмулятор InApp</h1>
+      <header class="emu-head">
+        <h1>Эмулятор InApp</h1>
+        <button
+          v-if="compact"
+          type="button"
+          aria-label="Скрыть панель"
+          @click="panelOpen = false"
+        >
+          ✕
+        </button>
+      </header>
 
       <label>Экран
         <select v-model="screenId">
@@ -165,7 +211,7 @@ onBeforeUnmount(() => window.removeEventListener('message', onMessage))
             >{{ languageLabel(code) }}</option>
           </select>
         </label>
-        <label>Ориентация
+        <label v-if="!screen.fill">Ориентация
           <select v-model="orientation">
             <option value="landscape">Альбомная</option>
             <option value="portrait">Портрет</option>
@@ -221,6 +267,13 @@ onBeforeUnmount(() => window.removeEventListener('message', onMessage))
           >
             Перезагрузить
           </button>
+          <button
+            v-if="canFullscreen"
+            type="button"
+            @click="toggleFullscreen"
+          >
+            На весь экран
+          </button>
         </div>
         <label class="emu-check">
           <input
@@ -240,39 +293,43 @@ onBeforeUnmount(() => window.removeEventListener('message', onMessage))
             >{{ title }}</option>
           </select>
         </label>
-        <div
+        <!-- Панель скрыта — плашка поверх экрана, иначе итог покупки не выбрать -->
+        <Teleport
           v-if="state.purchasing"
-          class="emu-purchase"
+          to=".emu"
+          :disabled="!compact || panelOpen"
         >
-          <p>Идёт покупка <code>{{ state.purchasing }}</code></p>
-          <div class="emu-buttons">
-            <button
-              type="button"
-              class="emu-ok"
-              @click="host.pay('success')"
-            >
-              Прошла
-            </button>
-            <button
-              type="button"
-              @click="host.pay('cancel')"
-            >
-              Отменена
-            </button>
-            <button
-              type="button"
-              @click="host.pay('error')"
-            >
-              Ошибка
-            </button>
-            <button
-              type="button"
-              @click="host.pay('none')"
-            >
-              Без итога
-            </button>
+          <div class="emu-purchase">
+            <p>Идёт покупка <code>{{ state.purchasing }}</code></p>
+            <div class="emu-buttons">
+              <button
+                type="button"
+                class="emu-ok"
+                @click="host.pay('success')"
+              >
+                Прошла
+              </button>
+              <button
+                type="button"
+                @click="host.pay('cancel')"
+              >
+                Отменена
+              </button>
+              <button
+                type="button"
+                @click="host.pay('error')"
+              >
+                Ошибка
+              </button>
+              <button
+                type="button"
+                @click="host.pay('none')"
+              >
+                Без итога
+              </button>
+            </div>
           </div>
-        </div>
+        </Teleport>
       </section>
 
       <section class="emu-block">
@@ -286,7 +343,7 @@ onBeforeUnmount(() => window.removeEventListener('message', onMessage))
           <a
             :href="screenOnlyUrl"
             target="_blank"
-          >Только экран — для телефона</a>
+          >Только экран, без эмулятора</a>
         </div>
         <p
           v-if="copied"
@@ -325,6 +382,12 @@ onBeforeUnmount(() => window.removeEventListener('message', onMessage))
   border-left: 1px solid #d8dbe0;
 }
 
+.emu-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .emu-panel h1 {
   margin: 0;
   font-size: 18px;
@@ -350,6 +413,10 @@ onBeforeUnmount(() => window.removeEventListener('message', onMessage))
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
+}
+
+.emu-row > :only-child {
+  grid-column: 1 / -1;
 }
 
 .emu-panel .emu-check {
@@ -400,7 +467,7 @@ onBeforeUnmount(() => window.removeEventListener('message', onMessage))
   background: #e8eaee;
 }
 
-.emu-panel .emu-ok {
+.emu .emu-ok {
   color: #fff;
   border-color: #1f883d;
   background: #1f883d;
@@ -419,5 +486,157 @@ onBeforeUnmount(() => window.removeEventListener('message', onMessage))
 .emu-hint {
   margin: 0;
   color: #57606a;
+}
+
+/* Телефон и планшет: экран на всё место, панель выезжает поверх. Поля под касание, 16 px — иначе iOS увеличивает
+   страницу при выборе в списке */
+.emu--compact {
+  display: block;
+  font-size: 16px;
+}
+
+.emu--compact .emu-panel,
+.emu--compact > .emu-purchase {
+  box-sizing: border-box;
+}
+
+.emu--compact .emu-stage {
+  position: absolute;
+  inset: 0;
+}
+
+.emu--compact :deep(button),
+.emu--compact .emu-buttons a,
+.emu--compact select {
+  min-height: 44px;
+  font-size: 16px;
+}
+
+.emu--compact .emu-buttons a,
+.emu--compact select {
+  padding-inline: 12px;
+}
+
+.emu--compact .emu-head button {
+  width: 44px;
+  padding: 0;
+  border-radius: 50%;
+}
+
+/* Язычок у левого края: там пусто на всех экранах, а углы заняты логотипом, крестиком и документами */
+.emu .emu-menu {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: env(safe-area-inset-left);
+  width: 28px;
+  min-height: 64px;
+  padding: 0;
+  color: #fff;
+  border: 0;
+  border-radius: 0 12px 12px 0;
+  background: rgb(0 0 0 / 0.45);
+  transform: translateY(-50%);
+}
+
+/* Зона касания 44 px при узком язычке */
+.emu-menu::after {
+  content: '';
+  position: absolute;
+  inset: 0 -16px 0 0;
+}
+
+.emu-scrim {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  background: rgb(0 0 0 / 0.25);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 220ms ease;
+}
+
+.emu--open .emu-scrim {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.emu--compact .emu-panel {
+  position: absolute;
+  z-index: 3;
+  inset: auto 0 0;
+  max-height: 70%;
+  padding: 0 calc(16px + env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
+  border: 0;
+  border-radius: 16px 16px 0 0;
+  background: #f6f7f9;
+  box-shadow: 0 -8px 32px rgb(0 0 0 / 0.35);
+  overscroll-behavior: contain;
+  transform: translateY(100%);
+  visibility: hidden;
+  transition: transform 220ms ease, visibility 220ms;
+}
+
+.emu--open .emu-panel {
+  visibility: visible;
+}
+
+.emu--compact.emu--open .emu-panel {
+  transform: none;
+}
+
+.emu--compact .emu-head {
+  position: sticky;
+  z-index: 1;
+  top: 0;
+  padding-block: 8px;
+  background: #f6f7f9;
+}
+
+.emu--compact :deep(.emu-log) {
+  flex: none;
+}
+
+.emu--compact :deep(.emu-log ol) {
+  overflow: visible;
+}
+
+/* Плашка покупки поверх экрана: сверху, чтобы не закрывать кнопку с загрузкой */
+.emu--compact > .emu-purchase {
+  position: absolute;
+  z-index: 1;
+  top: calc(8px + env(safe-area-inset-top));
+  left: 50%;
+  width: min(420px, calc(100% - 16px));
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.35);
+  transform: translateX(-50%);
+}
+
+.emu--compact > .emu-purchase code {
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.emu--compact > .emu-purchase button {
+  flex: 1 1 auto;
+  padding-inline: 8px;
+}
+
+@media (orientation: landscape) {
+  .emu--compact .emu-panel {
+    inset: 0 0 0 auto;
+    width: min(360px, 70%);
+    max-height: none;
+    border-radius: 16px 0 0 16px;
+    box-shadow: -8px 0 32px rgb(0 0 0 / 0.35);
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .emu--compact .emu-panel,
+  .emu-scrim {
+    transition: none;
+  }
 }
 </style>

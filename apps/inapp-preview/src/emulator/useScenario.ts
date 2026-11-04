@@ -13,12 +13,12 @@ const pick = <T extends string>(value: string | null, allowed: readonly T[], fal
  * Сценарий эмулятора живёт в адресе: ссылка открывает тот же экран, пресет, язык, устройство и итог покупки.
  * При каждом изменении адрес обновляется без новой записи в истории браузера.
  */
-export function useScenario() {
+export function useScenario(defaultDevice?: string) {
   const query = new URLSearchParams(location.search)
   const screenId = ref(pick(query.get('screen'), screens.map(item => item.id), screens[0]!.id))
   const presetName = ref(query.get('preset') ?? 'default')
   const lang = ref(pick(query.get('lang'), locales, 'en'))
-  const deviceId = ref(findDevice(query.get('device')).id)
+  const deviceId = ref(findDevice(query.get('device') ?? defaultDevice ?? null).id)
   const orientation = ref<Orientation>(query.get('orient') === 'portrait' ? 'portrait' : 'landscape')
   const outcome = ref<Outcome>(pick(query.get('outcome'), Object.keys(OUTCOMES) as Outcome[], 'ask'))
   const autoOpen = ref(query.get('open') !== '0')
