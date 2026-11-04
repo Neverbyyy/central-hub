@@ -1,12 +1,13 @@
 import type { StoryObj } from '@storybook/vue3-vite'
 import { computed, ref } from 'vue'
-import { useStoryTexts } from '../stories'
+import { useStoryTexts, NO_SCREEN_STATE } from '../stories'
 import DsAccordion from './DsAccordion.vue'
 
 // FAQ лендинга: вопросы — кнопки, ↑/↓/Home/End между ними; тексты — ключи лендинга Cars 2
 export default {
   title: 'Блоки лендинга/FAQ',
-  component: DsAccordion
+  component: DsAccordion,
+  globals: NO_SCREEN_STATE
 }
 
 export const Faq: StoryObj = {

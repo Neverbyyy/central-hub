@@ -4,14 +4,15 @@
 // Остальные истории блоков — рядом с компонентами в packages/ui
 import type { LandingConfig } from '@amaya/landing-kit'
 import { DsStoreBadges, DsVideo, type DsStore } from '@amaya/ui'
-import { useStoryTexts } from '@amaya/ui/stories'
+import { useStoryTexts, NO_SCREEN_STATE } from '@amaya/ui/stories'
 import type { StoryObj } from '@storybook/vue3-vite'
 import { computed, onMounted, ref } from 'vue'
 import { cars2 } from '../../landings/app/landings/cars2/config'
 import { farm } from '../../landings/app/landings/farm/config'
 
 export default {
-  title: 'Блоки лендинга/Видео и сторы'
+  title: 'Блоки лендинга/Видео и сторы',
+  globals: NO_SCREEN_STATE
 }
 
 const LANDINGS: Record<string, LandingConfig> = { cars2, farm, base: farm }

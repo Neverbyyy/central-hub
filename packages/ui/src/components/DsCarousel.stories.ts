@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import { ref } from 'vue'
 import { imageSet } from '../image'
-import { DEMO_ART, DEMO_PRICES, GAME_BACKDROP, useStoryTexts } from '../stories'
+import { DEMO_ART, DEMO_PRICES, GAME_BACKDROP, useStoryTexts, NO_SCREEN_STATE } from '../stories'
 import DsButton from './DsButton.vue'
 import DsCarousel from './DsCarousel.vue'
 import DsImage from './DsImage.vue'
@@ -9,7 +9,7 @@ import DsImage from './DsImage.vue'
 const meta = {
   title: 'Cars 2/Карусель наборов',
   component: DsCarousel,
-  globals: { theme: 'cars2' }
+  globals: { theme: 'cars2', ...NO_SCREEN_STATE }
 } satisfies Meta<typeof DsCarousel>
 
 export default meta

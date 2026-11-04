@@ -3,7 +3,7 @@
 // Артборды и стейт-машины читаются из файла; inputs стейт-машины и свойства view model — кнопками справа,
 // Rive Events и смена состояний — в лог. Рисует тот же DsRive, что и экраны
 import { DsRive, loadRive, type RiveInstance } from '@amaya/ui'
-import { GAME_BACKDROP, WHITE_BACKDROP } from '@amaya/ui/stories'
+import { GAME_BACKDROP, WHITE_BACKDROP, NO_LOCALE, NO_SCREEN_STATE, NO_THEME } from '@amaya/ui/stories'
 import type { StoryObj } from '@storybook/vue3-vite'
 import { computed, ref, shallowRef, watch } from 'vue'
 
@@ -34,7 +34,8 @@ export default {
     fit: { name: 'Вписать', control: 'select', options: Object.keys(FITS), labels: FITS },
     backdrop: { name: 'Фон', control: 'inline-radio', options: Object.keys(BACKDROPS), labels: { white: 'Белый', game: 'Игра' } }
   },
-  parameters: { layout: 'fullscreen', themes: false }
+  parameters: { layout: 'fullscreen', themes: false },
+  globals: { ...NO_THEME, ...NO_LOCALE, ...NO_SCREEN_STATE }
 }
 
 // Строка панели: input стейт-машины или свойство view model

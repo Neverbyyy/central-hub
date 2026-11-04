@@ -1,7 +1,7 @@
 // Истории целых экранов: экран с заглушкой окружения. Одна история на экран — всё остальное в панели: данные
 // приложения (пресет), итог покупки и лог вызовов; в тулбаре — язык, «экран открыт / закрыт» и «идёт покупка»
 import { createStubEnv, type StubCall, type StubOutcome } from '@amaya/paywall-kit'
-import { useStoryEnv } from '@amaya/ui/stories'
+import { NO_THEME, useStoryEnv } from '@amaya/ui/stories'
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch, type Component } from 'vue'
 import type { ScreenPreset } from '../types'
@@ -30,7 +30,7 @@ export const SCREENS_META: Omit<Meta<ScreenArgs>, 'title'> = {
   },
   parameters: { themes: false, layout: 'fullscreen' },
   // Макеты — телефон в альбомной 844×390; размер меняется переключателем в тулбаре
-  globals: { viewport: { value: 'phoneLandscapeM', isRotated: false } }
+  globals: { viewport: { value: 'phoneLandscapeM', isRotated: false }, ...NO_THEME }
 }
 
 /**

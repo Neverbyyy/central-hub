@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import { ref } from 'vue'
-import { APPS_COUNT, PLUS_SLIDES, useStoryEnv, useStoryTexts } from '../stories'
+import { APPS_COUNT, PLUS_SLIDES, useStoryEnv, useStoryTexts, NO_PURCHASE } from '../stories'
 import DsSlides from './DsSlides.vue'
 import DsText from './DsText.vue'
 
@@ -9,7 +9,7 @@ const meta = {
   component: DsSlides,
   args: { count: PLUS_SLIDES.length, interval: 3000 },
   argTypes: { count: { control: { type: 'range', min: 1, max: PLUS_SLIDES.length } }, interval: { control: { type: 'number', step: 500 } } },
-  globals: { theme: 'farm' }
+  globals: { theme: 'farm', ...NO_PURCHASE }
 } satisfies Meta<typeof DsSlides>
 
 export default meta

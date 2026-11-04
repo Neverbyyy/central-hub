@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import { computed, ref } from 'vue'
-import { cars2Plans, useStoryTexts } from '../stories'
+import { cars2Plans, useStoryTexts, NO_SCREEN_STATE } from '../stories'
 import DsButton from './DsButton.vue'
 import DsCloseButton from './DsCloseButton.vue'
 import DsGameTitle from './DsGameTitle.vue'
@@ -11,7 +11,7 @@ const meta = {
   title: 'Cars 2/Попап тарифов',
   component: DsPopup,
   args: { open: false },
-  globals: { theme: 'cars2' }
+  globals: { theme: 'cars2', ...NO_SCREEN_STATE }
 } satisfies Meta<typeof DsPopup>
 
 export default meta

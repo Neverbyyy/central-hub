@@ -1,11 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
-import { APPS_COUNT, FEATURE_KEYS, TAGS, useStoryTexts } from '../stories'
+import { APPS_COUNT, FEATURE_KEYS, TAGS, useStoryTexts, NO_SCREEN_STATE } from '../stories'
 import DsBadge from './DsBadge.vue'
 import DsBenefitList from './DsBenefitList.vue'
 
 const meta = {
   title: 'Общее/Плашки и списки',
-  component: DsBadge
+  component: DsBadge,
+  globals: NO_SCREEN_STATE
 } satisfies Meta<typeof DsBadge>
 
 export default meta

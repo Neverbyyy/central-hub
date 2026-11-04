@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import { ref } from 'vue'
-import { useStoryTexts } from '../stories'
+import { useStoryTexts, NO_SCREEN_STATE } from '../stories'
 import DsLegalLinks from './DsLegalLinks.vue'
 
 const meta = {
   title: 'Farm/Документы',
   component: DsLegalLinks,
-  globals: { theme: 'farm' }
+  globals: { theme: 'farm', ...NO_SCREEN_STATE }
 } satisfies Meta<typeof DsLegalLinks>
 
 export default meta

@@ -1,11 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import { imageSet } from '../image'
-import { DEMO_ART } from '../stories'
+import { DEMO_ART, NO_LOCALE, NO_SCREEN_STATE } from '../stories'
 import DsImage from './DsImage.vue'
 
 const meta = {
   title: 'Общее/Картинка',
-  component: DsImage
+  component: DsImage,
+  globals: { ...NO_LOCALE, ...NO_SCREEN_STATE }
 } satisfies Meta<typeof DsImage>
 
 export default meta

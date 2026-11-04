@@ -1,11 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
-import { GAME_BACKDROP, useStoryTexts } from '../stories'
+import { GAME_BACKDROP, useStoryTexts, NO_SCREEN_STATE } from '../stories'
 import { DS_TEXT_TONES, DS_TEXT_VARIANTS } from '../types'
 import DsText from './DsText.vue'
 
 const meta = {
   title: 'Общее/Текст',
-  component: DsText
+  component: DsText,
+  globals: NO_SCREEN_STATE
 } satisfies Meta<typeof DsText>
 
 export default meta

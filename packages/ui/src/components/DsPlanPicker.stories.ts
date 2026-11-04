@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import { computed, ref } from 'vue'
-import { cars2Plans, farmSwitchPlans, farmTrioPlans, useStoryTexts } from '../stories'
+import { cars2Plans, farmSwitchPlans, farmTrioPlans, useStoryTexts, NO_SCREEN_STATE } from '../stories'
 import type { DsPlan } from '../types'
 import DsPlanPicker from './DsPlanPicker.vue'
 
@@ -13,7 +13,8 @@ const meta = {
     plans: { table: { disable: true } },
     modelValue: { table: { disable: true } },
     disabled: { name: 'Идёт покупка', control: 'boolean' }
-  }
+  },
+  globals: NO_SCREEN_STATE
 } satisfies Meta<typeof DsPlanPicker>
 
 export default meta

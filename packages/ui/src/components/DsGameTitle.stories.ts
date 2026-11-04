@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
-import { useStoryTexts } from '../stories'
+import { useStoryTexts, NO_SCREEN_STATE } from '../stories'
 import DsGameTitle from './DsGameTitle.vue'
 
 const meta = {
   title: 'Cars 2/Заголовок с обводкой',
   component: DsGameTitle,
-  globals: { theme: 'cars2' }
+  globals: { theme: 'cars2', ...NO_SCREEN_STATE }
 } satisfies Meta<typeof DsGameTitle>
 
 export default meta

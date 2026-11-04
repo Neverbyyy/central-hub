@@ -1,11 +1,12 @@
 import type { StoryObj } from '@storybook/vue3-vite'
-import { useStoryTexts } from '../stories'
+import { useStoryTexts, NO_SCREEN_STATE } from '../stories'
 import DsRating from './DsRating.vue'
 
 // Звёзды отзыва: 5 из 5 как в макете и неполные — бледнее. Рядом — что прочитает скринридер
 export default {
   title: 'Блоки лендинга/Звёзды',
-  component: DsRating
+  component: DsRating,
+  globals: NO_SCREEN_STATE
 }
 
 export const Stars: StoryObj = {

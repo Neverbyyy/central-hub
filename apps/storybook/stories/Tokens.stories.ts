@@ -1,4 +1,5 @@
 import tokens from '@amaya/tokens/tokens.json'
+import { NO_LOCALE, NO_SCREEN_STATE, NO_THEME } from '@amaya/ui/stories'
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 
 // Страницы токенов: значения из @amaya/tokens (dist/tokens.json) — сразу по всем темам и брейкпоинтам,
@@ -52,7 +53,8 @@ const fontOf = (style: string) => `var(--ds-font-${FONT[style] ?? 'body'})`
 
 const meta = {
   title: 'Токены/Значения',
-  parameters: { themes: false }
+  parameters: { themes: false },
+  globals: { ...NO_THEME, ...NO_LOCALE, ...NO_SCREEN_STATE }
 } satisfies Meta
 
 export default meta

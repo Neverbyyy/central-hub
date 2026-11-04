@@ -2,13 +2,14 @@
 // Язык — из тулбара, размер — телефон 375, iPad 768, десктоп. Кнопки здесь в стор не уводят: на компьютере
 // кнопка прокручивает к значкам сторов, а нажатия видны в консоли (track)
 import { LkPage } from '@amaya/landing-kit'
+import { NO_SCREEN_STATE, NO_THEME } from '@amaya/ui/stories'
 import type { StoryObj } from '@storybook/vue3-vite'
 import { farm } from '../../landings/app/landings/farm/config'
 
 export default {
   title: 'Лендинги/Farm',
   parameters: { layout: 'fullscreen', themes: false },
-  globals: { viewport: { value: 'phonePortraitS', isRotated: false } }
+  globals: { viewport: { value: 'phonePortraitS', isRotated: false }, ...NO_THEME, ...NO_SCREEN_STATE }
 }
 
 export const Farm: StoryObj = {

@@ -3,13 +3,14 @@
 import type { StoryObj } from '@storybook/vue3-vite'
 import Screen from '../variants/ios/as/farm/ds1/onboarding/index.vue'
 import { presets } from '../variants/ios/as/farm/ds1/onboarding/presets'
-import { WHITE_BACKDROP } from '@amaya/ui/stories'
+import { NO_PURCHASE, WHITE_BACKDROP } from '@amaya/ui/stories'
 import { SCREENS_META, screenStory, type ScreenArgs } from './screenStory'
 
 export default {
   title: 'Онбординги/Farm',
   id: 'онбординги-farm',
-  ...SCREENS_META
+  ...SCREENS_META,
+  globals: { ...SCREENS_META.globals, ...NO_PURCHASE }
 }
 
 export const FarmOnboarding: StoryObj<ScreenArgs> = { name: 'Farm', ...screenStory(Screen, presets, WHITE_BACKDROP) }

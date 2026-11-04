@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import { ref } from 'vue'
-import { useStoryTexts } from '../stories'
+import { useStoryTexts, NO_SCREEN_STATE } from '../stories'
 import DsCloseButton from './DsCloseButton.vue'
 
 const meta = {
@@ -12,7 +12,8 @@ const meta = {
     active: { control: 'boolean' },
     delay: { control: { type: 'number', step: 500 } },
     label: { table: { disable: true } }
-  }
+  },
+  globals: NO_SCREEN_STATE
 } satisfies Meta<typeof DsCloseButton>
 
 export default meta

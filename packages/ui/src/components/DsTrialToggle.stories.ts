@@ -1,13 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import { ref } from 'vue'
-import { useStoryTexts } from '../stories'
+import { useStoryTexts, NO_SCREEN_STATE } from '../stories'
 import DsTrialToggle from './DsTrialToggle.vue'
 
 const meta = {
   title: 'Farm/Тумблер триала',
   component: DsTrialToggle,
   args: { modelValue: false, label: '', disabled: false },
-  globals: { theme: 'farm' },
+  globals: { theme: 'farm', ...NO_SCREEN_STATE },
   argTypes: {
     modelValue: { table: { disable: true } },
     label: { table: { disable: true } },

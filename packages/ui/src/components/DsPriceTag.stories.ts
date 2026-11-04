@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import { ref } from 'vue'
-import { DEMO_PRICES, TAGS, useStoryTexts } from '../stories'
+import { DEMO_PRICES, TAGS, useStoryTexts, NO_SCREEN_STATE } from '../stories'
 import DsBadge from './DsBadge.vue'
 import DsBenefitList from './DsBenefitList.vue'
 import DsBox from './DsBox.vue'
@@ -12,7 +12,7 @@ import DsText from './DsText.vue'
 const meta = {
   title: 'Cars 2/Главная карточка',
   component: DsPriceTag,
-  globals: { theme: 'cars2' }
+  globals: { theme: 'cars2', ...NO_SCREEN_STATE }
 } satisfies Meta<typeof DsPriceTag>
 
 export default meta

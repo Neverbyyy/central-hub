@@ -20,6 +20,8 @@ description: Добавить компонент в дизайн-систему 
 6. **Экспорт** в `packages/ui/src/index.ts`, типы — в `src/types.ts`.
 7. **История** рядом: `Ds<Имя>.stories.ts`, раздел по месту использования («Общее», «Cars 2», «Farm», «Блоки лендинга»),
    все состояния, тексты — ключами (`useStoryTexts`), длинный текст — немецким из тулбара. Порядок раздела —
-   `storySort` в `apps/storybook/.storybook/preview.ts`.
+   `storySort` в `apps/storybook/.storybook/preview.ts`. Кнопки тулбара, которые на истории не действуют, закрепить:
+   в meta `globals: NO_SCREEN_STATE` из `../stories` («экран» и «покупка» нужны только целым экранам), без текстов —
+   ещё `NO_LOCALE`.
 8. **Манифест**: `pnpm --filter @amaya/ui manifest`.
 9. **Проверка**: скилл `ds-self-check`.

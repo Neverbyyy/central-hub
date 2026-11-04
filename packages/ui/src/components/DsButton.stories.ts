@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import { ref } from 'vue'
-import { useStoryTexts } from '../stories'
+import { useStoryTexts, NO_SCREEN_STATE } from '../stories'
 import DsButton from './DsButton.vue'
 
 // Главная кнопка обоих пейволлов: в Farm — плоская оранжевая капсом, в Cars 2 — градиент с рамкой и обводкой букв
@@ -11,7 +11,8 @@ const meta = {
   argTypes: {
     variant: { control: 'inline-radio', options: ['primary', 'secondary', 'lp'] },
     size: { control: 'inline-radio', options: ['md', 'sm', 'lg'] }
-  }
+  },
+  globals: NO_SCREEN_STATE
 } satisfies Meta<typeof DsButton>
 
 export default meta

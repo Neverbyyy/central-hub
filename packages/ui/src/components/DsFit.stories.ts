@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
-import { APPS_COUNT, FEATURE_KEYS, useStoryTexts } from '../stories'
+import { APPS_COUNT, FEATURE_KEYS, useStoryTexts, NO_SCREEN_STATE } from '../stories'
 import DsBenefitList from './DsBenefitList.vue'
 import DsButton from './DsButton.vue'
 import DsFit from './DsFit.vue'
@@ -8,7 +8,8 @@ import DsText from './DsText.vue'
 const meta = {
   title: 'Общее/Подгонка по высоте',
   component: DsFit,
-  args: { minScale: 0.6 }
+  args: { minScale: 0.6 },
+  globals: NO_SCREEN_STATE
 } satisfies Meta<typeof DsFit>
 
 export default meta
