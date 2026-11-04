@@ -157,7 +157,10 @@
     },
     "unlock-h": {
       "$value": "{size.360}"
-    }
+    },
+    "popup-art-w": { "$value": 221 },
+    "popup-art-rise": { "$value": 98 },
+    "popup-top": { "$value": 85 }
   },
   "radius": {
     "$type": "dimension",

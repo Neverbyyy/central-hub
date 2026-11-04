@@ -44,10 +44,12 @@ const height = () => sheet.value?.offsetHeight ?? 0
         <div class="ds:flex ds:h-full ds:flex-col ds:justify-end">
           <div
             ref="sheet"
-            class="ds:pointer-events-auto ds:relative ds:pt-16"
+            class="ds:pointer-events-auto ds:relative ds:pt-popup-art-rise"
           >
+            <!-- Робот сидит на краю попапа: размер и подъём — токены, а не доля экрана, поэтому на любом экране он
+                 заходит на попап одинаково и не задевает заголовок -->
             <DsImage
-              class="pw-plans__top ds:pointer-events-none ds:absolute ds:start-1/2 ds:top-0 ds:z-10 ds:-translate-x-1/2"
+              class="ds:pointer-events-none ds:absolute ds:start-1/2 ds:top-0 ds:z-10 ds:w-popup-art-w ds:-translate-x-1/2"
               :set="config.art.popup.top"
               alt=""
             />
@@ -79,7 +81,7 @@ const height = () => sheet.value?.offsetHeight ?? 0
                 alt=""
               />
 
-              <div class="ds:relative ds:flex ds:flex-col ds:items-center ds:px-6 ds:pb-8 ds:pt-3">
+              <div class="ds:relative ds:flex ds:flex-col ds:items-center ds:px-6 ds:pb-8 ds:pt-popup-top">
                 <DsGameTitle variant="title-lg">
                   <em>{{ t(config.texts.titleLead) }}</em>
                   {{ ' ' }}
@@ -120,14 +122,14 @@ const height = () => sheet.value?.offsetHeight ?? 0
                   {{ buttonText }}
                 </DsButton>
               </div>
-            </div>
-            <div class="ds:absolute ds:end-1.5 ds:top-18 ds:z-10">
-              <DsCloseButton
-                tone="alt"
-                :label="t(config.texts.close)"
-                :delay="0"
-                @close="emit('close')"
-              />
+              <div class="ds:absolute ds:end-1.5 ds:top-4 ds:large:end-6 ds:large:top-7">
+                <DsCloseButton
+                  tone="alt"
+                  :label="t(config.texts.close)"
+                  :delay="0"
+                  @close="emit('close')"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -147,10 +149,6 @@ const height = () => sheet.value?.offsetHeight ?? 0
   pointer-events: none;
 }
 
-.pw-plans__top {
-  width: 14%;
-}
-
 .pw-plans__left {
   width: 31%;
 }
@@ -160,12 +158,12 @@ const height = () => sheet.value?.offsetHeight ?? 0
 }
 
 .pw-plans__balloon {
-  top: 10%;
+  top: 22%;
   width: 16%;
 }
 
 .pw-plans__key {
-  top: 25%;
+  top: 34%;
   width: 8%;
 }
 </style>
