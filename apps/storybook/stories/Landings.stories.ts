@@ -7,8 +7,8 @@ import { LANDINGS } from '../../landings/app/landings'
 
 // Заголовок у каждой истории свой, его задаёт индекс в .storybook/main.ts
 export default {
-  parameters: { layout: 'fullscreen', themes: false },
-  globals: { viewport: { value: 'phonePortraitS', isRotated: false }, ...NO_THEME, ...NO_SCREEN_STATE },
+  parameters: { layout: 'fullscreen', themes: false, viewport: { initial: 'phonePortraitS' } },
+  globals: { ...NO_THEME, ...NO_SCREEN_STATE },
   argTypes: { landing: { control: false } },
   render: (args: { landing: string }) => ({
     components: { LkPage },

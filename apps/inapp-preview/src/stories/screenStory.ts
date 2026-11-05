@@ -28,9 +28,9 @@ export const SCREENS_META: Omit<Meta<ScreenArgs>, 'title'> = {
     outcome: { name: 'Итог покупки', control: 'select', options: Object.keys(OUTCOMES), labels: OUTCOMES } as never,
     log: { name: 'Лог вызовов', control: 'boolean' }
   },
-  parameters: { themes: false, layout: 'fullscreen' },
-  // Макеты — телефон в альбомной 844×390; размер меняется переключателем в тулбаре
-  globals: { viewport: { value: 'phoneLandscapeM', isRotated: false }, ...NO_THEME }
+  // Макеты — телефон в альбомной 844×390; размер меняется переключателем в тулбаре и ручками рамки
+  parameters: { themes: false, layout: 'fullscreen', viewport: { initial: 'phoneLandscapeM' } },
+  globals: NO_THEME
 }
 
 /**
