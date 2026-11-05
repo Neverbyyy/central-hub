@@ -3,11 +3,14 @@
  * Обёртка интерактива лендинга (Rive, позже GSAP): содержимое монтируется, только когда страница уже загружена,
  * первый экран отрисован и отвечает на нажатия — после load, паузы (delay, по умолчанию 2,5 с) и простоя браузера.
  * Интерактив — украшение: его рантайм и файлы (у Rive — wasm 2,6 МБ и .riv) не должны спорить с первым экраном
- * за сеть и процессор. С экономией трафика (Save-Data) и на сети 2G/3G не грузится вовсе.
+ * за сеть и процессор. С экономией трафика (Save-Data), на сети 2G/3G и без видеокарты не грузится вовсе; не потянул
+ * на деле (меньше 24 кадров в секунду) — снимается вместе с остальными интерактивами страницы.
  * Под обёрткой должна лежать картинка: она видна до интерактива и остаётся, если тот не загрузился или выключен.
- * Когда использовать: любой интерактив лендинга. Rive — DsRive внутри; GSAP — динамическим импортом внутри, когда понадобится.
+ * Когда использовать: любой интерактив лендинга. Rive — DsRive внутри, его событие load передать в started из слота:
+ * с этого момента считаются кадры. GSAP — динамическим импортом внутри, когда понадобится.
  */
 import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { hasHardwareWebGL, interactiveOff, watchFrameRate } from '../interactive'
 
 const props = withDefaults(defineProps<{
   // Пауза после загрузки страницы, мс
@@ -32,8 +35,10 @@ function lightOnly(): boolean {
 
 onMounted(() => {
   if (lightOnly()) return
+  // Видеокарта проверяется здесь, а не при монтировании: временный контекст WebGL не должен мешать первому экрану
   const activate = () => {
-    active.value = true
+    if (hasHardwareWebGL()) active.value = true
+    else interactiveOff.value = true
   }
   const whenIdle = () => {
     if (typeof window.requestIdleCallback === 'function') {
@@ -58,5 +63,8 @@ onBeforeUnmount(() => cancel?.())
 </script>
 
 <template>
-  <slot v-if="active" />
+  <slot
+    v-if="active && !interactiveOff"
+    :started="watchFrameRate"
+  />
 </template>

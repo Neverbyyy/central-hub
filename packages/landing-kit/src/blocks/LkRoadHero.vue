@@ -65,7 +65,10 @@ onMounted(() => {
           @load="markHeroLoaded"
           @error="markHeroLoaded"
         />
-        <LkInteractive :delay="1200">
+        <LkInteractive
+          v-slot="{ started }"
+          :delay="1200"
+        >
           <div class="ds:absolute ds:inset-0">
             <DsRive
               class="ds:size-full"
@@ -76,6 +79,7 @@ onMounted(() => {
               alignment="bottomCenter"
               alt=""
               data-hero-rive
+              @load="started"
             />
           </div>
         </LkInteractive>

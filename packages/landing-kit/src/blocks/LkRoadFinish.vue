@@ -32,13 +32,14 @@ const SIDES = ['lk-road-finish__balloons--start', 'lk-road-finish__balloons--end
         alt=""
         loading="lazy"
       />
-      <LkInteractive>
+      <LkInteractive v-slot="{ started }">
         <div class="ds:absolute ds:inset-0">
           <DsRive
             class="ds:size-full"
             :src="finish.balloons.src"
             :artboard="finish.balloons.artboard"
             alt=""
+            @load="started"
           />
         </div>
       </LkInteractive>

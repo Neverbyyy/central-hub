@@ -20,6 +20,9 @@ const UA = {
   android: 'Mozilla/5.0 (Linux; Android 13; SM-A135F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Mobile Safari/537.36'
 }
 const WIDTHS = [320, 375, 390, 768, 1024, 1440]
+// Живая анимация на первом экране, которая играет постоянно
+const LANDINGS_WITH_ANIMATION = ['cars2-go']
+const SOFTWARE_WEBGL = ['--use-angle=swiftshader', '--enable-unsafe-swiftshader']
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript',
@@ -179,6 +182,67 @@ async function checkSticky(id) {
   await page.close()
 }
 
+/**
+ * Анимация не грузит машину: без видеокарты её нет, а не потянула — снята, и остаётся картинка первого экрана.
+ * Свой браузер с программным WebGL: обычный на компьютере с видеокартой идёт через неё, и такой машины здесь не было бы.
+ * Цикл кадров считается снаружи: стоит — значит, процессор свободен.
+ */
+async function checkAnimationLoad(id) {
+  const machine = await launch({ args: SOFTWARE_WEBGL })
+  const openPage = async (prepare) => {
+    const page = await machine.newPage()
+    await page.setViewport({ width: 1214, height: 850 })
+    if (prepare) await page.evaluateOnNewDocument(prepare)
+    const requests = []
+    page.on('request', request => requests.push(request.url()))
+    await page.goto(`${base}/${id}`, { waitUntil: 'load' })
+    return { page, requests }
+  }
+  const framesPerSecond = async (page) => {
+    await page.evaluate(() => {
+      window.__frames = 0
+      const original = window.requestAnimationFrame
+      window.requestAnimationFrame = (callback) => {
+        window.__frames++
+        return original.call(window, callback)
+      }
+    })
+    await sleep(1000)
+    return page.evaluate(() => window.__frames)
+  }
+  const heroArt = `[id="${id}-hero"] img`
+
+  try {
+    const software = await openPage()
+    await sleep(5000)
+    check(`${id}, без видеокарты: рантайм Rive не загружен`, !software.requests.some(url => url.endsWith('.wasm') || url.endsWith('.riv')))
+    check(`${id}, без видеокарты: холста сцены нет`, !(await software.page.$('[data-hero-rive]')))
+    check(`${id}, без видеокарты: картинка на месте`, await imagesLoaded(software.page, heroArt))
+    const idle = await framesPerSecond(software.page)
+    check(`${id}, без видеокарты: кадры не считаются`, idle === 0, `кадров за секунду: ${idle}`)
+    await software.page.close()
+
+    // Тот же программный WebGL под именем настоящей видеокарты: проверка по имени пропустит, сработать должен замер кадров
+    const { page, requests } = await openPage(() => {
+      const getParameter = WebGL2RenderingContext.prototype.getParameter
+      WebGL2RenderingContext.prototype.getParameter = function (name) {
+        return name === 0x9246 ? 'ANGLE (Test GPU)' : getParameter.call(this, name)
+      }
+    })
+    for (let i = 0; i < 80 && !(await page.$('[data-hero-rive]')); i++) await sleep(250)
+    check(`${id}, видеокарта по имени: анимация запустилась`, !!(await page.$('[data-hero-rive]')))
+    for (let i = 0; i < 80 && (await page.$('[data-hero-rive]')); i++) await sleep(250)
+    check(`${id}, не тянет: рантайм загружался`, requests.some(url => url.endsWith('.wasm')))
+    check(`${id}, не тянет: анимация снята`, !(await page.$('[data-hero-rive]')))
+    check(`${id}, не тянет: картинка на месте`, await imagesLoaded(page, heroArt))
+    const after = await framesPerSecond(page)
+    check(`${id}, не тянет: кадры не считаются`, after === 0, `кадров за секунду: ${after}`)
+    await page.close()
+  } finally {
+    await machine.close()
+  }
+}
+
 async function checkDesktop(id) {
   const { page, requests, external, errors } = await open(`/${id}`, { width: 1440, height: 900 })
 
@@ -307,6 +371,7 @@ try {
     await checkLoadingOrder(id)
     await checkLanguages(id)
     await checkWidths(id)
+    if (LANDINGS_WITH_ANIMATION.includes(id)) await checkAnimationLoad(id)
   }
   await checkIndex()
 } finally {

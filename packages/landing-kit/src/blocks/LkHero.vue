@@ -50,7 +50,10 @@ const ADVANTAGES = [
         @load="markHeroLoaded"
         @error="markHeroLoaded"
       />
-      <LkInteractive v-if="hero.rive">
+      <LkInteractive
+        v-if="hero.rive"
+        v-slot="{ started }"
+      >
         <div class="ds:absolute ds:inset-0">
           <DsRive
             class="ds:size-full"
@@ -61,6 +64,7 @@ const ADVANTAGES = [
             alignment="bottomCenter"
             alt=""
             data-hero-rive
+            @load="started"
           />
         </div>
       </LkInteractive>
