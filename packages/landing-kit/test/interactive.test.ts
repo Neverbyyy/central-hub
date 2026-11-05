@@ -46,6 +46,13 @@ describe('watchFrameRate', () => {
     for (let now = from; frame; now += 1000 / fps) step(now)
   }
 
+  // Кадры с нужной частотой в течение ms; вернёт время следующего кадра
+  const runFor = (fps: number, from: number, ms: number) => {
+    let now = from
+    for (; now < from + ms && frame; now += 1000 / fps) step(now)
+    return now
+  }
+
   beforeEach(() => {
     frame = undefined
     onVisibility = undefined
@@ -86,6 +93,32 @@ describe('watchFrameRate', () => {
     watchFrameRate()
     run(10)
     expect(interactiveOff.value).toBe(true)
+  })
+
+  it('провал на старте не снимает: так стартует Rive и на хорошей видеокарте', async () => {
+    const { interactiveOff, watchFrameRate } = await load()
+    watchFrameRate()
+    // Прогрев 1 с и ещё 2 с медленно, потом 60 кадров — как в Opera на RTX 3050
+    const now = runFor(15, 0, 3000)
+    run(60, now)
+    expect(interactiveOff.value).toBe(false)
+  })
+
+  it('провалы вразброс не снимают: нужны три секунды подряд', async () => {
+    const { interactiveOff, watchFrameRate } = await load()
+    watchFrameRate()
+    let now = runFor(60, 0, 1000)
+    for (const fps of [15, 15, 60, 15, 15, 60]) now = runFor(fps, now, 1000)
+    run(60, now)
+    expect(interactiveOff.value).toBe(false)
+  })
+
+  it('медленно три секунды подряд — снимает, не дожидаясь конца замера', async () => {
+    const { interactiveOff, watchFrameRate } = await load()
+    watchFrameRate()
+    runFor(10, 0, 4300)
+    expect(interactiveOff.value).toBe(true)
+    expect(frame).toBeUndefined()
   })
 
   it('заканчивается сам: новых кадров не просит и за вкладкой не следит', async () => {

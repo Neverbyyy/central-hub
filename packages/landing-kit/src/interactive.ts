@@ -9,9 +9,12 @@ export const interactiveOff = ref(false)
 
 const SOFTWARE_RENDERER = /swiftshader|llvmpipe|softpipe|software|basic render/i
 
-// Первые кадры дорогие (сборка шейдеров), их не считаем
-const WARMUP_MS = 500
-const WINDOW_MS = 2000
+// Старт анимации дорогой на любой машине: в Opera на RTX 3050 первые секунды дают 21–24 кадра, потом стабильные 60.
+// Поэтому снимаем, только если медленно несколько секунд подряд, а не по одному провалу
+const WARMUP_MS = 1000
+const SAMPLE_MS = 1000
+const SLOW_SAMPLES_IN_A_ROW = 3
+const SAMPLES = 6
 // Меньше 30: в режиме энергосбережения iPhone сам ограничивает кадры тридцатью, и это не слабая машина
 const MIN_FPS = 24
 
@@ -42,36 +45,47 @@ let watched = false
 
 /**
  * Запущенная анимация успевает: иначе interactiveOff. Ловит то, что не видно по имени рендерера: слабую видеокарту,
- * удалённый рабочий стол, виртуальную машину. Замер один на страницу и через 2,5 с заканчивается сам.
+ * удалённый рабочий стол, виртуальную машину. Замер один на страницу и через 7 с заканчивается сам.
  */
 export function watchFrameRate(): void {
   if (watched) return
   watched = true
 
   let warmupEnd: number | undefined
-  let windowStart: number | undefined
+  let sampleStart: number | undefined
   let frames = 0
+  let samples = 0
+  let slowInARow = 0
 
   // Скрытая вкладка кадров не рисует, и это не тормоза: считаем заново
   const restart = () => {
     warmupEnd = undefined
-    windowStart = undefined
+    sampleStart = undefined
+    samples = 0
+    slowInARow = 0
   }
 
   const tick = (now: number) => {
     if (warmupEnd === undefined) warmupEnd = now + WARMUP_MS
     if (now >= warmupEnd) {
-      if (windowStart === undefined) {
-        windowStart = now
+      if (sampleStart === undefined) {
+        sampleStart = now
         frames = 0
       } else {
         frames++
       }
-      const elapsed = now - windowStart
-      if (elapsed >= WINDOW_MS) {
-        document.removeEventListener('visibilitychange', restart)
-        if (frames * 1000 / elapsed < MIN_FPS) interactiveOff.value = true
-        return
+      const elapsed = now - sampleStart
+      if (elapsed >= SAMPLE_MS) {
+        slowInARow = frames * 1000 / elapsed < MIN_FPS ? slowInARow + 1 : 0
+        samples++
+        sampleStart = now
+        frames = 0
+        const slow = slowInARow >= SLOW_SAMPLES_IN_A_ROW
+        if (slow) interactiveOff.value = true
+        if (slow || samples >= SAMPLES) {
+          document.removeEventListener('visibilitychange', restart)
+          return
+        }
       }
     }
     requestAnimationFrame(tick)
