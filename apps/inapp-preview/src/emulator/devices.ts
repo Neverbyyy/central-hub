@@ -13,7 +13,7 @@ export interface Device {
   height: number
   radius: number
   // Позы Duo: альбом L и R отличаются стороной камеры, портрет — свой
-  duo?: { posture: 'folded' | 'unfolded', side: 'left' | 'right' }
+  duo?: { posture: 'folded' | 'unfolded' | 'half', side: 'left' | 'right' }
   // Без рамки: экран занимает всё место, размер и поворот — настоящие. На телефоне так он и смотрится
   fill?: boolean
 }
@@ -31,7 +31,9 @@ export const DEVICES: Device[] = [
   { id: 'tall', name: 'Окно браузера 901×861', width: 901, height: 861, radius: 0 },
   { id: 'duo-folded-l', name: 'iPhone Duo сложен, альбом L', width: 678, height: 466, radius: 0, duo: { posture: 'folded', side: 'left' } },
   { id: 'duo-folded-r', name: 'iPhone Duo сложен, альбом R', width: 678, height: 466, radius: 0, duo: { posture: 'folded', side: 'right' } },
-  { id: 'duo-unfolded', name: 'iPhone Duo разложен 951×669', width: 951, height: 669, radius: 0, duo: { posture: 'unfolded', side: 'left' } }
+  { id: 'duo-unfolded', name: 'iPhone Duo разложен 951×669', width: 951, height: 669, radius: 0, duo: { posture: 'unfolded', side: 'left' } },
+  { id: 'duo-unfolded-r', name: 'iPhone Duo разложен, альбом R', width: 951, height: 669, radius: 0, duo: { posture: 'unfolded', side: 'right' } },
+  { id: 'duo-half', name: 'iPhone Duo полураскрыт, со сгибом', width: 951, height: 669, radius: 0, duo: { posture: 'half', side: 'left' } }
 ]
 
 export const findDevice = (id: string | null) => DEVICES.find(device => device.id === id) ?? DEVICES.find(device => device.id === 'iphone')!

@@ -17,10 +17,13 @@ import { onBeforeUnmount, onMounted, ref } from 'vue'
 const props = withDefaults(defineProps<{
   // Сколько высоты нужно содержимому в его размерах, px
   measure?: () => number
+  // Предел масштаба от самого экрана: например, чтобы содержимое вошло по ширине. Вызывается в размерах содержимого
+  maxScale?: () => number
   // Меньше не уменьшаем: текст должен оставаться читаемым
   minScale?: number
 }>(), {
   measure: undefined,
+  maxScale: undefined,
   minScale: 0.6
 })
 
@@ -45,8 +48,8 @@ const fit = () => {
   apply(1)
   const available = el.clientHeight
   const need = props.measure ? props.measure() : content.scrollHeight
-  const scale = need > available + 0.5 ? Math.max(props.minScale, available / need) : 1
-  apply(scale)
+  const byHeight = need > available + 0.5 ? available / need : 1
+  apply(Math.max(props.minScale, Math.min(1, byHeight, props.maxScale?.() ?? 1)))
 }
 
 let mutations: MutationObserver | undefined

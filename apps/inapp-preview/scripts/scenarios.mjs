@@ -2,8 +2,8 @@
 //   pnpm --filter @amaya/inapp-preview scenarios                — сам поднимает vite на свободном порту
 //   node apps/inapp-preview/scripts/scenarios.mjs --url http://localhost:6011 [--only cars2]
 // Эмулятором управляет window.__inapp (src/emulator/InAppEmulator.vue): open, close, pay(итог), log, state, screen.
-// Итог: строки OK / FAIL / WARN, код выхода 1, если есть FAIL. WARN — зоны iPhone Duo: в InApp элементы из них
-// уводит его адаптер (useIphoneDuoControls), эмулятор показывает вёрстку до адаптации.
+// Итог: строки OK / FAIL, код выхода 1, если есть FAIL. На iPhone Duo всё, что нажимается, — в safe area и в скруглении
+// экрана: фон и арт могут заходить в отступы, а адаптер InApp наши экраны не обрабатывает.
 import { fileURLToPath } from 'node:url'
 import { launch } from '../../../tools/browser.mjs'
 
@@ -56,6 +56,51 @@ const SCREENS = [
     changed: frame => frame.evaluate(() => document.querySelectorAll('[role="radio"]')[2]?.getAttribute('aria-checked') === 'true')
   }
 ].filter(screen => !only || screen.key === only)
+
+const DUO_POSES = [
+  { device: 'duo-folded-l', orient: 'landscape' },
+  { device: 'duo-folded-r', orient: 'landscape' },
+  { device: 'duo-folded-l', orient: 'portrait' },
+  { device: 'duo-unfolded', orient: 'landscape' },
+  { device: 'duo-unfolded-r', orient: 'landscape' },
+  { device: 'duo-half', orient: 'landscape' },
+  { device: 'duo-unfolded', orient: 'portrait' }
+]
+const DUO_SCREENS = [
+  { key: 'cars2', title: 'Cars 2', id: 'ios_as_cars2_ds1_varb_t1_pw_slider_v1', state: { name: 'попап тарифов', tap: '[data-pw="more"]', wait: 800 } },
+  { key: 'farm-start', title: 'Farm On start', id: 'ios_as_farm_ds1_varb_ut1_pw_switch_v1' },
+  { key: 'farm-click', title: 'Farm On click', id: 'ios_as_farm_ds1_varb_ut1_pw_trio_v1' },
+  { key: 'onboarding', title: 'Онбординг Farm', id: 'ios_as_farm_ds1_varb_ut1_onboarding_v1', state: { name: 'шаг 2', tap: '[data-pw="cta"]', wait: 3500 } }
+]
+
+/**
+ * Что нажимается и стоит за safe area или за скруглением экрана. Подэкранная камера не считается: она видна, только
+ * пока включена. Хвост карусели, которая листается, — тоже: он приезжает в safe area при прокрутке.
+ */
+const offSafeArea = (frame, pose) => frame.$$eval('a, button, [role="button"], [role="radio"], [role="switch"], [data-pw], [data-legal]', (elements, { width, height, insets, radii }) => {
+  const safe = { left: insets.left, top: insets.top, right: width - insets.right, bottom: height - insets.bottom }
+  // top-left, top-right, bottom-right, bottom-left — как у позы
+  const arcs = [[0, 0, 1, 1], [width, 0, -1, 1], [width, height, -1, -1], [0, height, 1, -1]]
+  const outsideArc = (x, y) => arcs.some(([cornerX, cornerY, dirX, dirY], index) => {
+    const radius = radii[index]
+    const dx = radius - (x - cornerX) * dirX
+    const dy = radius - (y - cornerY) * dirY
+    return dx > 0 && dy > 0 && Math.hypot(dx, dy) > radius
+  })
+  return elements.flatMap((element) => {
+    const box = element.getBoundingClientRect()
+    const style = getComputedStyle(element)
+    const hidden = box.width < 2 || box.height < 2 || style.visibility === 'hidden' || Number(style.opacity) === 0 || element.closest('[inert],[aria-hidden="true"]')
+    const carousel = element.closest('.ds-carousel')
+    const tail = carousel && carousel.scrollWidth > carousel.clientWidth + 2 && !element.closest('[data-pw]')
+    if (hidden || tail) return []
+    const name = element.getAttribute('data-pw') ?? element.getAttribute('data-legal') ?? (element.getAttribute('aria-label') || element.textContent).trim().slice(0, 24)
+    const out = box.left < safe.left - 1 || box.top < safe.top - 1 || box.right > safe.right + 1 || box.bottom > safe.bottom + 1
+    const corners = [[box.left, box.top], [box.right, box.top], [box.right, box.bottom], [box.left, box.bottom]]
+    if (out) return [`${name} (${Math.round(box.left)}–${Math.round(box.right)} × ${Math.round(box.top)}–${Math.round(box.bottom)})`]
+    return corners.some(([x, y]) => outsideArc(x, y)) ? [`${name} в скруглении`] : []
+  })
+}, pose)
 
 const browser = await launch()
 const errors = []
@@ -151,7 +196,7 @@ try {
     }
 
     // 5. Размеры и немецкий: главная кнопка, тарифы, заголовок, документы и крестик — целиком на экране
-    for (const device of ['se', 'iphone8', 'iphone', 'promax', 'ipad', 'tall', 'duo-folded-l', 'duo-folded-r', 'duo-unfolded']) {
+    for (const device of ['se', 'iphone8', 'iphone', 'promax', 'ipad', 'tall', 'duo-folded-l', 'duo-folded-r', 'duo-unfolded', 'duo-unfolded-r']) {
       ;({ page, frame } = await emulator({ screen: screen.id, device, lang: 'de' }))
       await sleep(3300)
       const geometry = await inapp(page, () => window.__inapp.screen)
@@ -161,11 +206,6 @@ try {
       }).filter(box => box.w > 0))
       const outside = boxes.filter(box => box.x < -1 || box.y < -1 || box.x + box.w > geometry.width + 1 || box.y + box.h > geometry.height + 1).map(box => box.name)
       check(`${name} ${device} (${geometry.width}×${geometry.height}), немецкий: всё на экране`, outside.length === 0, outside.join(', '))
-      if (geometry.duo) {
-        const zones = [geometry.duo.island, geometry.duo.camera].filter(Boolean)
-        const hit = boxes.filter(box => zones.some(([x, y, w, h]) => box.x < x + w && box.x + box.w > x && box.y < y + h && box.y + box.h > y)).map(box => box.name)
-        if (hit.length) report('WARN', `${name} ${device}: под Island или камерой`, `${hit.join(', ')} — в InApp сдвинет адаптер Duo`)
-      }
       await page.close()
     }
 
@@ -259,6 +299,26 @@ try {
     await page.close()
   }
 
+  // iPhone Duo: все позы, немецкий (самый длинный текст) и состояния экрана, где появляются новые кнопки
+  for (const { title, id, state } of DUO_SCREENS.filter(item => !only || item.key === only)) {
+    for (const { device, orient } of DUO_POSES) {
+      const { page, frame } = await emulator({ screen: id, device, orient, lang: 'de' })
+      await sleep(3300)
+      const { duo } = await inapp(page, () => window.__inapp.screen)
+      const pose = `${title}, ${device} ${orient}`
+      let bad = await offSafeArea(frame, duo)
+      check(`${pose}: нажимаемое в safe area`, bad.length === 0, bad.join(', '))
+      if (state) {
+        // Не клик мышью: рамка уменьшена под окно, и точка нажатия внутри iframe считается неверно
+        await frame.$eval(state.tap, element => element.click())
+        await sleep(state.wait)
+        bad = await offSafeArea(frame, duo)
+        check(`${pose}, ${state.name}: нажимаемое в safe area`, bad.length === 0, bad.join(', '))
+      }
+      await page.close()
+    }
+  }
+
   check('ошибок в консоли нет', errors.length === 0, errors.slice(0, 5).join(' | '))
 } finally {
   await browser.close()
@@ -266,6 +326,5 @@ try {
 }
 
 const fails = results.filter(level => level === 'FAIL').length
-const warns = results.filter(level => level === 'WARN').length
-console.log(`\n${results.length - fails - warns} OK, ${fails} FAIL, ${warns} WARN`)
+console.log(`\n${results.length - fails} OK, ${fails} FAIL`)
 process.exit(fails ? 1 : 0)

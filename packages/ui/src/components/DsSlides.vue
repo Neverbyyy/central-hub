@@ -118,7 +118,7 @@ defineExpose({ goTo })
 
     <DsDots
       v-if="dots && count > 1"
-      :class="dotsOverlay ? 'ds:absolute ds:inset-x-0 ds:bottom-0' : 'ds:shrink-0'"
+      :class="dotsOverlay ? 'ds-slides__dots ds:absolute ds:inset-x-0' : 'ds:shrink-0'"
       :count="count"
       :active="active"
       :label="dotLabel"
@@ -143,5 +143,10 @@ defineExpose({ goTo })
 .ds-slides__slide {
   scroll-snap-align: start;
   scroll-snap-stop: always;
+}
+
+/* Слайды у нижнего края экрана: точки выше отступа. Только экран знает, где слайды, поэтому значение задаёт он */
+.ds-slides__dots {
+  bottom: var(--ds-slides-dots-bottom, 0px);
 }
 </style>

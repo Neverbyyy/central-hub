@@ -7,6 +7,7 @@
  * - trio («On click»): неделя, месяц и год с триалом, у каждого свой цвет; под кнопкой — условия триала.
  * Логика экрана — usePaywall; тексты — ключи сервиса (PLUS_TEXTS, конфиг может заменить); цены — из стора.
  * Раскладка — две половины экрана (телефон в альбомной, iPad); в портретной — слайды сверху, тарифы снизу.
+ * Цвет и арт слайдов — на весь экран, тексты, тарифы, кнопки и точки — в safe area.
  */
 import { perWeek } from '@amaya/pricing'
 import { DsBenefitList, DsButton, DsCloseButton, DsFit, DsImage, DsLegalLinks, DsPlanPicker, DsRoot, DsSlides, DsText, DsTrialToggle, type DsPlan } from '@amaya/ui'
@@ -151,7 +152,7 @@ const buy = () => {
       >
         <template #slide="{ index }">
           <div
-            class="ds:flex ds:h-full ds:flex-col ds:items-center ds:px-8 ds:pb-9 ds:pt-10"
+            class="pw-plus__slide ds:flex ds:h-full ds:flex-col ds:items-center"
             :class="SLIDE_BG[config.slides[index]!.bg]"
           >
             <DsText
@@ -180,7 +181,7 @@ const buy = () => {
         </template>
       </DsSlides>
 
-      <div class="ds:absolute ds:start-0 ds:top-0 ds:flex ds:rounded-ee-card ds:bg-bg-card ds:px-6 ds:py-1.5">
+      <div class="pw-plus__logo ds:absolute ds:start-0 ds:top-0 ds:flex ds:rounded-ee-card ds:bg-bg-card">
         <DsImage
           class="ds:h-4"
           :src="config.logo"
@@ -191,88 +192,117 @@ const buy = () => {
     </section>
 
     <!-- Заголовок, тарифы, кнопка, документы -->
-    <!-- Не помещается по высоте (iPhone SE в альбомной) — уменьшается целиком, а не обрезается -->
-    <DsFit class="pw-plus__content ds:min-w-0">
-      <section class="ds:relative ds:flex ds:h-full ds:flex-col ds:items-center ds:justify-between ds:px-5 ds:pb-3 ds:pt-4 ds:medium:px-8">
-        <DsText
-          as="h1"
-          variant="title-lg"
-          align="center"
-          class="ds:px-4"
-        >
-          {{ title }}
-        </DsText>
-
-        <div class="ds:flex ds:w-full ds:max-w-80 ds:flex-col">
-          <DsBenefitList
-            v-if="config.mode === 'switch'"
-            class="ds:mb-2"
-            :items="features"
-          />
-          <DsTrialToggle
-            v-if="config.mode === 'switch' && !wasTrial"
-            class="ds:mb-2"
-            :model-value="trialMode"
-            :label="t(tx.freeTrial)"
-            :disabled="busy"
-            @update:model-value="setTrial"
-          />
-          <DsPlanPicker
-            v-model="selected"
-            :class="config.mode === 'trio' ? 'ds:px-4' : ''"
-            :plans="plans"
-            :label="t(tx.plans)"
-            :disabled="busy"
-          />
-          <DsButton
-            data-pw="cta"
-            class="ds:mt-2"
-            :class="config.mode === 'trio' ? 'ds:mx-4' : ''"
-            block
-            :loading="!!purchasing || forcePurchasing"
-            :loading-label="buttonText"
-            @click="buy"
-          >
-            {{ buttonText }}
-          </DsButton>
+    <!-- Не помещается по высоте (iPhone SE в альбомной) — уменьшается целиком, а не обрезается.
+         Отступы экрана — снаружи DsFit: их он не уменьшает -->
+    <div class="pw-plus__content ds:flex ds:min-w-0 ds:flex-col">
+      <DsFit class="ds:min-h-0 ds:flex-1">
+        <section class="ds:relative ds:flex ds:h-full ds:flex-col ds:items-center ds:justify-between ds:px-5 ds:pb-3 ds:pt-4 ds:medium:px-8">
           <DsText
-            v-for="(line, index) in notes"
-            :key="index"
-            :class="index === 0 ? 'ds:mt-1' : ''"
-            variant="caption"
-            :tone="config.mode === 'trio' ? 'secondary' : 'muted'"
+            as="h1"
+            variant="title-lg"
             align="center"
+            class="ds:px-4"
           >
-            {{ line }}
+            {{ title }}
           </DsText>
-        </div>
 
-        <DsLegalLinks
-          tone="muted"
-          :terms="t(tx.terms)"
-          :restore="t(tx.restore)"
-          @terms="paywall.openLegal('terms')"
-          @restore="paywall.restore()"
+          <div class="ds:flex ds:w-full ds:max-w-80 ds:flex-col">
+            <DsBenefitList
+              v-if="config.mode === 'switch'"
+              class="ds:mb-2"
+              :items="features"
+            />
+            <DsTrialToggle
+              v-if="config.mode === 'switch' && !wasTrial"
+              class="ds:mb-2"
+              :model-value="trialMode"
+              :label="t(tx.freeTrial)"
+              :disabled="busy"
+              @update:model-value="setTrial"
+            />
+            <DsPlanPicker
+              v-model="selected"
+              :class="config.mode === 'trio' ? 'ds:px-4' : ''"
+              :plans="plans"
+              :label="t(tx.plans)"
+              :disabled="busy"
+            />
+            <DsButton
+              data-pw="cta"
+              class="ds:mt-2"
+              :class="config.mode === 'trio' ? 'ds:mx-4' : ''"
+              block
+              :loading="!!purchasing || forcePurchasing"
+              :loading-label="buttonText"
+              @click="buy"
+            >
+              {{ buttonText }}
+            </DsButton>
+            <DsText
+              v-for="(line, index) in notes"
+              :key="index"
+              :class="index === 0 ? 'ds:mt-1' : ''"
+              variant="caption"
+              :tone="config.mode === 'trio' ? 'secondary' : 'muted'"
+              align="center"
+            >
+              {{ line }}
+            </DsText>
+          </div>
+
+          <DsLegalLinks
+            tone="muted"
+            :terms="t(tx.terms)"
+            :restore="t(tx.restore)"
+            @terms="paywall.openLegal('terms')"
+            @restore="paywall.restore()"
+          />
+        </section>
+      </DsFit>
+    </div>
+
+    <div class="ds:pointer-events-none ds:absolute ds:inset-safe">
+      <div class="ds:pointer-events-auto ds:absolute ds:end-2 ds:top-2 ds:m-safe-corner">
+        <DsCloseButton
+          data-pw="close"
+          :label="t(tx.close)"
+          :active="opened"
+          @close="paywall.close()"
         />
-      </section>
-    </DsFit>
-
-    <div class="ds:absolute ds:end-2 ds:top-2">
-      <DsCloseButton
-        data-pw="close"
-        :label="t(tx.close)"
-        :active="opened"
-        @close="paywall.close()"
-      />
+      </div>
     </div>
   </DsRoot>
 </template>
 
 <style scoped>
-/* Две половины в альбомной; в портретной — слайды сверху (40 % высоты), тарифы снизу */
-.pw-plus__hero,
+/* Две половины в альбомной; в портретной — слайды сверху (40 % высоты), тарифы снизу.
+   Отступ справа отдают слайды: ширина под тарифы остаётся половиной экрана */
+.pw-plus__hero {
+  --pw-hero-top: var(--ds-inset-top);
+  --pw-hero-right: 0px;
+  --pw-hero-bottom: var(--ds-inset-bottom);
+  --pw-hero-left: var(--ds-inset-left);
+  --ds-slides-dots-bottom: var(--pw-hero-bottom);
+
+  width: calc(50% - var(--ds-inset-right));
+}
+
 .pw-plus__content {
-  width: 50%;
+  width: calc(50% + var(--ds-inset-right));
+  padding: var(--ds-inset-top) var(--ds-inset-right) var(--ds-inset-bottom) 0;
+}
+
+.pw-plus__slide {
+  padding:
+    calc(2.5rem + var(--pw-hero-top))
+    calc(2rem + var(--pw-hero-right))
+    calc(2.25rem + var(--pw-hero-bottom))
+    calc(2rem + var(--pw-hero-left));
+}
+
+/* Плашка логотипа растёт от угла экрана, логотип в ней — в safe area */
+.pw-plus__logo {
+  padding: calc(0.375rem + var(--pw-hero-top)) 1.5rem 0.375rem calc(1.5rem + var(--pw-hero-left));
 }
 
 @media (orientation: portrait) {
@@ -281,6 +311,9 @@ const buy = () => {
   }
 
   .pw-plus__hero {
+    --pw-hero-right: var(--ds-inset-right);
+    --pw-hero-bottom: 0px;
+
     width: 100%;
     height: 40%;
     border-radius: 0 0 var(--ds-radius-hero) var(--ds-radius-hero);
@@ -289,6 +322,7 @@ const buy = () => {
   .pw-plus__content {
     width: 100%;
     flex: 1;
+    padding: 0 var(--ds-inset-right) var(--ds-inset-bottom) var(--ds-inset-left);
   }
 }
 </style>

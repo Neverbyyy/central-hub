@@ -23,7 +23,8 @@
 `src/tailwind.css`: `@import '@amaya/ui/tailwind.css'` в приложении. Брейкпоинты: `ds:medium:` (844), `ds:large:`
 (844 и высота от 600 — iPad, планшеты), `ds:wide:` (640 — раскладка лендинга), `ds:phone-landscape:`; значения —
 `packages/tokens/src/breakpoints.json`, `ds:large:` и `ds:wide:` собираются из него. Утилиты: `ds:surface-*` (заливка
-цветом или градиентом), `ds:case-*` (регистр из темы), `ds:h-vh`, `ds:pt-safe`, `ds:no-select`.
+цветом или градиентом), `ds:case-*` (регистр из темы), `ds:h-vh`, `ds:no-select`. Отступы экрана: `ds:pt-safe` и другие,
+`ds:inset-safe` (рамка safe area), `ds:m-safe-corner` (запас от скругления экрана в углу рамки), `ds:w-split` и `ds:w-split-end` (две половины safe area). Значения — `--ds-safe-*` от хоста, иначе `env()`.
 
 ## Картинки
 

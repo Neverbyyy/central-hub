@@ -18,31 +18,74 @@
   }
 }
 
-/* Отступы под вырез, Dynamic Island и полоску «домой» */
+/* Отступы экрана: вырез, Dynamic Island, камера, полоска «домой». Всё, что нажимается, стоит внутри них, фон и арт —
+   на весь экран. Обычно хватает env(). Хост задаёт свои --ds-safe-*, если сам знает зоны: в вебвью внутри iframe env()
+   о них не знает (эмулятор берёт их из позы iPhone Duo, InApp — из своей геометрии) */
+[data-ds-root] {
+  --ds-inset-top: var(--ds-safe-top, env(safe-area-inset-top, 0px));
+  --ds-inset-right: var(--ds-safe-right, env(safe-area-inset-right, 0px));
+  --ds-inset-bottom: var(--ds-safe-bottom, env(safe-area-inset-bottom, 0px));
+  --ds-inset-left: var(--ds-safe-left, env(safe-area-inset-left, 0px));
+  --ds-inset-corner: var(--ds-safe-corner, 0px);
+}
+
 @utility pt-safe {
-  padding-top: env(safe-area-inset-top, 0px);
+  padding-top: var(--ds-inset-top, 0px);
 }
 
 @utility pr-safe {
-  padding-right: env(safe-area-inset-right, 0px);
+  padding-right: var(--ds-inset-right, 0px);
 }
 
 @utility pb-safe {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: var(--ds-inset-bottom, 0px);
 }
 
 @utility pl-safe {
-  padding-left: env(safe-area-inset-left, 0px);
+  padding-left: var(--ds-inset-left, 0px);
 }
 
 @utility px-safe {
-  padding-left: env(safe-area-inset-left, 0px);
-  padding-right: env(safe-area-inset-right, 0px);
+  padding-left: var(--ds-inset-left, 0px);
+  padding-right: var(--ds-inset-right, 0px);
 }
 
 @utility py-safe {
-  padding-top: env(safe-area-inset-top, 0px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-top: var(--ds-inset-top, 0px);
+  padding-bottom: var(--ds-inset-bottom, 0px);
+}
+
+/* Рамка safe area: крестик и документы стоят в ней, как в обычном углу экрана. Пустая часть пропускает касания только
+   с ds:pointer-events-none. Без свойства inset: его нет в старых вебвью */
+@utility inset-safe {
+  top: var(--ds-inset-top, 0px);
+  right: var(--ds-inset-right, 0px);
+  bottom: var(--ds-inset-bottom, 0px);
+  left: var(--ds-inset-left, 0px);
+}
+
+@utility inset-x-safe {
+  right: var(--ds-inset-right, 0px);
+  left: var(--ds-inset-left, 0px);
+}
+
+@utility inset-y-safe {
+  top: var(--ds-inset-top, 0px);
+  bottom: var(--ds-inset-bottom, 0px);
+}
+
+/* Запас от скругления экрана — для того, что стоит в углу рамки: прямоугольная рамка скругления не учитывает */
+@utility m-safe-corner {
+  margin: var(--ds-inset-corner, 0px);
+}
+
+/* Две половины экрана в альбомной — поровну делится safe area: арт и контент отдают отступу справа по половине */
+@utility w-split {
+  width: calc(50% - var(--ds-inset-right, 0px) / 2);
+}
+
+@utility w-split-end {
+  width: calc(50% + var(--ds-inset-right, 0px) / 2);
 }
 
 /* Телефон в альбомной ориентации — низкий экран. Планшет в альбомной сюда не попадает */

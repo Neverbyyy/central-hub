@@ -6,6 +6,7 @@
  * - «More Plans» — попап снизу с тремя тарифами (год с триалом, год, неделя с триалом).
  * - Справа — наборы машин разовой покупкой; если подписка уже есть или куплено всё — только главная карточка.
  * Логика экрана — usePaywall; тексты — ключи сервиса из конфига; цены — из стора.
+ * Затемнение и арт — на весь экран, всё, что нажимается, — в safe area; наборы машин уезжают под отступ, как в любой карусели.
  */
 import { perWeek } from '@amaya/pricing'
 import { DsButton, DsCarousel, DsCloseButton, DsFit, DsGameTitle, DsIconButton, DsImage, DsLink, DsPriceTag, DsRive, DsRoot, type DsPlan } from '@amaya/ui'
@@ -100,6 +101,9 @@ const buyPopup = () => {
   if (popupPlan.value) paywall.purchase(popupPlan.value.key)
 }
 
+// Запас от края safe area, px
+const SAFE_GAP = 8
+
 // Сколько высоты нужно ряду в его размерах (для DsFit): колонка главной карточки — карточка, кнопка, «More plans» —
 // плюс поле ряда сверху и немного воздуха снизу. Наборы машин ниже колонки, их высота не решает
 const main = ref<HTMLElement | null>(null)
@@ -109,6 +113,19 @@ const neededHeight = () => {
   const row = column.parentElement
   const top = row ? Number.parseFloat(getComputedStyle(row).paddingTop) || 0 : 0
   return column.offsetHeight + top * 2
+}
+
+// Главная карточка шире safe area (сложенный iPhone Duo в портрете) — ряд уменьшается и по ширине. Без отступов экрана
+// ряд просто листается пальцем
+const insetOf = (element: Element, side: 'left' | 'right') => Number.parseFloat(getComputedStyle(element).getPropertyValue(`--ds-inset-${side}`)) || 0
+const widthScale = () => {
+  const column = main.value
+  const row = column?.parentElement
+  if (!column || !row) return 1
+  const right = insetOf(row, 'right')
+  if (!right && !insetOf(row, 'left')) return 1
+  const start = Number.parseFloat(getComputedStyle(row).paddingLeft) || 0
+  return (row.clientWidth - right - SAFE_GAP) / (start + column.offsetWidth)
 }
 </script>
 
@@ -126,13 +143,14 @@ const neededHeight = () => {
     />
 
     <!-- Ряд не помещается по высоте (iPhone SE в альбомной) — уменьшается целиком: карточка, кнопка, наборы -->
-    <div class="ds:absolute ds:inset-0">
+    <div class="ds:absolute ds:inset-x-0 ds:inset-y-safe">
       <DsFit
         class="ds:size-full"
         :measure="neededHeight"
+        :max-scale="widthScale"
       >
         <DsCarousel
-          class="pw-hero__row ds:relative ds:h-full ds:scroll-px-14 ds:px-14 ds:pt-4"
+          class="pw-hero__row ds:relative ds:h-full ds:pt-4"
           :class="onlyMain ? 'ds:justify-center' : ''"
           :hint="!onlyMain"
           :reset-key="session"
@@ -145,6 +163,7 @@ const neededHeight = () => {
           >
             <div
               class="pw-hero__card ds:relative ds:h-hero-h ds:w-hero-w ds:cursor-pointer"
+              data-pw="card"
               @click="buyMain"
             >
               <!-- Фон: лицевая сторона и оборот сменяются прозрачностью -->
@@ -321,25 +340,27 @@ const neededHeight = () => {
       </DsFit>
     </div>
 
-    <!-- Документы по углам -->
-    <div class="ds:absolute ds:bottom-1.5 ds:start-10 ds:font-link ds:text-legal">
-      <DsLink @click="paywall.openLegal('terms')">
-        {{ t(tx.terms) }}
-      </DsLink>
-    </div>
-    <div class="ds:absolute ds:bottom-1.5 ds:end-10 ds:font-link ds:text-legal">
-      <DsLink @click="paywall.restore()">
-        {{ t(tx.restore) }}
-      </DsLink>
-    </div>
+    <!-- Документы по углам и крестик — в углах safe area -->
+    <div class="ds:pointer-events-none ds:absolute ds:inset-safe">
+      <div class="ds:pointer-events-auto ds:absolute ds:bottom-1.5 ds:start-10 ds:font-link ds:text-legal">
+        <DsLink @click="paywall.openLegal('terms')">
+          {{ t(tx.terms) }}
+        </DsLink>
+      </div>
+      <div class="ds:pointer-events-auto ds:absolute ds:bottom-1.5 ds:end-10 ds:font-link ds:text-legal">
+        <DsLink @click="paywall.restore()">
+          {{ t(tx.restore) }}
+        </DsLink>
+      </div>
 
-    <div class="ds:absolute ds:end-1.5 ds:top-1.5">
-      <DsCloseButton
-        data-pw="close"
-        :label="t(tx.close)"
-        :active="opened"
-        @close="paywall.close()"
-      />
+      <div class="ds:pointer-events-auto ds:absolute ds:end-1.5 ds:top-1.5 ds:m-safe-corner">
+        <DsCloseButton
+          data-pw="close"
+          :label="t(tx.close)"
+          :active="opened"
+          @close="paywall.close()"
+        />
+      </div>
     </div>
 
     <HeroPlans
@@ -360,6 +381,15 @@ const neededHeight = () => {
 /* Белая рамка карточек — тенью внутрь поверх фона: толщина line.hero, цвет как у рамки кнопки */
 .pw-hero__frame {
   box-shadow: inset 0 0 0 var(--ds-line-hero) var(--ds-color-cta-border);
+}
+
+/* Поля ряда — как в макете, а рядом с отступом экрана — от него: главная карточка стоит в safe area */
+.pw-hero__row {
+  --pw-row-start: max(3.5rem, calc(var(--ds-inset-left) + 1rem));
+
+  padding-right: max(3.5rem, calc(var(--ds-inset-right) + 1rem));
+  padding-left: var(--pw-row-start);
+  scroll-padding-left: var(--pw-row-start);
 }
 
 /* Вход экрана: карточки поднимаются и проявляются — только transform и opacity */

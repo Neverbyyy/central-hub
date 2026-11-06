@@ -81,7 +81,8 @@ const height = () => sheet.value?.offsetHeight ?? 0
                 alt=""
               />
 
-              <div class="ds:relative ds:flex ds:flex-col ds:items-center ds:px-6 ds:pb-8 ds:pt-popup-top">
+              <!-- Картинки попапа — до краёв экрана, содержимое — в safe area -->
+              <div class="pw-plans__body ds:relative ds:flex ds:flex-col ds:items-center ds:pt-popup-top">
                 <DsGameTitle variant="title-lg">
                   <em>{{ t(config.texts.titleLead) }}</em>
                   {{ ' ' }}
@@ -131,13 +132,15 @@ const height = () => sheet.value?.offsetHeight ?? 0
                   {{ buttonText }}
                 </DsButton>
               </div>
-              <div class="ds:absolute ds:end-1.5 ds:top-4 ds:large:end-6 ds:large:top-7">
-                <DsCloseButton
-                  tone="alt"
-                  :label="t(config.texts.close)"
-                  :delay="0"
-                  @close="emit('close')"
-                />
+              <div class="ds:pointer-events-none ds:absolute ds:inset-x-safe ds:inset-y-0">
+                <div class="ds:pointer-events-auto ds:absolute ds:end-1.5 ds:top-4 ds:large:end-6 ds:large:top-7">
+                  <DsCloseButton
+                    tone="alt"
+                    :label="t(config.texts.close)"
+                    :delay="0"
+                    @close="emit('close')"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -156,6 +159,12 @@ const height = () => sheet.value?.offsetHeight ?? 0
   border-radius: inherit;
   box-shadow: inset 0 0.375rem 0 var(--ds-color-popup-rim), inset 0 0.75rem 0 var(--ds-color-popup-edge);
   pointer-events: none;
+}
+
+.pw-plans__body {
+  padding-right: calc(1.5rem + var(--ds-inset-right));
+  padding-bottom: max(2rem, calc(var(--ds-inset-bottom) + 0.5rem));
+  padding-left: calc(1.5rem + var(--ds-inset-left));
 }
 
 .pw-plans__left {

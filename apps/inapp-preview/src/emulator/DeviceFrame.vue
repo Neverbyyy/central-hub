@@ -2,7 +2,7 @@
 // Рамка устройства эмулятора: вебвью в логическом размере, зоны Duo поверх него и заглушка «экран закрыт».
 // Экран уменьшается под свободное место, как в DevTools; screen.fill — без рамки, на всё место.
 // Инструмент разработки: подписи по-русски, свой CSS
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { Screen } from './devices'
 import ScreenClosed from './ScreenClosed.vue'
 
@@ -42,6 +42,22 @@ onBeforeUnmount(() => observer?.disconnect())
 // Эмулятор говорит с окном этого iframe
 const frame = ref<HTMLIFrameElement | null>(null)
 defineExpose({ frame })
+
+// Отступы экрана: на устройстве их задаёт приложение, здесь — поза Duo. Не зависят от галочки зон: она только рисует их
+const SIDES = ['top', 'right', 'bottom', 'left'] as const
+const applyInsets = () => {
+  const root = frame.value?.contentDocument?.documentElement
+  if (!root) return
+  const duo = props.screen.duo
+  for (const side of SIDES) {
+    if (duo) root.style.setProperty(`--ds-safe-${side}`, `${duo.insets[side]}px`)
+    else root.style.removeProperty(`--ds-safe-${side}`)
+  }
+  // Запас, при котором угол прямоугольника вписывается в скругление экрана радиуса r: r × (1 − 1/√2)
+  if (duo) root.style.setProperty('--ds-safe-corner', `${Math.ceil(Math.max(...duo.radii) * (1 - Math.SQRT1_2))}px`)
+  else root.style.removeProperty('--ds-safe-corner')
+}
+watch(() => props.screen, applyInsets)
 </script>
 
 <template>
@@ -61,6 +77,7 @@ defineExpose({ frame })
         class="emu-frame"
         :src="src"
         title="Экран InApp"
+        @load="applyInsets"
       />
       <svg
         v-if="pose"
@@ -132,6 +149,14 @@ defineExpose({ frame })
           rx="12"
           class="emu-zone--system"
         />
+        <rect
+          v-if="pose.hinge"
+          :x="pose.hinge[0]"
+          :y="pose.hinge[1]"
+          :width="pose.hinge[2]"
+          :height="pose.hinge[3]"
+          class="emu-zone--hinge"
+        />
       </svg>
       <ScreenClosed
         v-if="closed"
@@ -196,6 +221,10 @@ defineExpose({ frame })
 
 .emu-zone--system {
   fill: rgb(142 68 173 / 0.55);
+}
+
+.emu-zone--hinge {
+  fill: rgb(120 120 120 / 0.3);
 }
 
 .emu-zone--camera {

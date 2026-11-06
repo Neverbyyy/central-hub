@@ -5,6 +5,7 @@
  * «Continue» на первом шаге открывает второй, на втором — закрывает экран: дальше приложение показывает пейволл.
  * Шаблона под онбординг нет, поэтому экран собран из Ds* и usePaywall: «готов» — после шрифта и арта обоих шагов
  * (второй шаг появляется сразу, без догрузки), повторное открытие — снова с первого шага.
+ * Арт — на весь экран, тексты, кнопка, документы и крестик — в safe area.
  */
 import { usePaywall, type ScreenProps } from '@amaya/paywall-kit'
 import { DsButton, DsCloseButton, DsFit, DsImage, DsLegalLinks, DsRoot, DsText } from '@amaya/ui'
@@ -73,7 +74,7 @@ const artClass = (index: number) => [
   >
     <!-- Арт шагов: слои друг на друге, оба грузятся сразу. В портрете (в макете его нет) — пропорции кадра 667,
          но не выше половины экрана: награды сверху и звери снизу видны целиком -->
-    <section class="ds:relative ds:w-1/2 ds:shrink-0 ds:overflow-hidden ds:bg-bg-hero ds:portrait:aspect-[334/375] ds:portrait:max-h-1/2 ds:portrait:w-full">
+    <section class="ds:relative ds:w-split ds:shrink-0 ds:overflow-hidden ds:bg-bg-hero ds:portrait:aspect-[334/375] ds:portrait:max-h-1/2 ds:portrait:w-full">
       <DsImage
         v-for="(item, index) in config.steps"
         :key="index"
@@ -86,8 +87,69 @@ const artClass = (index: number) => [
         @load="paywall.markLoaded(`art-${index}`)"
         @error="paywall.markLoaded(`art-${index}`)"
       />
+    </section>
 
-      <div class="ds:absolute ds:start-3 ds:top-3 ds:large:top-4">
+    <!-- Не помещается по высоте (iPhone SE в альбомной, длинный язык) — уменьшается целиком, а не обрезается.
+         Отступы экрана — снаружи DsFit: их он не уменьшает -->
+    <div class="ds:flex ds:w-split-end ds:min-w-0 ds:flex-col ds:pb-safe ds:pr-safe ds:pt-safe ds:portrait:w-full ds:portrait:flex-1 ds:portrait:pl-safe ds:portrait:pt-0">
+      <DsFit class="ds:min-h-0 ds:flex-1">
+        <section class="ds:flex ds:h-full ds:flex-col ds:justify-between ds:px-8 ds:py-4 ds:large:px-11 ds:large:py-8">
+          <!-- Тексты шагов лежат в одной ячейке: высота — по большему, при смене шага ничего не сдвигается.
+             Заголовок — строками поровну, как в макете (там перенос стоял вручную, а в тексте сервиса его нет);
+             где text-wrap: balance не знают (старые вебвью), перенос обычный -->
+          <div class="ds:grid">
+            <DsText
+              v-for="(item, index) in config.steps"
+              :key="index"
+              as="h1"
+              variant="title-xl"
+              align="center"
+              class="ds:col-start-1 ds:row-start-1 ds:text-balance"
+              :class="textClass(index)"
+              :aria-hidden="index === step ? undefined : 'true'"
+            >
+              {{ t(item.title, { count: config.appsCount }) }}
+            </DsText>
+          </div>
+
+          <div class="ds:my-2 ds:grid ds:items-center">
+            <DsText
+              v-for="(item, index) in config.steps"
+              :key="index"
+              variant="body-lg"
+              align="center"
+              class="ds:col-start-1 ds:row-start-1"
+              :class="textClass(index)"
+              :aria-hidden="index === step ? undefined : 'true'"
+            >
+              {{ t(item.text) }}
+            </DsText>
+          </div>
+
+          <div class="ds:flex ds:flex-col ds:items-center">
+            <DsButton
+              data-pw="cta"
+              block
+              class="ds:max-w-67.5 ds:large:max-w-none"
+              @click="next"
+            >
+              {{ t(config.texts.continue) }}
+            </DsButton>
+            <DsLegalLinks
+              class="ds:mt-6 ds:w-full ds:large:mt-10.5"
+              tone="muted"
+              :terms="t(config.texts.terms)"
+              :privacy="t(config.texts.privacy)"
+              @terms="paywall.openLegal('terms')"
+              @privacy="paywall.openLegal('privacy')"
+            />
+          </div>
+        </section>
+      </DsFit>
+    </div>
+
+    <div class="ds:pointer-events-none ds:absolute ds:inset-safe">
+      <div class="ds:pointer-events-auto ds:absolute ds:start-3 ds:top-3 ds:m-safe-corner ds:large:top-4">
         <DsCloseButton
           data-pw="close"
           :label="t(config.texts.close)"
@@ -95,62 +157,6 @@ const artClass = (index: number) => [
           @close="paywall.close()"
         />
       </div>
-    </section>
-
-    <!-- Не помещается по высоте (iPhone SE в альбомной, длинный язык) — уменьшается целиком, а не обрезается -->
-    <DsFit class="ds:w-1/2 ds:min-w-0 ds:portrait:w-full ds:portrait:flex-1">
-      <section class="ds:flex ds:h-full ds:flex-col ds:justify-between ds:px-8 ds:py-4 ds:large:px-11 ds:large:py-8">
-        <!-- Тексты шагов лежат в одной ячейке: высота — по большему, при смене шага ничего не сдвигается.
-             Заголовок — строками поровну, как в макете (там перенос стоял вручную, а в тексте сервиса его нет);
-             где text-wrap: balance не знают (старые вебвью), перенос обычный -->
-        <div class="ds:grid">
-          <DsText
-            v-for="(item, index) in config.steps"
-            :key="index"
-            as="h1"
-            variant="title-xl"
-            align="center"
-            class="ds:col-start-1 ds:row-start-1 ds:text-balance"
-            :class="textClass(index)"
-            :aria-hidden="index === step ? undefined : 'true'"
-          >
-            {{ t(item.title, { count: config.appsCount }) }}
-          </DsText>
-        </div>
-
-        <div class="ds:my-2 ds:grid ds:items-center">
-          <DsText
-            v-for="(item, index) in config.steps"
-            :key="index"
-            variant="body-lg"
-            align="center"
-            class="ds:col-start-1 ds:row-start-1"
-            :class="textClass(index)"
-            :aria-hidden="index === step ? undefined : 'true'"
-          >
-            {{ t(item.text) }}
-          </DsText>
-        </div>
-
-        <div class="ds:flex ds:flex-col ds:items-center">
-          <DsButton
-            data-pw="cta"
-            block
-            class="ds:max-w-67.5 ds:large:max-w-none"
-            @click="next"
-          >
-            {{ t(config.texts.continue) }}
-          </DsButton>
-          <DsLegalLinks
-            class="ds:mt-6 ds:w-full ds:large:mt-10.5"
-            tone="muted"
-            :terms="t(config.texts.terms)"
-            :privacy="t(config.texts.privacy)"
-            @terms="paywall.openLegal('terms')"
-            @privacy="paywall.openLegal('privacy')"
-          />
-        </div>
-      </section>
-    </DsFit>
+    </div>
   </DsRoot>
 </template>
