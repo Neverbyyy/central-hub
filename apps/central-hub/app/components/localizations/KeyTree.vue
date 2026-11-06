@@ -104,8 +104,9 @@ const onSelect = (item: Item | undefined) => {
   <aside class="flex shrink-0 flex-col overflow-hidden bg-default">
     <button
       type="button"
-      class="mx-2 mt-2 mb-1 flex items-center justify-between rounded-md px-2 text-left text-sm hover:bg-muted"
-      :class="[!prefix ? 'font-semibold text-highlighted' : 'text-toned', drawer ? 'py-3' : 'py-1.5']"
+      class="mx-2 mt-2 mb-1 flex items-center justify-between rounded-md px-2 text-left text-sm"
+      :class="[!prefix ? 'bg-elevated font-semibold text-primary' : 'text-toned hover:bg-muted', drawer ? 'py-3' : 'py-1.5']"
+      :aria-current="!prefix ? 'true' : undefined"
       @click="emit('select', '', true)"
     >
       Все ключи
