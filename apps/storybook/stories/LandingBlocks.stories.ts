@@ -1,8 +1,7 @@
 // Блоки лендинга, которым нужен арт лендинга игры (постер и ролик, значки сторов): у каждой темы — своя игра.
-// cars2 — лендинг Cars 2, farm и base — лендинг Farm (оба в apps/landings; палитра base — Amaya Plus, как у Farm).
-// Тема колонки — атрибут data-ds-theme её корня (DsRoot): «Все три рядом» показывает каждую игру в своей теме.
+// Лендинг — из apps/landings, папка с именем темы; у base своего нет — лендинг Farm (палитра base — Amaya Plus, как у Farm).
+// Тема колонки — атрибут data-ds-theme её корня (DsRoot): «Все рядом» показывает каждую игру в своей теме.
 // Остальные истории блоков — рядом с компонентами в packages/ui
-import type { LandingConfig } from '@amaya/landing-kit'
 import { DsStoreBadges, DsVideo, type DsStore } from '@amaya/ui'
 import { useStoryTexts, NO_SCREEN_STATE } from '@amaya/ui/stories'
 import type { StoryObj } from '@storybook/vue3-vite'
@@ -15,16 +14,15 @@ export default {
 }
 
 const farm = LANDINGS.farm!
-const THEME_LANDINGS: Record<string, LandingConfig> = { cars2: LANDINGS.cars2!, farm, base: farm }
 
-/** Лендинг игры по теме колонки, в которой нарисована история. */
+/** Лендинг игры по теме колонки, в которой нарисована история: тема называется как папка лендинга, у base его нет. */
 function useThemeLanding() {
   const box = ref<HTMLElement | null>(null)
   const theme = ref('base')
   onMounted(() => {
     theme.value = box.value?.closest('[data-ds-theme]')?.getAttribute('data-ds-theme') ?? 'base'
   })
-  const landing = computed(() => THEME_LANDINGS[theme.value] ?? farm)
+  const landing = computed(() => LANDINGS[theme.value] ?? farm)
   return { box, landing }
 }
 

@@ -48,7 +48,7 @@ onMounted(async () => {
       >
         <UCard
           title="Дизайн-система"
-          description="Storybook: компоненты, токены и экраны пейволлов Cars 2 и Farm."
+          description="Storybook: компоненты, токены, экраны пейволлов и лендингов."
           class="w-full h-full sm:w-xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 dark:shadow-black/40 hover:bg-elevated hover:ring-accented dark:hover:bg-gray-700/60 dark:hover:ring-gray-600 rounded-xl"
         />
       </NuxtLink>
@@ -61,7 +61,7 @@ onMounted(async () => {
       >
         <UCard
           title="Эмулятор InApp"
-          description="Пейволлы и онбординги как в InApp: покупка, лог и устройства."
+          description="Пейволлы и онбординги: возможность посмотреть как будет выглядеть экран в InApp."
           class="w-full h-full sm:w-xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 dark:shadow-black/40 hover:bg-elevated hover:ring-accented dark:hover:bg-gray-700/60 dark:hover:ring-gray-600 rounded-xl"
         />
       </NuxtLink>
@@ -74,7 +74,7 @@ onMounted(async () => {
       >
         <UCard
           title="Лендинги"
-          description="Лендинги игр на дизайн-системе: каждый на 9 языках."
+          description="Лендинги игр на основе дизайн-системы."
           class="w-full h-full sm:w-xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 dark:shadow-black/40 hover:bg-elevated hover:ring-accented dark:hover:bg-gray-700/60 dark:hover:ring-gray-600 rounded-xl"
         />
       </NuxtLink>
