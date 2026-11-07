@@ -1,0 +1,10 @@
+/* Стили готовой сборки: шрифты, пресет ds: и все классы компонентов и шаблонов. Истории в сборку не идут.
+   Своих классов у папки экрана быть не должно: Tailwind в InApp нет, и собрать их там некому */
+@import '@amaya/tokens/fonts.css';
+@import '@amaya/ui/tailwind.css';
+
+@source '../../ui/src';
+@source '../../paywall-kit/src';
+@source not '../../ui/src/stories';
+@source not '../../ui/src/**/*.stories.ts';
+@source not '../../paywall-kit/src/**/*.stories.ts';

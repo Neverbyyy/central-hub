@@ -5,7 +5,8 @@
   "description": "Тексты набора выгрузки ds из сервиса локализации: файлы кладёт pnpm l10n pull",
   "exports": {
     ".": "./src/index.ts",
-    "./lazy": "./src/lazy.ts"
+    "./lazy": "./src/lazy.ts",
+    "./plural": "./src/plural.ts"
   },
   "sideEffects": false,
   "scripts": {

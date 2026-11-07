@@ -1,0 +1,45 @@
+{
+  "name": "@amaya/inapp-kit",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Готовая сборка дизайн-системы для InApp: JS и CSS без Tailwind и без исходников Vue",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./plural": {
+      "types": "./dist/plural.d.ts",
+      "default": "./dist/plural.js"
+    },
+    "./style.css": "./dist/style.css"
+  },
+  "scripts": {
+    "kit": "vite build && node scripts/flatten.mjs && node scripts/types.mjs",
+    "lint": "eslint ."
+  },
+  "peerDependencies": {
+    "@rive-app/webgl2": "^2.39.2",
+    "vue": "^3.3.4",
+    "vue-i18n": "^9.2.2 || ^10.0.0 || ^11.0.0"
+  },
+  "devDependencies": {
+    "@amaya/locales": "workspace:*",
+    "@amaya/paywall-kit": "workspace:*",
+    "@amaya/tokens": "workspace:*",
+    "@amaya/ui": "workspace:*",
+    "@csstools/postcss-cascade-layers": "^5.0.2",
+    "@rive-app/webgl2": "2.39.2",
+    "@tailwindcss/vite": "^4.3.3",
+    "@vitejs/plugin-vue": "^6.0.6",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.3.3",
+    "vite": "^7.3.2",
+    "vue": "^3.5.33",
+    "vue-i18n": "^11.4.16"
+  }
+}
