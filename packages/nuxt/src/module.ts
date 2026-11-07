@@ -47,6 +47,9 @@ export default defineNuxtModule<ModuleOptions>({
         `@import '${slash(join(ui, 'tailwind.css'))}';`,
         `@source '${slash(join(landingKit, 'blocks'))}';`,
         `@source '${slash(nuxt.options.srcDir)}';`,
+        // Своё приложение: у body браузер ставит поле 8 px, и вокруг страницы видна белая рамка. Глобального сброса
+        // у дизайн-системы нет намеренно, поэтому только это. В хосте (embedded) body — его
+        embedded ? '' : 'body { margin: 0; }',
         ''
       ].join('\n')
     })

@@ -342,6 +342,12 @@ async function checkWidths(id) {
     const { page } = await open(`/${id}/de`, { ua: width < 700 ? UA.iphone : undefined, width, height: 800 })
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
     check(`${id}, ${width} px, немецкий: без горизонтальной прокрутки`, overflow <= 0, `+${overflow}`)
+    // Страница от края до края: поле body в 8 px давало белую рамку вокруг лендинга
+    const edge = await page.$eval('[data-ds-root]', (root) => {
+      const box = root.getBoundingClientRect()
+      return { left: box.left, top: box.top + scrollY, right: innerWidth - box.right }
+    })
+    check(`${id}, ${width} px: без рамки вокруг страницы`, edge.left === 0 && edge.top === 0 && edge.right <= 0, JSON.stringify(edge))
     await page.close()
   }
 }
