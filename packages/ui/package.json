@@ -21,7 +21,7 @@
   },
   "peerDependencies": {
     "@rive-app/webgl2": "^2.39.2",
-    "tailwindcss": "^4.3.0",
+    "tailwindcss": "^4.2.0",
     "vue": "^3.3.4"
   },
   "peerDependenciesMeta": {
