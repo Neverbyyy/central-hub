@@ -13,7 +13,8 @@ packages/tokens       токены → CSS-переменные и тема Tail
 packages/ui           компоненты Ds* и пресет Tailwind (ds:); манифест — packages/ui/manifest.md
 packages/paywall-kit  интерфейс окружения InApp, usePaywall, шаблоны Pw*
 packages/landing-kit  конфиг лендинга, track, ссылки в сторы с UTM, блоки Lk*
-packages/nuxt         Nuxt-модуль: всё для лендинга одной строкой
+packages/nuxt         Nuxt-модуль: всё для лендинга одной строкой; в чужом приложении (Pages Hub) — amaya: { embedded: true }
+packages/inapp-kit    готовая сборка дизайн-системы для InApp: пилот доставки, проверяется только на своей копии
 packages/locales      утверждённые тексты набора ds (pnpm l10n pull); руками не правится
 packages/art          арт, общий для экранов и лендингов: один файл на все продукты
 packages/icons, pricing, l10n-core, l10n-cli
