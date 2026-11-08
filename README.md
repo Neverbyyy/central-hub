@@ -1,42 +1,30 @@
 # Amaya Hub
 
-Монорепозиторий веб-инструментов Amaya (pnpm + Turborepo): сервис локализации — единое место,
-где живут все тексты продуктов и откуда они выгружаются в код, в Figma и доступны нейросетям по MCP, —
-и дизайн-система, из которой собираются пейволлы и лендинги (этап 2, см. «Дизайн-система»).
+Монорепо Amaya (pnpm + Turborepo): сервис локализации и дизайн-система для пейволлов и лендингов.
+Принятые решения — в [DECISIONS.md](DECISIONS.md).
 
 ```
-apps/central-hub/      сервис локализации (Nuxt 4, Nuxt UI 4, Tailwind 4)
-apps/storybook/        витрина дизайн-системы (Storybook 10): темы, языки, размеры экрана
-apps/inapp-preview/    экраны пейволлов, устроенные как варианты InApp, и «только экран» по ссылке
-packages/tokens/       токены: JSON из Figma → CSS-переменные и тема Tailwind 4
-packages/ui/           компоненты Ds* и пресет Tailwind (префикс ds:, без глобального сброса)
-packages/paywall-kit/  пейволлы: связь с окружением (InApp), общая логика экрана, шаблоны и их конфиги
-packages/pricing/      цены из стора: «в неделю», «в месяц», скидка — в том же виде, что строка стора
-packages/art/          арт, общий для экранов и лендингов: один файл на все продукты
-packages/icons/        иконки дизайн-системы: пути SVG 24×24 для DsIcon
-packages/locales/      тексты набора ds из сервиса — кладёт pnpm l10n pull
-packages/l10n-core/    правила ключей и форматы файлов локалей — общие для сервера, CLI и MCP
-packages/l10n-cli/     CLI amaya-l10n: pull / diff / check / import
-packages/figma-plugin/ плагин Figma «Amaya Hub — локализация»: переменные из сервиса, живое обновление
-supabase/              миграции базы (Supabase CLI)
-fixtures/legacy/       копии файлов локалей InApp и Pages Hub — для автотеста выгрузки
-tests/db/              автотесты базы: права, правила ключей, история, импорт и выгрузка
-tests/unit/            код без базы: выгрузка в GitHub на поддельном API, история ключа, подсказки к ключу
+apps/
+  central-hub        сервис локализации
+  storybook          витрина дизайн-системы
+  inapp-preview      эмулятор InApp с пейволлами
+  landings           лендинги
+packages/
+  tokens, ui         токены и компоненты Ds*
+  paywall-kit        шаблоны пейволлов
+  landing-kit        блоки лендингов
+  nuxt               лендинг одной строкой
+  inapp-kit          сборка для InApp
+  art, icons         арт и иконки
+  pricing            цены «в неделю», скидки
+  locales            тексты из сервиса
+  l10n-core, -cli    правила ключей и CLI
+  figma-plugin       тексты в Figma
+supabase/            миграции базы
+fixtures/legacy/     локали InApp и Pages Hub
+tests/               автотесты
+tools/               линтер, Figma, проверка арта
 ```
-
-Внутри `apps/central-hub/app` общее вынесено из компонентов:
-
-```
-composables/   useLocalizations — грид и фильтры; useLanguages, useKeyTree, useExportRules — данные,
-               общие для нескольких мест (по одному запросу на страницу); useNotifyError, useCopy
-utils/         чистые функции без Vue: история ключа (history), подсказки к ключу (keySuggestions),
-               даты (formatDate), множественное число (plural) — покрыты tests/unit
-```
-
-На сервере маршруты `server/api/**` объявляются через `defineHubHandler` (`server/utils/db.ts`):
-`HubError` и ошибки базы уходят человеку понятным текстом без `try/catch` в каждом маршруте.
-
-Решения, принятые по ходу работы, — в [DECISIONS.md](DECISIONS.md).
 
 ## Как работать
 
@@ -291,6 +279,15 @@ snake_case. Пока ключ дописывают, ошибок нет; кра�
 
 `/settings` — пункт «Настройки» в меню слева. Пока одна настройка — тема: светлая (по умолчанию) или тёмная.
 Выбор хранится в этом браузере; переключить можно и из палитры (Ctrl+K → «Тема: тёмная»).
+
+## Код сервиса
+
+- `apps/central-hub/app/composables/` — `useLocalizations` (грид и фильтры); `useLanguages`, `useKeyTree`,
+  `useExportRules` — общие данные, один запрос на страницу; `useNotifyError`, `useCopy`.
+- `apps/central-hub/app/utils/` — чистые функции без Vue (история ключа, подсказки к ключу, даты,
+  множественное число), покрыты `tests/unit`.
+- Маршруты `server/api/**` объявляются через `defineHubHandler` (`server/utils/db.ts`): ошибки уходят
+  человеку понятным текстом без `try/catch` в каждом маршруте.
 
 ## Figma
 
