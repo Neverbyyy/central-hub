@@ -2,8 +2,9 @@
 import type { CommandPaletteGroup, CommandPaletteItem } from '@nuxt/ui'
 import { escapeLike } from '@amaya/l10n-core'
 
-// Палитра команд по Ctrl+K / ⌘K: найти ключ, открыть очередь перевода, применить частый фильтр
-const open = ref(false)
+// Палитра команд по Ctrl+K / ⌘K: найти ключ, открыть очередь перевода, применить частый фильтр.
+// Состояние общее: её открывает и кнопка «Найти ключ» на главной
+const open = useState('command-palette-open', () => false)
 const searchTerm = ref('')
 const searching = ref(false)
 
@@ -98,10 +99,15 @@ const groups = computed<CommandPaletteGroup<CommandPaletteItem>[]>(() => {
     { label: 'Главная', icon: 'i-lucide-house', onSelect: () => go('/') },
     { label: 'Локализации', icon: 'i-lucide-languages', onSelect: () => go('/localizations') },
     { label: 'Настройки', icon: 'i-lucide-settings', onSelect: () => go('/settings') },
-    // Инструменты дизайн-системы — те же адреса, что у карточек на главной, в новой вкладке
-    { label: 'Эмулятор InApp', icon: 'i-lucide-smartphone', onSelect: () => window.open('https://inapp-preview.vercel.app', '_blank', 'noopener') },
-    { label: 'Storybook', icon: 'i-lucide-book-open', onSelect: () => window.open('https://amaya-storybook.vercel.app', '_blank', 'noopener') },
-    { label: 'Лендинги', icon: 'i-lucide-layout-template', onSelect: () => window.open('https://landings-six-henna.vercel.app', '_blank', 'noopener') }
+    // Внешние сервисы — из того же списка, что карточки на главной (utils/services.ts), в новой вкладке
+    ...HUB_SERVICES.filter(service => service.external).map(service => ({
+      label: service.title,
+      icon: service.icon,
+      onSelect: () => {
+        open.value = false
+        window.open(service.to, '_blank', 'noopener')
+      }
+    }))
   ]
 
   return [

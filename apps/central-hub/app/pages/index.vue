@@ -1,83 +1,102 @@
 <script lang="ts" setup>
-// const supabase = useSupabaseClient()
+// Главная: сервисы по группам. Список — app/utils/services.ts, тот же, что в палитре команд
+const user = useHubUser()
+// Та же палитра, что по Ctrl+K / ⌘K (CommandPalette в лейауте)
+const paletteOpen = useState('command-palette-open', () => false)
 
-onMounted(async () => {
-  // // Пытаемся просто постучаться в таблицу (даже если она пустая)
-  // const { data, error } = await supabase.from('localizations').select('technical_key')
+const groups = HUB_SERVICE_GROUPS.map(group => ({
+  ...group,
+  services: HUB_SERVICES.filter(service => service.group === group.id)
+}))
 
-  // if (error) {
-  //   console.error('Ошибка подключения:', error.message)
-  // } else {
-  //   console.log('✅ Соединение с Supabase установлено!', data)
-  // }
-})
+// Плитка с иконкой — цветом группы: тексты — основной цвет сервиса, дизайн-система — синий, рабочие стенды — нейтральный
+const TILE: Record<HubServiceGroup, string> = {
+  texts: 'bg-primary/10 text-primary',
+  design: 'bg-info/10 text-info',
+  work: 'bg-elevated text-muted ring ring-default'
+}
 </script>
 
 <template>
-  <div class="flex flex-col gap-4 p-4">
-    <h2 class="font-bold">
-      Сервисы
-    </h2>
+  <div class="mx-auto flex w-full max-w-6xl flex-col gap-8 p-4 lg:p-6">
+    <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div class="min-w-0">
+        <h1 class="text-2xl font-bold text-highlighted">
+          {{ user.name ? `Привет, ${user.name}` : 'Amaya Central Hub' }}
+        </h1>
+        <p class="mt-1 text-muted">
+          Тексты всех продуктов, дизайн-система и стенды — в одном месте.
+        </p>
+      </div>
 
-    <!-- На телефоне карточки во всю ширину, с 640 px — в ряд с переносом -->
-    <div class="grid gap-4 mb-4 sm:flex sm:flex-wrap">
-      <UCard
-        title="Локализации"
-        description="Управление всеми локализациями с возможностью выгрузки."
-        class="w-full sm:w-xs hover:cursor-pointer transition-all shadow-xl shadow-amber-50 dark:shadow-black/40 hover:bg-elevated hover:ring-accented dark:hover:bg-gray-700/60 dark:hover:ring-gray-600 rounded-xl"
-        @click="navigateTo('/localizations')"
-      />
-
-      <NuxtLink
-        to="https://inapp-webview-hub.b-cdn.net/?debugEnabled=1&mode=hyper"
-        target="_blank"
-        external
+      <UButton
+        data-home-search
+        icon="i-lucide-search"
+        color="neutral"
+        variant="outline"
+        class="self-start sm:self-auto"
+        @click="paletteOpen = true"
       >
-        <UCard
-          title="WebViews"
-          description="Все варианты WebView используемые в тестах и не только."
-          class="w-full h-full sm:w-xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 dark:shadow-black/40 hover:bg-elevated hover:ring-accented dark:hover:bg-gray-700/60 dark:hover:ring-gray-600 rounded-xl"
-        />
-      </NuxtLink>
+        Найти ключ
+        <template #trailing>
+          <!-- На телефоне клавиатуры нет — подсказка только с 640 px -->
+          <span class="ms-2 hidden items-center gap-0.5 sm:flex">
+            <UKbd value="meta" />
+            <UKbd value="K" />
+          </span>
+        </template>
+      </UButton>
+    </header>
 
-      <!-- Storybook дизайн-системы: компоненты, токены и целые экраны пейволлов (apps/storybook) -->
-      <NuxtLink
-        to="https://amaya-storybook.vercel.app"
-        target="_blank"
-        external
+    <section
+      v-for="group in groups"
+      :key="group.id"
+      :aria-labelledby="`services-${group.id}`"
+    >
+      <h2
+        :id="`services-${group.id}`"
+        class="mb-3 text-xs font-semibold uppercase tracking-wider text-muted"
       >
-        <UCard
-          title="Дизайн-система"
-          description="Storybook: компоненты, токены, экраны пейволлов и лендингов."
-          class="w-full h-full sm:w-xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 dark:shadow-black/40 hover:bg-elevated hover:ring-accented dark:hover:bg-gray-700/60 dark:hover:ring-gray-600 rounded-xl"
-        />
-      </NuxtLink>
+        {{ group.label }}
+      </h2>
 
-      <!-- Эмулятор InApp: экраны в рамке устройства по протоколу InApp, панель, лог, ссылки сценариев (apps/inapp-preview) -->
-      <NuxtLink
-        to="https://inapp-preview.vercel.app"
-        target="_blank"
-        external
-      >
-        <UCard
-          title="Эмулятор InApp"
-          description="Пейволлы и онбординги: возможность посмотреть как будет выглядеть экран в InApp."
-          class="w-full h-full sm:w-xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 dark:shadow-black/40 hover:bg-elevated hover:ring-accented dark:hover:bg-gray-700/60 dark:hover:ring-gray-600 rounded-xl"
-        />
-      </NuxtLink>
+      <UPageGrid class="gap-4">
+        <!-- Отклик на нажатие — сразу, на касании (active), а не после перехода -->
+        <UPageCard
+          v-for="service in group.services"
+          :key="service.id"
+          :title="service.title"
+          :description="service.description"
+          :to="service.to"
+          :target="service.external ? '_blank' : undefined"
+          variant="outline"
+          class="transition-transform hover:ring-accented active:scale-[0.99]"
+          :class="group.id === 'texts' && 'sm:col-span-2 lg:col-span-3'"
+          :ui="{ leading: 'mb-3', description: 'text-sm text-muted', footer: 'pt-3' }"
+        >
+          <template #leading>
+            <span
+              class="flex size-10 items-center justify-center rounded-lg"
+              :class="TILE[group.id]"
+            >
+              <UIcon
+                :name="service.icon"
+                class="size-5"
+              />
+            </span>
+          </template>
 
-      <!-- Стенд лендингов: оглавление — все лендинги и кнопка на каждый язык (apps/landings) -->
-      <NuxtLink
-        to="https://landings-six-henna.vercel.app"
-        target="_blank"
-        external
-      >
-        <UCard
-          title="Лендинги"
-          description="Лендинги игр на основе дизайн-системы."
-          class="w-full h-full sm:w-xs hover:cursor-pointer transition-all shadow-xl shadow-purple-50 dark:shadow-black/40 hover:bg-elevated hover:ring-accented dark:hover:bg-gray-700/60 dark:hover:ring-gray-600 rounded-xl"
-        />
-      </NuxtLink>
-    </div>
+          <template #footer>
+            <span class="flex items-center gap-1 text-xs text-muted">
+              {{ service.external ? serviceHost(service) : 'Открыть' }}
+              <UIcon
+                :name="service.external ? 'i-lucide-arrow-up-right' : 'i-lucide-arrow-right'"
+                class="size-3.5"
+              />
+            </span>
+          </template>
+        </UPageCard>
+      </UPageGrid>
+    </section>
   </div>
 </template>
