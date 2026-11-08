@@ -7,15 +7,17 @@
   "editorType": ["figma"],
   "documentAccess": "dynamic-page",
   "networkAccess": {
-    "allowedDomains": ["__HUB_ORIGIN__"],
-    "reasoning": "Плагин загружает тексты и переводы из сервиса локализации Amaya Hub"
+    "allowedDomains": ["__HUB_ORIGIN__", "__REALTIME_ORIGIN__"],
+    "reasoning": "Плагин загружает тексты и переводы из сервиса локализации Amaya Hub и узнаёт о правках через Supabase Realtime"
   },
   "menu": [
     { "name": "Открыть", "command": "open" },
-    { "name": "Обновить тексты", "command": "sync" }
+    { "name": "Обновить тексты", "command": "sync" },
+    { "name": "Следить в фоне", "command": "watch" }
   ],
   "relaunchButtons": [
     { "command": "sync", "name": "Обновить тексты" },
+    { "command": "watch", "name": "Следить в фоне" },
     { "command": "open", "name": "Amaya Hub" }
   ]
 }

@@ -97,8 +97,12 @@
 
   .actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .status { min-height: 16px; }
+  .live-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 28px; }
   .live { display: flex; align-items: center; gap: 6px; cursor: pointer; }
   .live input { margin: 0; cursor: pointer; accent-color: var(--bg-brand); }
+  .live-row .link { align-self: auto; min-height: 28px; }
+  /* Строка есть всегда и в одну строку — смена состояния ничего не сдвигает; целиком — в подсказке */
+  .live-state { min-height: 16px; margin-top: -8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .extra summary { color: var(--text-secondary); cursor: pointer; }
   .extra ul { max-height: 96px; overflow-y: auto; margin: 4px 0 0; padding-left: 16px; font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 10px; }
   .foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -129,7 +133,11 @@
     <button id="load" class="primary" type="button" title="Ctrl+Enter">Загрузить</button>
   </div>
   <p id="status" class="status" role="status"></p>
-  <label class="live"><input id="live" type="checkbox" checked> Живое обновление <span id="live-state" class="muted"></span></label>
+  <div class="live-row">
+    <label class="live"><input id="live" type="checkbox" checked> Живое обновление</label>
+    <button id="background" class="link" type="button" title="Окно закроется, тексты будут обновляться дальше — до закрытия файла или запуска другого плагина" hidden>Следить в фоне</button>
+  </div>
+  <p id="live-state" class="live-state muted" role="status"></p>
   <details id="extra" class="extra" hidden>
     <summary></summary>
     <p class="muted">Переменные не удалены, чтобы не сломать привязки слоёв.</p>
@@ -145,7 +153,9 @@
   var $ = function (id) { return document.getElementById(id) }
   var send = function (message) { parent.postMessage({ pluginMessage: message }, '*') }
 
-  var state = { sections: [], nodes: new Map(), expanded: new Set(), modes: [], selected: new Set(['common']), langs: null, busy: false }
+  var state = { sections: [], nodes: new Map(), expanded: new Set(), modes: [], selected: new Set(['common']), langs: null, busy: false, loaded: false }
+  // Живое обновление: последнее изменение и ошибка связи с сервисом (секунды до повтора)
+  var live = { last: null, retryIn: 0 }
 
   var plural = function (n, forms) {
     var mod10 = n % 10, mod100 = n % 100
@@ -325,6 +335,157 @@
     details.querySelector('summary').textContent = 'Нет в выборке или устарели в сервисе: ' + current.length
   }
 
+  function renderLive() {
+    var on = $('live').checked && state.loaded
+    $('background').hidden = !on
+    if (!on) {
+      $('live-state').textContent = ''
+      return
+    }
+    var mode = live.retryIn ? 'Сервис не отвечает — повтор через ' + live.retryIn + ' с'
+      : rt.state === 'on' ? 'Мгновенно'
+      : rt.state === 'connecting' ? 'Подключаюсь…'
+      : rt.state === 'offline' ? 'Связь прервалась — раз в 5 с'
+      : 'Раз в 5 с'
+    var line = mode + (live.last ? ' · обновлено ' + live.last.changed + ' в ' + time(live.last.at) : '')
+    $('live-state').textContent = line
+    $('live-state').title = line
+  }
+
+  // --- Supabase Realtime: сигнал «ключ изменился» ---
+  // Протокол Phoenix, как у realtime-js (vsn 1.0.0 — JSON), без supabase-js: у плагина нет сборки.
+  // Тексты из события не берём — основной код спросит сервис «что изменилось» по токену плагина
+  var TOPIC = 'realtime:amaya-figma-plugin'
+  var RECONNECT = [1000, 2000, 5000, 10000, 30000]
+  var HEARTBEAT = 25000
+  var rt = { config: null, state: 'off', socket: null, ref: 0, joinRef: null, heartbeat: null, waiting: null, retry: null, tries: 0, keys: [], flush: null }
+
+  function rtSet(next) {
+    if (rt.state === next) return
+    rt.state = next
+    send({ type: 'realtime', state: next })
+    renderLive()
+  }
+
+  function rtPush(topic, event, payload, ref) {
+    if (!rt.socket || rt.socket.readyState !== 1) return
+    rt.socket.send(JSON.stringify({ topic: topic, event: event, payload: payload, ref: ref, join_ref: topic === TOPIC ? rt.joinRef : null }))
+  }
+
+  function rtCleanup() {
+    clearInterval(rt.heartbeat)
+    clearTimeout(rt.retry)
+    rt.heartbeat = rt.retry = rt.waiting = null
+    var socket = rt.socket
+    rt.socket = null
+    if (!socket) return
+    socket.onopen = socket.onmessage = socket.onclose = socket.onerror = null
+    try { socket.close() } catch (error) { /* уже закрыт */ }
+  }
+
+  function rtRetry() {
+    rtCleanup()
+    if (!rt.config) return
+    rtSet('offline')
+    rt.retry = setTimeout(rtConnect, RECONNECT[Math.min(rt.tries, RECONNECT.length - 1)])
+    rt.tries++
+  }
+
+  function rtHeartbeat() {
+    // На прошлый heartbeat ответа нет — соединение мёртвое, хотя браузер этого ещё не заметил
+    if (rt.waiting) return rtRetry()
+    rt.waiting = String(++rt.ref)
+    rtPush('phoenix', 'heartbeat', {}, rt.waiting)
+  }
+
+  function rtQueue(key) {
+    if (rt.keys.indexOf(key) === -1) rt.keys.push(key)
+    if (rt.flush) return
+    rt.flush = setTimeout(function () {
+      send({ type: 'changed', keys: rt.keys })
+      rt.keys = []
+      rt.flush = null
+    }, 100)
+  }
+
+  function rtMessage(message) {
+    if (message.event === 'phx_reply') {
+      if (message.ref === rt.waiting) rt.waiting = null
+      else if (message.ref === rt.joinRef && (!message.payload || message.payload.status !== 'ok')) rtRetry()
+      return
+    }
+    if (message.topic !== TOPIC) return
+    var payload = message.payload || {}
+    if (message.event === 'system' && payload.extension === 'postgres_changes') {
+      // Подписка на изменения таблицы готова только после этого сообщения, а не после ответа на join
+      if (payload.status === 'ok') {
+        rt.tries = 0
+        rtSet('on')
+      } else {
+        rtRetry()
+      }
+    } else if (message.event === 'postgres_changes') {
+      var record = payload.data && payload.data.record
+      if (record && record.technical_key) rtQueue(record.technical_key)
+    } else if (message.event === 'phx_error' || message.event === 'phx_close') {
+      rtRetry()
+    }
+  }
+
+  function rtConnect() {
+    rtCleanup()
+    var url = rt.config.url.replace(/^http/, 'ws').replace(/\/+$/, '') +
+      '/realtime/v1/websocket?apikey=' + encodeURIComponent(rt.config.key) + '&vsn=1.0.0'
+    var socket
+    try {
+      socket = new WebSocket(url)
+    } catch (error) {
+      rtRetry()
+      return
+    }
+    rt.socket = socket
+    socket.onopen = function () {
+      rt.joinRef = String(++rt.ref)
+      rtPush(TOPIC, 'phx_join', {
+        config: {
+          broadcast: { ack: false, self: false },
+          presence: { key: '', enabled: false },
+          postgres_changes: [{ event: '*', schema: 'public', table: 'localizations' }],
+          private: false
+        },
+        // Без сессии supabase-js отдаёт публичный ключ — так же делает грид
+        access_token: rt.config.key
+      }, rt.joinRef)
+      rt.heartbeat = setInterval(rtHeartbeat, HEARTBEAT)
+    }
+    socket.onmessage = function (event) {
+      var message
+      try {
+        message = JSON.parse(event.data)
+      } catch (error) {
+        return
+      }
+      rtMessage(message)
+    }
+    socket.onerror = function () { /* дальше придёт close */ }
+    socket.onclose = rtRetry
+  }
+
+  function rtStart(config) {
+    rt.config = config
+    rt.tries = 0
+    rt.state = 'connecting'
+    renderLive()
+    rtConnect()
+  }
+
+  function rtStop() {
+    rt.config = null
+    rtCleanup()
+    rt.state = 'off'
+    renderLive()
+  }
+
   function load() {
     if ($('load').disabled) return
     send({ type: 'load', prefixes: chosen().map(function (row) { return row.path }), langs: state.langs })
@@ -348,9 +509,11 @@
   })
   $('change-token').addEventListener('click', function () { send({ type: 'forget-token' }) })
   $('live').addEventListener('change', function () {
-    $('live-state').textContent = ''
+    live.retryIn = 0
+    renderLive()
     send({ type: 'live', on: $('live').checked })
   })
+  $('background').addEventListener('click', function () { send({ type: 'background' }) })
 
   window.onmessage = function (event) {
     var message = event.data.pluginMessage
@@ -381,21 +544,28 @@
       render()
     } else if (message.type === 'result') {
       state.busy = false
+      state.loaded = true
+      live.retryIn = 0
       setStatus(message.text + ' · ' + time(message.at), 'success')
       setExtra(message.stats.extra, false)
-      if ($('live').checked) $('live-state').textContent = '· следит за изменениями'
       render()
+      renderLive()
     } else if (message.type === 'error') {
       state.busy = false
       setStatus(message.message, 'danger')
       render()
     } else if (message.type === 'live') {
-      $('live-state').textContent = message.changed
-        ? '· обновлено ' + message.changed + ' в ' + time(message.at)
-        : '· проверено в ' + time(message.at)
+      live.retryIn = 0
+      if (message.changed) live.last = { changed: message.changed, at: message.at }
       if (message.extra.length) setExtra(message.extra, true)
+      renderLive()
     } else if (message.type === 'live-error') {
-      $('live-state').textContent = '· нет связи, повтор через ' + Math.round(message.retryIn / 1000) + ' с'
+      live.retryIn = Math.round(message.retryIn / 1000)
+      renderLive()
+    } else if (message.type === 'realtime-start') {
+      rtStart({ url: message.url, key: message.key })
+    } else if (message.type === 'realtime-stop') {
+      rtStop()
     }
   }
 </script>

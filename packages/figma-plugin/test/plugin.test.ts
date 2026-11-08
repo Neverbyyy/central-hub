@@ -4,7 +4,12 @@ import { createContext, runInContext } from 'node:vm'
 import { describe, expect, it, vi } from 'vitest'
 
 const HUB = 'https://hub.test'
-const SOURCE = readFileSync(new URL('../src/code.js', import.meta.url), 'utf8').replaceAll('__HUB_ORIGIN__', HUB)
+const SUPABASE = { url: 'https://db.test', key: 'sb_publishable_test' }
+const CODE = readFileSync(new URL('../src/code.js', import.meta.url), 'utf8').replaceAll('__HUB_ORIGIN__', HUB)
+// Как архив из сервиса: с Realtime — адрес и ключ Supabase, без него — пустые строки
+const source = (realtime: boolean) => CODE
+  .replaceAll('__SUPABASE_URL__', realtime ? SUPABASE.url : '')
+  .replaceAll('__SUPABASE_KEY__', realtime ? SUPABASE.key : '')
 
 const MODES = [['en', 'English'], ['ru', 'Russian'], ['de', 'German']].map(([code, name]) => ({ code, name }))
 const SETTINGS = { prefixes: ['common', 'app.cars2'], langs: ['en', 'ru', 'de'], live: true }
@@ -52,7 +57,7 @@ class FakeCollection {
   }
 }
 
-function setup({ command = 'open', token = 'secret', settings = null as object | null, maxModes = 10 } = {}) {
+function setup({ command = 'open', token = 'secret', settings = null as object | null, maxModes = 10, realtime = false } = {}) {
   let ids = 0
   const collections = new Map<string, FakeCollection>()
   const variables = new Map<string, FakeVariable>()
@@ -64,6 +69,9 @@ function setup({ command = 'open', token = 'secret', settings = null as object |
   const env = {
     closed: undefined as string | undefined,
     shown: false,
+    // Окно на экране: showUI({ visible: false }) и ui.hide() его прячут
+    visible: false,
+    notes: [] as { message: string, options?: { error?: boolean, button?: { text: string, action: () => void } } }[],
     relaunch: null as Record<string, string> | null,
     // Ответ сервиса на следующий запрос текстов
     respond: (_url: string): { status: number, body: unknown } => ({ status: 500, body: {} })
@@ -80,9 +88,18 @@ function setup({ command = 'open', token = 'secret', settings = null as object |
       getAsync: async (key: string) => storage.get(key),
       setAsync: async (key: string, value: string) => { storage.set(key, value) }
     },
-    showUI: () => { env.shown = true },
-    ui: { postMessage: (message: unknown) => posted.push(message), onmessage: null as null | ((message: unknown) => void) },
+    showUI: (_html: string, options: { visible?: boolean } = {}) => {
+      env.shown = true
+      env.visible = options.visible !== false
+    },
+    ui: {
+      postMessage: (message: unknown) => posted.push(message),
+      onmessage: null as null | ((message: unknown) => void),
+      hide: () => { env.visible = false },
+      show: () => { env.visible = true }
+    },
     on: () => {},
+    notify: (message: string, options?: (typeof env.notes)[number]['options']) => { env.notes.push({ message, options }) },
     closePlugin: (message?: string) => { env.closed = message ?? '' },
     variables: {
       getVariableCollectionByIdAsync: async (id: string) => collections.get(id) ?? null,
@@ -137,10 +154,24 @@ function setup({ command = 'open', token = 'secret', settings = null as object |
     return byName(name).valuesByMode[modeId]
   }
 
+  // Запросы текстов (без разделов)
+  const textRequests = () => requests.filter(r => new URL(r.url).pathname.endsWith('/texts'))
+
   return {
-    env, posted, requests, root, storage, variables, timers, ui, last, waitFor, pendingTimer, collection, byName, valueOf,
-    start: () => runInContext(SOURCE, context)
+    env, posted, requests, root, storage, variables, timers, ui, last, waitFor, pendingTimer, collection, byName, valueOf, textRequests,
+    start: () => runInContext(source(realtime), context)
   }
+}
+
+// Загрузка выборки common в открытом окне: дальше живое обновление
+async function loaded(options: Parameters<typeof setup>[0] = {}) {
+  const t = setup(options)
+  t.env.respond = () => ({ status: 200, body: texts([variable('common.a.one', 'One')], [], '2026-10-29T10:00:00.000Z') })
+  t.start()
+  await t.waitFor('sections')
+  t.ui({ type: 'load', prefixes: ['common'], langs: ['en', 'ru'] })
+  await t.waitFor('result')
+  return t
 }
 
 describe('плагин Figma: загрузка выборки', () => {
@@ -173,7 +204,7 @@ describe('плагин Figma: загрузка выборки', () => {
 
     const saved = JSON.parse(t.root.get('settings')!)
     expect(saved).toMatchObject({ prefixes: ['common', 'app.cars2'], langs: ['en', 'ru', 'de'], live: true, collectionId: t.collection().id })
-    expect(t.env.relaunch).toEqual({ sync: 'Разделы: common, app.cars2', open: '' })
+    expect(t.env.relaunch).toEqual({ sync: 'Разделы: common, app.cars2', watch: '', open: '' })
   })
 
   it('повторная загрузка меняет только изменённое, переменные те же — привязки слоёв живы', async () => {
@@ -281,6 +312,8 @@ describe('плагин Figma: живое обновление', () => {
     t.pendingTimer()!.fn()
     await t.waitFor('live', 2)
     expect(t.requests.at(-1)!.url).toContain('since=2026-10-29T10%3A00%3A05.000Z')
+    // Архив без адреса Supabase — подписку окну не заказывают
+    expect(t.posted.some(m => m.type === 'realtime-start')).toBe(false)
   })
 
   it('нет связи — повтор реже; неверный токен — опрос останавливается, окно просит токен', async () => {
@@ -330,5 +363,175 @@ describe('плагин Figma: «Обновить тексты» без окна'
     t.start()
     await vi.waitFor(() => expect(t.env.closed).toBeDefined())
     expect(t.env.closed).toBe('Тексты не обновились: Неизвестные языки: xx')
+  })
+})
+
+describe('плагин Figma: мгновенное обновление через Realtime', () => {
+  it('окно получает адрес Supabase; до подключения — опрос раз в 5 с, после — запрос сразу и страховка раз в минуту', async () => {
+    const t = await loaded({ realtime: true })
+    expect(t.last('realtime-start')).toEqual({ type: 'realtime-start', url: SUPABASE.url, key: SUPABASE.key })
+    expect(t.pendingTimer()!.delay).toBe(5000)
+
+    t.ui({ type: 'realtime', state: 'on' })
+    // Правки, сделанные пока шло подключение, — одним запросом сразу
+    expect(t.pendingTimer()!.delay).toBe(0)
+    t.pendingTimer()!.fn()
+    await t.waitFor('live')
+    expect(t.pendingTimer()!.delay).toBe(60000)
+
+    // Связь пропала — снова опрос
+    t.ui({ type: 'realtime', state: 'offline' })
+    expect(t.pendingTimer()!.delay).toBe(5000)
+
+    // Новая выборка подписку не перезапускает: она одна на все ключи
+    t.ui({ type: 'load', prefixes: ['common'], langs: ['en'] })
+    await t.waitFor('result', 2)
+    expect(t.posted.filter(m => m.type === 'realtime-start')).toHaveLength(1)
+  })
+
+  it('событие по ключу выборки — запрос через 300 мс; чужой раздел — ничего; пачка во время запроса — ещё ровно один', async () => {
+    const t = await loaded({ realtime: true })
+    t.ui({ type: 'realtime', state: 'on' })
+    t.pendingTimer()!.fn()
+    await t.waitFor('live')
+    const before = t.textRequests().length
+
+    // commonx — не раздел common
+    t.ui({ type: 'changed', keys: ['app.farm.title', 'commonx.a'] })
+    expect(t.pendingTimer()!.delay).toBe(60000)
+
+    t.env.respond = () => ({ status: 200, body: texts([variable('common.a.one', 'One!')], [], '2026-10-29T10:01:00.000Z') })
+    t.ui({ type: 'changed', keys: ['common.a.one'] })
+    const nudge = t.pendingTimer()!
+    expect(nudge.delay).toBe(300)
+    // Следующие события запланированный запрос не откладывают
+    t.ui({ type: 'changed', keys: ['common.a.two'] })
+    expect(t.pendingTimer()).toBe(nudge)
+
+    nudge.fn()
+    // Запрос в пути — пришла ещё пачка: после него — ещё один, а не по запросу на событие
+    t.ui({ type: 'changed', keys: ['common.a.one'] })
+    t.ui({ type: 'changed', keys: ['common.a.one'] })
+    const live = await t.waitFor('live', 2)
+    expect(live.changed).toBe(1)
+    expect(t.valueOf('common/a/one', 'English')).toBe('One!')
+    expect(t.pendingTimer()!.delay).toBe(300)
+    t.pendingTimer()!.fn()
+    await t.waitFor('live', 3)
+    expect(t.pendingTimer()!.delay).toBe(60000)
+    expect(t.textRequests().length).toBe(before + 2)
+  })
+
+  it('галка «Живое обновление» снята — подписка и опрос остановлены, запоздалые сообщения окна их не оживляют', async () => {
+    const t = await loaded({ realtime: true })
+    t.ui({ type: 'live', on: false })
+    expect(t.last('realtime-stop')).toBeDefined()
+    expect(t.pendingTimer()).toBeUndefined()
+
+    t.ui({ type: 'realtime', state: 'on' })
+    t.ui({ type: 'changed', keys: ['common.a.one'] })
+    expect(t.pendingTimer()).toBeUndefined()
+
+    t.ui({ type: 'live', on: true })
+    expect(t.posted.filter(m => m.type === 'realtime-start')).toHaveLength(2)
+    expect(t.pendingTimer()!.delay).toBe(0)
+  })
+
+  it('неверный токен — подписка остановлена, события больше не запускают запросы', async () => {
+    const t = await loaded({ realtime: true })
+    t.ui({ type: 'realtime', state: 'on' })
+    t.env.respond = () => ({ status: 401, body: { error: 'Неверный токен Figma' } })
+    t.pendingTimer()!.fn()
+    expect((await t.waitFor('auth')).message).toBe('Неверный токен Figma')
+    expect(t.last('realtime-stop')).toBeDefined()
+
+    const before = t.timers.length
+    t.ui({ type: 'changed', keys: ['common.a.one'] })
+    expect(t.timers.length).toBe(before)
+  })
+})
+
+describe('плагин Figma: фоновый режим', () => {
+  it('«Следить в фоне» из окна: окно скрыто, об изменениях — уведомление с кнопкой «Окно»', async () => {
+    const t = await loaded({ realtime: true })
+    expect(t.env.visible).toBe(true)
+    t.ui({ type: 'background' })
+    expect(t.env.visible).toBe(false)
+    expect(t.env.notes.at(-1)!.message).toContain('в фоне')
+
+    t.ui({ type: 'realtime', state: 'on' })
+    t.env.respond = () => ({ status: 200, body: texts([variable('common.a.one', 'One!'), variable('common.a.two', 'Two')], [], '2026-10-29T10:01:00.000Z') })
+    t.pendingTimer()!.fn()
+    await t.waitFor('live')
+    const note = t.env.notes.at(-1)!
+    expect(note.message).toBe('Amaya Hub: обновлено 2 текста')
+    // Без изменений уведомлений нет
+    const count = t.env.notes.length
+    t.pendingTimer()!.fn()
+    await t.waitFor('live', 2)
+    expect(t.env.notes).toHaveLength(count)
+
+    note.options!.button!.action()
+    expect(t.env.visible).toBe(true)
+  })
+
+  it('в фоне неверный токен — окно снова на экране и просит токен', async () => {
+    const t = await loaded({ realtime: true })
+    t.ui({ type: 'background' })
+    t.ui({ type: 'realtime', state: 'on' })
+    t.env.respond = () => ({ status: 401, body: { error: 'Неверный токен Figma' } })
+    t.pendingTimer()!.fn()
+    await t.waitFor('auth')
+    expect(t.env.visible).toBe(true)
+  })
+
+  it('в фоне нет связи — одно уведомление на весь обрыв, окно остаётся скрытым', async () => {
+    const t = await loaded({ realtime: true })
+    t.ui({ type: 'background' })
+    const notes = t.env.notes.length
+    t.env.respond = () => ({ status: 503, body: { error: 'Сервис недоступен' } })
+    t.pendingTimer()!.fn()
+    await t.waitFor('live-error')
+    t.pendingTimer()!.fn()
+    await t.waitFor('live-error', 2)
+    expect(t.env.notes.slice(notes)).toHaveLength(1)
+    expect(t.env.notes.at(-1)).toMatchObject({ message: 'Amaya Hub: Сервис недоступен. Повторяю', options: { error: true } })
+    expect(t.env.visible).toBe(false)
+  })
+
+  it('команда «Следить в фоне»: окно не показывается, итог — в уведомлении, подписка запущена', async () => {
+    const t = setup({ command: 'watch', settings: SETTINGS, realtime: true })
+    t.env.respond = () => ({ status: 200, body: texts([variable('common.a.one', 'One')]) })
+    t.start()
+    await vi.waitFor(() => expect(t.env.notes).toHaveLength(1))
+    expect(t.env.notes[0]!.message).toBe('Тексты обновлены: создано 1 из 1 · слежу в фоне до закрытия файла')
+    expect(t.env.shown).toBe(true)
+    expect(t.env.visible).toBe(false)
+    expect(t.env.closed).toBeUndefined()
+    expect(t.last('init')).toMatchObject({ hasToken: true })
+    expect(t.last('realtime-start')).toBeDefined()
+    expect(t.pendingTimer()!.delay).toBe(5000)
+  })
+
+  it('команда «Следить в фоне» без выборки — обычное окно; со снятой галкой — живое обновление включается', async () => {
+    const fresh = setup({ command: 'watch', realtime: true })
+    fresh.start()
+    await fresh.waitFor('init')
+    expect(fresh.env.visible).toBe(true)
+
+    const off = setup({ command: 'watch', settings: { ...SETTINGS, live: false }, realtime: true })
+    off.env.respond = () => ({ status: 200, body: texts([variable('common.a.one', 'One')]) })
+    off.start()
+    await vi.waitFor(() => expect(off.env.notes).toHaveLength(1))
+    expect(JSON.parse(off.root.get('settings')!).live).toBe(true)
+    expect(off.env.visible).toBe(false)
+  })
+
+  it('загрузка в фоне не удалась — окно с причиной', async () => {
+    const t = setup({ command: 'watch', settings: SETTINGS, realtime: true })
+    t.env.respond = () => ({ status: 400, body: { error: 'Неизвестные языки: xx' } })
+    t.start()
+    expect((await t.waitFor('error')).message).toBe('Неизвестные языки: xx')
+    expect(t.env.visible).toBe(true)
   })
 })

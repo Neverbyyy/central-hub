@@ -2,25 +2,49 @@
 //
 //   Открыть          окно: токен, разделы и языки, «Загрузить», живое обновление
 //   Обновить тексты  без окна: та же выборка, что в прошлый раз, итог — во всплывающем сообщении
+//   Следить в фоне   окно скрыто, тексты обновляются сразу после правки — до закрытия файла
+//                    или запуска другого плагина (Figma держит запущенным один плагин)
 //
 // Коллекция «Amaya Hub»: режим на каждый язык (English, Russian…), переменная на ключ, имя — ключ через /.
 // Переменные не пересоздаются и не удаляются — привязки текстовых слоёв переживают любое обновление.
-// Адрес сервиса подставляет сервис при скачивании плагина. Токен — figma.clientStorage (на этом компьютере),
-// выборка и коллекция — в самом файле (figma.root), у каждого файла своя.
+// Адрес сервиса и Supabase подставляет сервис при скачивании плагина. Токен — figma.clientStorage
+// (на этом компьютере), выборка и коллекция — в самом файле (figma.root), у каждого файла своя.
+//
+// Живое обновление: окно подписано на Supabase Realtime (WebSocket есть только в окне) и сообщает,
+// какие ключи изменились. Тексты берутся не из события, а у сервиса — тем же запросом «что изменилось
+// с прошлого ответа» по токену плагина. Пока Realtime не на связи — опрос раз в 5 с, на связи —
+// страховочный раз в минуту: событие может потеряться.
 // Синтаксис не новее ES2017: песочница основного потока Figma отставала от браузеров.
 
 var HUB = '__HUB_ORIGIN__'
+// Пусто — Realtime в сервисе не настроен, живое обновление идёт опросом
+var REALTIME_URL = '__SUPABASE_URL__'
+var REALTIME_KEY = '__SUPABASE_KEY__'
 var COLLECTION_NAME = 'Amaya Hub'
 // Служебная переменная с именем режима — видно, какой язык включён у фрейма
 var LANGUAGE_KEY = '@language'
 var LIVE_INTERVAL = 5000
 var LIVE_MAX_INTERVAL = 60000
+var SAFETY_INTERVAL = 60000
+// Пачка событий (импорт, «Утвердить всё») — один запрос, а не по запросу на строку
+var NUDGE_DELAY = 300
+var WINDOW_BUTTON = { text: 'Окно', action: showWindow }
 
 var liveTimer = null
 var liveDelay = LIVE_INTERVAL
 // now из ответа сервиса: следующий запрос живого обновления просит изменения с этого момента
 var cursor = null
 var running = Promise.resolve()
+// Подписка в окне: off — не запущена, connecting, on, offline (окно само переподключается)
+var realtime = 'off'
+// Запрос живого обновления в пути; dirty — пока он шёл, пришли новые события
+var polling = false
+var dirty = false
+// Запрос по событию уже запланирован — следующие события его не откладывают
+var nudged = false
+// Окно скрыто: итоги и ошибки — уведомлениями Figma
+var background = false
+var offlineNotified = false
 
 function post(message) {
   figma.ui.postMessage(message)
@@ -209,7 +233,7 @@ async function fullSync(settings) {
   var stats = await exclusive(function () { return applyTexts(payload, settings, true) })
   cursor = payload.now
   // Кнопки плагина в правой панели файла, когда ничего не выделено
-  figma.root.setRelaunchData({ sync: 'Разделы: ' + settings.prefixes.join(', '), open: '' })
+  figma.root.setRelaunchData({ sync: 'Разделы: ' + settings.prefixes.join(', '), watch: '', open: '' })
   return stats
 }
 
@@ -229,9 +253,43 @@ function summary(stats) {
   return 'Тексты обновлены: ' + parts.join(', ') + ' из ' + stats.total
 }
 
+function updatedText(n) {
+  return 'обновлено ' + n + ' ' + plural(n, ['текст', 'текста', 'текстов'])
+}
+
+function showWindow() {
+  background = false
+  figma.ui.show()
+}
+
+function goBackground() {
+  background = true
+  offlineNotified = false
+  figma.ui.hide()
+  figma.notify('Amaya Hub следит за текстами в фоне — до закрытия файла или запуска другого плагина', { timeout: 6000, button: WINDOW_BUTTON })
+}
+
+function realtimeEnabled() {
+  return !!REALTIME_URL && REALTIME_URL.indexOf('__') !== 0 && !!REALTIME_KEY && REALTIME_KEY.indexOf('__') !== 0
+}
+
+function startRealtime() {
+  // Подписка одна на все ключи — новая выборка её не перезапускает
+  if (!realtimeEnabled() || realtime !== 'off') return
+  realtime = 'connecting'
+  post({ type: 'realtime-start', url: REALTIME_URL, key: REALTIME_KEY })
+}
+
+function stopRealtime() {
+  if (realtime === 'off') return
+  realtime = 'off'
+  post({ type: 'realtime-stop' })
+}
+
 function stopLive() {
   if (liveTimer) clearTimeout(liveTimer)
   liveTimer = null
+  nudged = false
 }
 
 function scheduleLive(delay) {
@@ -239,31 +297,105 @@ function scheduleLive(delay) {
   liveTimer = setTimeout(pollLive, delay)
 }
 
+// Пауза до следующего запроса без событий: с Realtime — страховка, без него — опрос
+function idleDelay() {
+  return realtime === 'on' ? SAFETY_INTERVAL : liveDelay
+}
+
+function startLive() {
+  startRealtime()
+  scheduleLive(idleDelay())
+}
+
+function liveOn(settings) {
+  return !!settings && settings.live !== false && !!cursor
+}
+
 async function pollLive() {
   liveTimer = null
+  nudged = false
   var settings = readSettings()
-  if (!settings || settings.live === false || !cursor) return
+  if (!liveOn(settings)) return
+  polling = true
+  dirty = false
   try {
     var payload = await api('/api/figma/plugin/texts', textsParams(settings, cursor))
     var stats = await exclusive(function () { return applyTexts(payload, settings, false) })
     cursor = payload.now
     liveDelay = LIVE_INTERVAL
-    post({ type: 'live', at: Date.now(), changed: stats.created + stats.updated, extra: stats.extra })
-    scheduleLive(liveDelay)
+    offlineNotified = false
+    var changed = stats.created + stats.updated
+    post({ type: 'live', at: Date.now(), changed: changed, extra: stats.extra })
+    if (background && changed) figma.notify('Amaya Hub: ' + updatedText(changed), { timeout: 3000, button: WINDOW_BUTTON })
+    polling = false
+    scheduleLive(dirty ? NUDGE_DELAY : idleDelay())
   } catch (error) {
+    polling = false
     if (error.auth) {
-      post({ type: 'auth', message: error.message })
+      report(error)
       return
     }
     // Нет связи — пробуем реже, но не бросаем
     liveDelay = Math.min(liveDelay * 2, LIVE_MAX_INTERVAL)
     post({ type: 'live-error', message: error.message, retryIn: liveDelay })
+    if (background && !offlineNotified) {
+      offlineNotified = true
+      figma.notify('Amaya Hub: ' + error.message + '. Повторяю', { error: true, button: WINDOW_BUTTON })
+    }
     scheduleLive(liveDelay)
   }
 }
 
+function inSelection(key, prefixes) {
+  return prefixes.some(function (prefix) { return key === prefix || key.indexOf(prefix + '.') === 0 })
+}
+
+// Окно: эти ключи изменились в сервисе. Чужие разделы не трогаем, пачку собираем в один запрос
+function onChanged(keys) {
+  var settings = readSettings()
+  // Подписку остановили (галка, неверный токен) — запоздалые события окна не в счёт
+  if (realtime === 'off' || !liveOn(settings)) return
+  if (!keys.some(function (key) { return inSelection(key, settings.prefixes) })) return
+  if (polling) {
+    dirty = true
+    return
+  }
+  if (nudged) return
+  scheduleLive(NUDGE_DELAY)
+  nudged = true
+}
+
+function onRealtime(state) {
+  var was = realtime
+  // Остановленную подписку не оживляет запоздалое сообщение окна
+  if (was === 'off') return
+  realtime = state
+  if (!liveOn(readSettings())) return
+  // Подключились — одним запросом забираем то, что поменялось, пока шло подключение
+  var connected = state === 'on' && was !== 'on'
+  // Связь пропала — снова опрос
+  var lost = state === 'offline' && was === 'on'
+  if (polling) {
+    // Идущий запрос сам выберет паузу по новому состоянию; после подключения нужен ещё один
+    if (connected) dirty = true
+    return
+  }
+  if (connected) scheduleLive(0)
+  else if (lost) scheduleLive(liveDelay)
+}
+
 function report(error) {
-  post(error.auth ? { type: 'auth', message: error.message } : { type: 'error', message: error.message })
+  if (error.auth) {
+    stopLive()
+    stopRealtime()
+    // Токен вводят в окне — прятать его дальше нельзя
+    if (background) showWindow()
+    post({ type: 'auth', message: error.message })
+    return
+  }
+  // Загрузка не удалась — в фоне ничего бы не обновлялось молча: показываем окно с причиной
+  if (background) showWindow()
+  post({ type: 'error', message: error.message })
 }
 
 async function runFull(settings) {
@@ -273,9 +405,11 @@ async function runFull(settings) {
     var stats = await fullSync(settings)
     post({ type: 'result', stats: stats, text: summary(stats), at: Date.now() })
     liveDelay = LIVE_INTERVAL
-    if (settings.live !== false) scheduleLive(LIVE_INTERVAL)
+    if (settings.live !== false) startLive()
+    return stats
   } catch (error) {
     report(error)
+    return null
   }
 }
 
@@ -296,6 +430,7 @@ async function onMessage(message) {
     if ((await loadSections()) && settings) await runFull(settings)
   } else if (message.type === 'forget-token') {
     stopLive()
+    stopRealtime()
     await figma.clientStorage.setAsync('token', '')
     post({ type: 'auth', message: '' })
   } else if (message.type === 'load') {
@@ -310,13 +445,26 @@ async function onMessage(message) {
     if (!current) return
     current.live = !!message.on
     saveSettings(current)
-    if (current.live) scheduleLive(0)
-    else stopLive()
+    if (current.live) {
+      startRealtime()
+      scheduleLive(0)
+    } else {
+      stopLive()
+      stopRealtime()
+    }
+  } else if (message.type === 'changed') {
+    onChanged(message.keys || [])
+  } else if (message.type === 'realtime') {
+    onRealtime(message.state)
+  } else if (message.type === 'background') {
+    // Кнопка видна только при живом обновлении после загрузки — без них в фоне нечего делать
+    if (liveOn(readSettings())) goBackground()
   }
 }
 
-async function openWindow() {
-  figma.showUI(__html__, { width: 340, height: 540, themeColors: true, title: 'Amaya Hub — локализация' })
+// Окно — видимое или скрытое (в фоне оно держит подписку Realtime). Возвращает выборку файла и токен
+async function setupWindow(visible) {
+  figma.showUI(__html__, { width: 340, height: 560, themeColors: true, title: 'Amaya Hub — локализация', visible: visible })
   figma.on('close', stopLive)
   figma.ui.onmessage = function (message) {
     onMessage(message).catch(report)
@@ -324,8 +472,30 @@ async function openWindow() {
   var settings = readSettings()
   var token = await getToken()
   post({ type: 'init', hub: HUB, hasToken: !!token, settings: settings })
-  if (!token) return
-  if ((await loadSections()) && settings) await runFull(settings)
+  return { settings: settings, token: token }
+}
+
+async function openWindow() {
+  var opened = await setupWindow(true)
+  if (!opened.token) return
+  if ((await loadSections()) && opened.settings) await runFull(opened.settings)
+}
+
+// «Следить в фоне»: без окна, если плагин уже настроен в этом файле; иначе — окно
+async function watchCommand() {
+  var settings = readSettings()
+  if (!settings || !(await getToken())) return openWindow()
+  // Слежение в фоне и есть живое обновление — включаем его, даже если в окне сняли галку
+  if (settings.live === false) {
+    settings.live = true
+    saveSettings(settings)
+  }
+  background = true
+  await setupWindow(false)
+  // Разделы — чтобы окно, если его откроют из уведомления, было готово
+  if (!(await loadSections())) return
+  var stats = await runFull(settings)
+  if (stats) figma.notify(summary(stats) + ' · слежу в фоне до закрытия файла', { timeout: 5000, button: WINDOW_BUTTON })
 }
 
 // «Обновить тексты»: без окна, если плагин уже настроен в этом файле; иначе — окно
@@ -340,6 +510,8 @@ async function syncCommand() {
   }
 }
 
-(figma.command === 'sync' ? syncCommand() : openWindow()).catch(function (error) {
+var COMMANDS = { sync: syncCommand, watch: watchCommand }
+
+;(COMMANDS[figma.command] || openWindow)().catch(function (error) {
   figma.closePlugin('Amaya Hub: ' + error.message)
 })
