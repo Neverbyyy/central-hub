@@ -206,7 +206,12 @@ const buy = () => {
             {{ title }}
           </DsText>
 
-          <div class="ds:flex ds:w-full ds:max-w-80 ds:flex-col">
+          <!-- On click: тарифы и кнопка уже колонки, поля — у самой колонки. Не margin у кнопки: block — это width: 100%,
+               и поле сдвигало её вправо за колонку, а тарифы казались прижатыми влево -->
+          <div
+            class="ds:flex ds:w-full ds:max-w-80 ds:flex-col"
+            :class="config.mode === 'trio' ? 'ds:px-4' : ''"
+          >
             <DsBenefitList
               v-if="config.mode === 'switch'"
               class="ds:mb-2"
@@ -222,7 +227,6 @@ const buy = () => {
             />
             <DsPlanPicker
               v-model="selected"
-              :class="config.mode === 'trio' ? 'ds:px-4' : ''"
               :plans="plans"
               :label="t(tx.plans)"
               :disabled="busy"
@@ -230,7 +234,6 @@ const buy = () => {
             <DsButton
               data-pw="cta"
               class="ds:mt-2"
-              :class="config.mode === 'trio' ? 'ds:mx-4' : ''"
               block
               :loading="!!purchasing || forcePurchasing"
               :loading-label="buttonText"

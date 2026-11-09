@@ -2,6 +2,22 @@ import { STORY_PREPARED } from 'storybook/internal/core-events'
 import { addons } from 'storybook/manager-api'
 import type { Parameters } from 'storybook/internal/types'
 
+// Переехавшие истории: экраны одной игры собраны в её выпадающий список (Farm: On start и On click — один файл,
+// лендинги Cars 2 и Cars 2 Go — один заголовок), и у них новые адреса. Ссылки, которые уже разослали, ведут на новые:
+// адрес подменяется до того, как Storybook его прочтёт
+const MOVED: Record<string, string> = {
+  'пейволлы-farm-on-start--farm-on-start': 'пейволлы-farm--on-start',
+  'пейволлы-farm-on-click--farm-on-click': 'пейволлы-farm--on-click',
+  'лендинги-cars-2-go--cars-2-go': 'лендинги-cars-2--cars-2-go'
+}
+const url = new URL(window.location.href)
+const path = url.searchParams.get('path') ?? ''
+const moved = /^\/(?:story|docs)\/([^/?]+)/.exec(path)?.[1]
+if (moved && MOVED[moved]) {
+  url.searchParams.set('path', path.replace(moved, MOVED[moved]))
+  window.history.replaceState(window.history.state, '', url)
+}
+
 // Размер экрана по умолчанию — `parameters.viewport.initial`. `globals.viewport` в истории для этого не годится: Storybook
 // закрепляет такое значение, и тулбар, поля W/H и ручки рамки перестают на него влиять. Здесь размер выставляется при входе
 // в раздел с другим размером по умолчанию; внутри раздела он остаётся таким, как выбрал пользователь. Размер из адреса страницы

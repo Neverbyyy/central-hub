@@ -1,6 +1,6 @@
 // Скриншоты страницы или истории Storybook на размерах макетов — для сравнения с эталоном из Figma.
 //   node tools/shot.mjs <адрес> <папка> [667x375 844x390 1024x768 …] [--full] [--click <селектор>]… [--wait <мс>]
-//   node tools/shot.mjs "http://localhost:6006/iframe.html?id=пейволлы-farm-on-start--farm-on-start&viewMode=story" shots
+//   node tools/shot.mjs "http://localhost:6006/iframe.html?id=пейволлы-farm--on-start&viewMode=story" shots
 //   node tools/shot.mjs "<онбординг>" shots 844x390 --click ".ds-button" — второй шаг: нажать главную кнопку и снять
 // Пишет <папка>/<ширина>x<высота>.png (после кликов — …-<число кликов>.png) и выводит ошибки консоли,
 // неудачные запросы с адресом и горизонтальную прокрутку, если они есть

@@ -11,6 +11,23 @@ const LANDING_STORIES = /stories[\\/]Landings\.stories\.ts$/
 const landings = () => readdirSync(LANDINGS_DIR, { withFileTypes: true }).filter(entry => entry.isDirectory()).map(entry => entry.name)
 // cars2-go → Cars2Go: имя экспорта, из него Storybook строит подпись «Cars 2 Go»
 const exportName = (landing: string) => landing.replace(/(?:^|-)(\w)/g, (_, letter: string) => letter.toUpperCase())
+// Игра — начало имени папки: cars2 и cars2-go — лендинги Cars 2
+const game = (landing: string) => landing.split('-')[0]!
+const label = (name: string) => storyNameFromExport(exportName(name))
+
+/**
+ * Где лендинг в боковой панели: заголовок — игра («Лендинги/Cars 2»), имя истории — лендинг. Несколько лендингов
+ * у игры — выпадающий список с такой же иконкой, как у пейволлов и компонентов («Cars 2» → Cars 2, Cars 2 Go), один —
+ * строкой («Farm»: имя истории совпадает с заголовком, Storybook не делает из него список).
+ * Адрес истории — от заголовка и имени экспорта: у основного лендинга игры он не меняется, когда появляется второй.
+ */
+export function landingEntry(landing: string) {
+  return {
+    exportName: exportName(landing),
+    name: label(landing),
+    title: `Лендинги/${label(game(landing))}`
+  }
+}
 
 const landingStories: Plugin = {
   name: 'amaya:landing-stories',
@@ -38,13 +55,8 @@ const config: StorybookConfig = {
   experimental_indexers: indexers => [
     {
       test: LANDING_STORIES,
-      createIndex: async fileName => landings().map(landing => ({
-        type: 'story',
-        importPath: fileName,
-        exportName: exportName(landing),
-        // Двухуровневый заголовок, как у других разделов: файл один, но у каждой истории свой, поэтому «Лендинги» — раздел
-        title: `Лендинги/${storyNameFromExport(exportName(landing))}`
-      }))
+      // Файл один, но у каждой истории свой заголовок, поэтому «Лендинги» — раздел, а лендинги игры — её список
+      createIndex: async fileName => landings().map(landing => ({ type: 'story' as const, importPath: fileName, ...landingEntry(landing) }))
     },
     ...(indexers ?? [])
   ],

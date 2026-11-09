@@ -43,6 +43,8 @@ const SCREENS = [
     key: 'farm-start',
     title: 'Farm On start',
     id: 'ios_as_farm_ds1_varb_ut1_pw_switch_v1',
+    // Тарифы и кнопка — одной колонкой: центры совпадают, кнопка не шире колонки
+    column: true,
     locked: '[role="radio"], [role="switch"]',
     change: async frame => frame.evaluate(() => document.querySelectorAll('[role="radio"]')[1]?.click()),
     changed: frame => frame.evaluate(() => document.querySelectorAll('[role="radio"]')[1]?.getAttribute('aria-checked') === 'true')
@@ -51,6 +53,7 @@ const SCREENS = [
     key: 'farm-click',
     title: 'Farm On click',
     id: 'ios_as_farm_ds1_varb_ut1_pw_trio_v1',
+    column: true,
     locked: '[role="radio"]',
     change: async frame => frame.evaluate(() => document.querySelectorAll('[role="radio"]')[2]?.click()),
     changed: frame => frame.evaluate(() => document.querySelectorAll('[role="radio"]')[2]?.getAttribute('aria-checked') === 'true')
@@ -62,6 +65,7 @@ const SCREENS = [
     id: 'ios_pp_babycare_ds1_varb_pw_duo_v1',
     orient: 'portrait',
     devices: ['se', 'iphone8', 'android', 'iphone', 'promax', 'ipad', 'ipadmini'],
+    column: true,
     locked: '[role="radio"]',
     change: async frame => frame.evaluate(() => document.querySelectorAll('[role="radio"]')[1]?.click()),
     changed: frame => frame.evaluate(() => document.querySelectorAll('[role="radio"]')[1]?.getAttribute('aria-checked') === 'true')
@@ -221,6 +225,21 @@ try {
       }).filter(box => box.w > 0))
       const outside = boxes.filter(box => box.x < -1 || box.y < -1 || box.x + box.w > geometry.width + 1 || box.y + box.h > geometry.height + 1).map(box => box.name)
       check(`${name} ${device} (${geometry.width}×${geometry.height}), немецкий: всё на экране`, outside.length === 0, outside.join(', '))
+      if (screen.column) {
+        // Farm On click: у кнопки были и «во всю ширину», и поля — она сдвигалась вправо за колонку, тарифы казались прижатыми влево
+        const axis = await frame.evaluate(() => {
+          const center = (el) => {
+            const r = el.getBoundingClientRect()
+            return (r.left + r.right) / 2
+          }
+          const cta = document.querySelector('[data-pw="cta"]')
+          const column = cta.parentElement.getBoundingClientRect()
+          const button = cta.getBoundingClientRect()
+          const centers = [center(cta), ...[...document.querySelectorAll('[role="radio"]')].map(center)]
+          return { spread: Math.max(...centers) - Math.min(...centers), inside: button.left >= column.left - 1 && button.right <= column.right + 1 }
+        })
+        check(`${name} ${device}: тарифы и кнопка по одной оси, кнопка в колонке`, axis.spread <= 1 && axis.inside, `разброс ${Math.round(axis.spread)} px${axis.inside ? '' : ', кнопка вылезает'}`)
+      }
       await page.close()
     }
 
