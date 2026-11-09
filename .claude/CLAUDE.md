@@ -9,7 +9,7 @@ apps/central-hub      сервис локализации (Nuxt 4) — текс�
 apps/storybook        витрина: пейволлы и лендинги целиком, компоненты, Rive, токены
 apps/inapp-preview    экраны пейволлов как варианты InApp: src/variants/ios/as/<игра>/ds1/<экран>/
 apps/landings         лендинги (Nuxt 4, prerender): app/landings/<путь>/config.ts + art/
-packages/tokens       токены → CSS-переменные и тема Tailwind; темы base, cars2, farm, cars2-go
+packages/tokens       токены → CSS-переменные и тема Tailwind; темы base, cars2, farm, cars2-go, babycare
 packages/ui           компоненты Ds* и пресет Tailwind (ds:); манифест — packages/ui/manifest.md
 packages/paywall-kit  интерфейс окружения InApp, usePaywall, шаблоны Pw*
 packages/landing-kit  конфиг лендинга, track, ссылки в сторы с UTM, блоки Lk*

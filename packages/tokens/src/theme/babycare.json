@@ -1,0 +1,85 @@
+{
+  "$description": "Тема Baby Care по макету пейволла B (Figma 96:21, 9 ноя 2026): только отличия от base. Экран вертикальный: арт сверху, ниже на голубом градиенте белые заголовок и список, белые карточки тарифов, зелёная кнопка. Заголовки и тарифы — Nunito, подписи и документы — Open Sans.",
+  "color": {
+    "$type": "color",
+    "bg": {
+      "screen": {
+        "$value": "{color.babycare.sky}"
+      },
+      "hero": {
+        "$value": "{color.babycare.sky}"
+      }
+    },
+    "text": {
+      "primary": {
+        "$value": "{color.white}",
+        "$description": "Заголовок, список, «Cancel anytime» — белые; текст тарифов — color.plan.text*"
+      },
+      "link": {
+        "$value": "{color.babycare.legal}"
+      }
+    },
+    "plan": {
+      "bg": {
+        "$value": "{color.babycare.plan}"
+      },
+      "bg-selected": {
+        "$value": "{color.white}"
+      },
+      "text": {
+        "$value": "{color.babycare.ink-50}"
+      },
+      "text-selected": {
+        "$value": "{color.babycare.ink}"
+      }
+    },
+    "radio": {
+      "bg": {
+        "$value": "{color.babycare.radio}"
+      },
+      "border": {
+        "$value": "{color.babycare.radio-line}"
+      }
+    },
+    "badge": {
+      "bg": {
+        "$value": "{color.babycare.orange}"
+      }
+    },
+    "bullet": {
+      "$value": "{color.babycare.orange}"
+    },
+    "close": {
+      "icon": {
+        "$value": "{color.babycare.close}"
+      }
+    }
+  },
+  "surface": {
+    "screen": {
+      "$value": "{gradient.babycare.screen}"
+    },
+    "cta": {
+      "$value": "{gradient.babycare.cta}"
+    },
+    "radio-dot": {
+      "$value": "{color.babycare.radio-on}"
+    }
+  },
+  "shadow": {
+    "cta": {
+      "$value": "{shadow.babycare.cta}"
+    }
+  },
+  "font": {
+    "title": {
+      "$value": "{font.nunito}"
+    },
+    "body": {
+      "$value": "{font.nunito}"
+    },
+    "button": {
+      "$value": "{font.nunito}"
+    }
+  }
+}

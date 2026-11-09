@@ -12,7 +12,7 @@ import { launch } from '../browser.mjs'
 const [source, target, ...rest] = process.argv.slice(2)
 const options = Object.fromEntries(rest.map(arg => arg.split('=')))
 const allSizes = Object.entries(options).filter(([name]) => ['small', 'wide', 'medium', 'large'].includes(name)).map(([name, width]) => [name, Number(width)])
-if (!source || !target || !sizes.length) throw new Error('node tools/figma/image-set.mjs <исходник.png> <папка/имя> small=<ширина> [wide=…] [medium=…] [large=…]')
+if (!source || !target || !allSizes.length) throw new Error('node tools/figma/image-set.mjs <исходник.png> <папка/имя> small=<ширина> [wide=…] [medium=…] [large=…]')
 const crop = options.crop ? options.crop.split(',').map(Number) : [0, 0, 1, 1]
 const quality = Number(options.quality ?? 0.8)
 // Лендингу PNG не нужен: png=no

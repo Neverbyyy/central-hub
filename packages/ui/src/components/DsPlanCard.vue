@@ -4,13 +4,16 @@
  * Когда использовать: только внутри DsPlanPicker — выбор, клавиатуру и блокировку на время покупки держит он.
  *
  * Две раскладки: split — название слева, цена справа (Farm, стиль Amaya Plus); stack — радиокнопка и строки
- * столбиком (попап тарифов Cars 2). Вид из темы: фон и рамка color.plan.*, толщина рамки line.plan / line.plan-selected,
- * поля spacing.plan-x / plan-y, радиус radius.plan. tint — свои цвета у тарифа (Farm On click): рамка всегда,
- * фон у выбранного. emphasis — название и цена жирные (тариф с триалом, тарифы On click).
+ * столбиком (попап тарифов Cars 2). Вид из темы: фон, рамка и текст color.plan.* (у невыбранного текст может быть
+ * приглушён — Baby Care), толщина рамки line.plan / line.plan-selected, поля spacing.plan-x / plan-y, радиус radius.plan.
+ * tint — свои цвета у тарифа (Farm On click): рамка всегда, фон у выбранного. emphasis — название и цена жирные
+ * (тариф с триалом, тарифы On click). Индикатор: radio — кольцо с точкой (Cars 2), check — круг, у выбранного залитый
+ * surface.radio-dot с галочкой color.check.icon (Baby Care), размер spacing.icon-lg.
  * Рамка нарисована тенью внутрь, а не border: у выбранной она толще, и вёрстка от этого не сдвигается.
  */
 import { usePressed } from '../composables/usePressed'
 import DsBadge from './DsBadge.vue'
+import DsIcon from './DsIcon.vue'
 
 const props = withDefaults(defineProps<{
   selected?: boolean
@@ -21,7 +24,7 @@ const props = withDefaults(defineProps<{
   note?: string
   badge?: string
   layout?: 'split' | 'stack'
-  indicator?: 'radio' | 'none'
+  indicator?: 'radio' | 'check' | 'none'
   tint?: 'sky' | 'violet' | 'pink'
   emphasis?: boolean
   disabled?: boolean
@@ -57,10 +60,27 @@ const onClick = () => {
     :aria-disabled="disabled || undefined"
     :data-tint="tint"
     :data-pressed="pressed && !disabled ? '' : undefined"
-    class="ds-plan ds:relative ds:flex ds:w-full ds:min-h-touch ds:items-center ds:rounded-plan ds:px-plan-x ds:py-plan-y ds:text-start ds:text-text-primary ds:no-select ds:transition-transform ds:duration-(--ds-duration-fast) ds:ease-standard ds:data-pressed:scale-98"
+    class="ds-plan ds:relative ds:flex ds:w-full ds:min-h-touch ds:items-center ds:rounded-plan ds:px-plan-x ds:py-plan-y ds:text-start ds:no-select ds:transition-transform ds:duration-(--ds-duration-fast) ds:ease-standard ds:data-pressed:scale-98"
     v-on="handlers"
     @click="onClick"
   >
+    <!-- Круг с галочкой: заливка и галочка проявляются (opacity и transform), рамка пустого круга под ними -->
+    <span
+      v-if="indicator === 'check'"
+      class="ds:relative ds:me-2 ds:inline-flex ds:size-icon-lg ds:shrink-0 ds:items-center ds:justify-center ds:rounded-full ds:border ds:border-radio-border ds:bg-radio-bg"
+      aria-hidden="true"
+    >
+      <span
+        class="ds:absolute ds:-inset-px ds:flex ds:items-center ds:justify-center ds:rounded-full ds:surface-radio-dot ds:text-check-icon ds:transition-[scale,opacity] ds:duration-(--ds-duration-fast) ds:ease-standard"
+        :class="selected ? 'ds:scale-100 ds:opacity-100' : 'ds:scale-50 ds:opacity-0'"
+      >
+        <DsIcon
+          name="check"
+          size="sm"
+        />
+      </span>
+    </span>
+
     <span
       v-if="indicator === 'radio'"
       class="ds:me-2 ds:inline-flex ds:size-4 ds:shrink-0 ds:items-center ds:justify-center ds:self-start ds:rounded-full ds:border ds:border-radio-border ds:bg-radio-bg"
@@ -143,11 +163,13 @@ const onClick = () => {
 
   background: var(--ds-color-plan-bg);
   box-shadow: inset 0 0 0 var(--ds-line-plan) var(--ds-plan-border);
+  color: var(--ds-color-plan-text);
 }
 
 .ds-plan[aria-checked='true'] {
   background: var(--ds-plan-bg-selected);
   box-shadow: inset 0 0 0 var(--ds-line-plan-selected) var(--ds-plan-border-selected);
+  color: var(--ds-color-plan-text-selected);
 }
 
 .ds-plan[data-tint='sky'] {

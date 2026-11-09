@@ -15,6 +15,7 @@
     "@amaya/art": "workspace:*",
     "@amaya/locales": "workspace:*",
     "@amaya/paywall-kit": "workspace:*",
+    "@amaya/pricing": "workspace:*",
     "@amaya/tokens": "workspace:*",
     "@amaya/ui": "workspace:*",
     "vue": "^3.5.33",

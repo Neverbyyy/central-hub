@@ -25,6 +25,12 @@ export const farmSwitchPlans = (t: T): DsPlan[] => [
   { key: 'week', title: t('common.plan.weekly_access'), price: DEMO_PRICES.farm.week, period: t('common.period.per_week') }
 ]
 
+/** Тарифы Baby Care (пейволл B): год без триала с плашкой и неделя с триалом — цены как у Farm. */
+export const babycarePlans = (t: T): DsPlan[] => [
+  { key: 'year', title: t('common.plan.yearly'), subtitle: t('common.price.just_per_year', { price: DEMO_PRICES.farm.year }), price: DEMO_PRICES.farm.yearWeek, period: t('common.period.per_week'), badge: t('common.badge.best_offer') },
+  { key: 'week-trial', title: t('common.trial.days_free', { days: TRIAL_DAYS }, TRIAL_DAYS), price: t('common.trial.then_price', { price: DEMO_PRICES.farm.week }), period: t('common.period.per_week') }
+]
+
 /** Тарифы Farm On click: неделя, месяц и год, у каждого свой цвет (режим trio). */
 export const farmTrioPlans = (t: T): DsPlan[] => [
   { key: 'week', title: t('common.plan.weekly'), price: DEMO_PRICES.farm.week, period: t('common.period.per_week'), tint: 'sky', emphasis: true },

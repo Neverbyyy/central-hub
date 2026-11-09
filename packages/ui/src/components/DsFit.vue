@@ -6,6 +6,8 @@
  * Когда использовать: экран без прокрутки (пейволл), который должен целиком помещаться и на низких экранах —
  * iPhone SE в альбомной (568×320), вебвью в половину окна. Не для текста, который можно прокрутить.
  *
+ * grow — блок и увеличивается до места (не больше maxScale): вертикальный экран, свёрстанный под телефон 390×844,
+ * на iPad крупнее целиком, а не телефонного размера посередине (пейволл Baby Care).
  * Сколько высоты нужно содержимому — по умолчанию его естественная высота (scrollHeight). Если содержимое само
  * растягивается на всю высоту (ряд с прокруткой), нужную высоту даёт экран: проп measure.
  * Пересчёт — при изменении размера блока и содержимого (смена языка, другие тарифы); до первой отрисовки.
@@ -21,10 +23,13 @@ const props = withDefaults(defineProps<{
   maxScale?: () => number
   // Меньше не уменьшаем: текст должен оставаться читаемым
   minScale?: number
+  // Места больше, чем нужно, — увеличить до него (предел — maxScale)
+  grow?: boolean
 }>(), {
   measure: undefined,
   maxScale: undefined,
-  minScale: 0.6
+  minScale: 0.6,
+  grow: false
 })
 
 const box = ref<HTMLElement | null>(null)
@@ -47,7 +52,23 @@ const fit = () => {
   // Мерим в своих размерах: масштаб 1, потом сразу нужный — в одном такте, кадр не отрисуется посередине
   apply(1)
   const available = el.clientHeight
-  const need = props.measure ? props.measure() : content.scrollHeight
+  // Для увеличения — высота самого содержимого: scrollHeight обёртки не бывает меньше её собственной высоты
+  const child = content.firstElementChild as HTMLElement | null
+  const need = props.measure ? props.measure() : props.grow && child ? child.offsetHeight : content.scrollHeight
+  if (props.grow) {
+    // Разница меньше пикселя — масштаб 1: не размывать текст ради долей пикселя
+    let scale = Math.min(need > 0 ? available / need : 1, props.maxScale?.() ?? Infinity)
+    scale = Math.abs(scale * need - need) < 1 ? 1 : Math.max(props.minScale, scale)
+    // Крупнее — значит уже по логической ширине: текст переносится чаще и блок выше, чем при замере.
+    // Перемеряем в новой ширине и уменьшаем; уменьшение ширину возвращает, поэтому сходится за шаг-два
+    for (let step = 0; step < 3; step++) {
+      apply(scale)
+      const height = props.measure ? props.measure() : child?.offsetHeight ?? need
+      if (height * scale <= available + 0.5 || scale <= props.minScale) break
+      scale = Math.max(props.minScale, available / height)
+    }
+    return
+  }
   const byHeight = need > available + 0.5 ? available / need : 1
   apply(Math.max(props.minScale, Math.min(1, byHeight, props.maxScale?.() ?? 1)))
 }

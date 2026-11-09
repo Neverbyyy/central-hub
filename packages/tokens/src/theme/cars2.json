@@ -72,6 +72,12 @@
       },
       "border-selected": {
         "$value": "{color.cars2.green-dark}"
+      },
+      "text": {
+        "$value": "{color.cars2.black-blue-text}"
+      },
+      "text-selected": {
+        "$value": "{color.cars2.black-blue-text}"
       }
     },
     "radio": {

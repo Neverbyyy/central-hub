@@ -105,6 +105,9 @@ importers:
       '@amaya/paywall-kit':
         specifier: workspace:*
         version: link:../../packages/paywall-kit
+      '@amaya/pricing':
+        specifier: workspace:*
+        version: link:../../packages/pricing
       '@amaya/tokens':
         specifier: workspace:*
         version: link:../../packages/tokens

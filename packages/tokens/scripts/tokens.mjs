@@ -13,7 +13,7 @@ import breakpoints from '../src/breakpoints.json' with { type: 'json' }
 
 // Tailwind собирается с prefix(ds): переменные темы у него --ds-*, переопределения пишем в те же имена
 const PREFIX = 'ds'
-export const THEMES = ['base', 'cars2', 'farm', 'cars2-go']
+export const THEMES = ['base', 'cars2', 'farm', 'cars2-go', 'babycare']
 // Брейкпоинты — один источник на токены, варианты Tailwind и картинки (src/breakpoints.json).
 // Размеры как в макетах и в InApp: 667 (по умолчанию) / 844 / 1024. Телефон в альбомной ниже 600 px, поэтому
 // размеры iPad (large) — на экране от 600 px в высоту и от 844 px в ширину: так их получают и Android-планшеты

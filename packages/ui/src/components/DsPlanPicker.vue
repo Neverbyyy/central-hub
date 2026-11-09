@@ -17,7 +17,7 @@ const props = withDefaults(defineProps<{
   modelValue: number
   direction?: 'column' | 'row'
   layout?: 'split' | 'stack'
-  indicator?: 'radio' | 'none'
+  indicator?: 'radio' | 'check' | 'none'
   disabled?: boolean
   // Подпись группы для скринридера, ключом из сервиса
   label?: string

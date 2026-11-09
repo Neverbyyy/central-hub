@@ -254,6 +254,49 @@
       "mud": {
         "$value": "#6B4423"
       }
+    },
+    "babycare": {
+      "$description": "Baby Care: пейволл B (Figma 96:21, 9 ноя 2026). У макета нет переменных — значения из слоёв",
+      "sky": {
+        "$value": "#5BAEDF",
+        "$description": "Фон под артом и верх экрана (promoContent, начало градиента)"
+      },
+      "ink": {
+        "$value": "#000000",
+        "$description": "Текст выбранного тарифа"
+      },
+      "ink-50": {
+        "$value": "#00000080",
+        "$description": "Текст невыбранного тарифа"
+      },
+      "plan": {
+        "$value": "#FFFFFFB2",
+        "$description": "Карточка невыбранного тарифа: белая 70 %"
+      },
+      "radio": {
+        "$value": "#0000001A",
+        "$description": "Пустая радиокнопка"
+      },
+      "radio-line": {
+        "$value": "#00000033",
+        "$description": "Рамка пустой радиокнопки"
+      },
+      "radio-on": {
+        "$value": "#53D674",
+        "$description": "Выбранная радиокнопка с белой галочкой"
+      },
+      "orange": {
+        "$value": "#EB6200",
+        "$description": "Плашка «Best offer» и точки списка: нижний цвет их градиента #FF8C3A → #EB6200"
+      },
+      "legal": {
+        "$value": "#FFFFFFBF",
+        "$description": "Документы внизу: белые 75 %"
+      },
+      "close": {
+        "$value": "#ACC0EE",
+        "$description": "Крестик: в макете его нет, цвет — из InApp babycare pw-duo (уточнить у Антона)"
+      }
     }
   },
   "gradient": {
@@ -302,6 +345,16 @@
       },
       "card": {
         "$value": "linear-gradient(180deg, #FFFFFF 0%, #FFFFFF 100%)"
+      }
+    },
+    "babycare": {
+      "screen": {
+        "$value": "linear-gradient(180deg, #5BAEDF 0%, #2A91CE 100%)",
+        "$description": "Baby Care: фон экрана под артом (promoContent)"
+      },
+      "cta": {
+        "$value": "linear-gradient(0deg, #079D27 0%, #00A846 12%, #14E66C 100%)",
+        "$description": "Baby Care: главная кнопка (CTA/button)"
       }
     }
   },
@@ -353,6 +406,12 @@
       },
       "video": {
         "$value": "0 8px 0 #1F1B52"
+      }
+    },
+    "babycare": {
+      "cta": {
+        "$value": "inset 0 0 0 1px #1C8041, 0 20px 15px 0 #00450F1A, 0 11px 10px 0 #00350C33, 0 4px 6px 0 #001A0633, 0 1px 1px 0 #001A06CC",
+        "$description": "Baby Care: главная кнопка — рамка 1 px внутри (в макете градиент #1C8041 → #0B682D) и четыре тени"
       }
     }
   },

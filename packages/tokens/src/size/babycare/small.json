@@ -1,0 +1,163 @@
+{
+  "$description": "Размеры Baby Care по макету телефона 390×844 (Figma 96:68). Экран вертикальный: тема держит эти размеры на всех брейкпоинтах, а на маленьком телефоне и на iPad экран масштабирует блок целиком (DsFit). Только отличия от base. Стилей текста в макете нет — значения из слоёв.",
+  "text": {
+    "$type": "dimension",
+    "title-lg": {
+      "$description": "GET UNLIMITED ACCESS: Nunito 900 32/32",
+      "size": {
+        "$value": 32
+      },
+      "line-height": {
+        "$value": 32
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 900
+      }
+    },
+    "list": {
+      "$description": "Пункты списка: Nunito 700 18/24",
+      "size": {
+        "$value": 18
+      },
+      "line-height": {
+        "$value": 24
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 700
+      }
+    },
+    "body": {
+      "$description": "Название тарифа (YEARLY, 3 DAYS FREE): Nunito 800 16/20",
+      "size": {
+        "$value": 16
+      },
+      "line-height": {
+        "$value": 20
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 800
+      }
+    },
+    "caption": {
+      "$description": "Just $00.00 per year: Nunito 900 14/14",
+      "size": {
+        "$value": 14
+      },
+      "line-height": {
+        "$value": 14
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 900
+      }
+    },
+    "price": {
+      "$description": "Цена тарифа: Nunito 800 16/20 (период под ней в макете — 700 14/14)",
+      "size": {
+        "$value": 16
+      },
+      "line-height": {
+        "$value": 20
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 800
+      }
+    },
+    "button": {
+      "$description": "CONTINUE / TRY FOR FREE: Nunito 900 18/18",
+      "size": {
+        "$value": 18
+      },
+      "line-height": {
+        "$value": 18
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 900
+      }
+    },
+    "badge": {
+      "$description": "BEST OFFER: Nunito 900 12/12",
+      "size": {
+        "$value": 12
+      },
+      "line-height": {
+        "$value": 12
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 900
+      }
+    },
+    "link": {
+      "$description": "Cancel anytime / No payment now: Open Sans 700 16/16",
+      "size": {
+        "$value": 16
+      },
+      "line-height": {
+        "$value": 16
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 700
+      }
+    },
+    "legal": {
+      "$description": "Документы: Open Sans 400 10/12 — на всех брейкпоинтах (иначе на iPad в альбомной брались бы 18/24 из base)",
+      "size": {
+        "$value": 10
+      },
+      "line-height": {
+        "$value": 12
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "$value": 400
+      }
+    }
+  },
+  "spacing": {
+    "$type": "dimension",
+    "button": {
+      "$value": 52
+    },
+    "button-x": {
+      "$value": "{size.36}"
+    },
+    "plan-x": {
+      "$value": "{size.16}"
+    },
+    "plan-y": {
+      "$value": "{size.18}"
+    },
+    "close": {
+      "$value": "{size.32}",
+      "$description": "Крестик — как у base на телефоне, на всех брейкпоинтах: экран сам подгоняет масштаб (DsFit)"
+    },
+    "close-icon": {
+      "$value": "{size.20}"
+    }
+  },
+  "radius": {
+    "$type": "dimension",
+    "plan": {
+      "$value": "{radius.12}"
+    },
+    "badge": {
+      "$value": "{radius.8}"
+    }
+  },
+  "line": {
+    "$type": "dimension",
+    "plan": {
+      "$value": "{size.0}"
+    },
+    "plan-selected": {
+      "$value": "{size.0}"
+    }
+  }
+}

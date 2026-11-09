@@ -54,6 +54,17 @@ const SCREENS = [
     locked: '[role="radio"]',
     change: async frame => frame.evaluate(() => document.querySelectorAll('[role="radio"]')[2]?.click()),
     changed: frame => frame.evaluate(() => document.querySelectorAll('[role="radio"]')[2]?.getAttribute('aria-checked') === 'true')
+  },
+  {
+    // Вертикальный экран: проверяется в портрете, на телефонах от iPhone SE до Pro Max и на iPad
+    key: 'babycare',
+    title: 'Baby Care',
+    id: 'ios_pp_babycare_ds1_varb_pw_duo_v1',
+    orient: 'portrait',
+    devices: ['se', 'iphone8', 'android', 'iphone', 'promax', 'ipad', 'ipadmini'],
+    locked: '[role="radio"]',
+    change: async frame => frame.evaluate(() => document.querySelectorAll('[role="radio"]')[1]?.click()),
+    changed: frame => frame.evaluate(() => document.querySelectorAll('[role="radio"]')[1]?.getAttribute('aria-checked') === 'true')
   }
 ].filter(screen => !only || screen.key === only)
 
@@ -70,7 +81,8 @@ const DUO_SCREENS = [
   { key: 'cars2', title: 'Cars 2', id: 'ios_as_cars2_ds1_varb_t1_pw_slider_v1', state: { name: 'попап тарифов', tap: '[data-pw="more"]', wait: 800 } },
   { key: 'farm-start', title: 'Farm On start', id: 'ios_as_farm_ds1_varb_ut1_pw_switch_v1' },
   { key: 'farm-click', title: 'Farm On click', id: 'ios_as_farm_ds1_varb_ut1_pw_trio_v1' },
-  { key: 'onboarding', title: 'Онбординг Farm', id: 'ios_as_farm_ds1_varb_ut1_onboarding_v1', state: { name: 'шаг 2', tap: '[data-pw="cta"]', wait: 3500 } }
+  { key: 'onboarding', title: 'Онбординг Farm', id: 'ios_as_farm_ds1_varb_ut1_onboarding_v1', state: { name: 'шаг 2', tap: '[data-pw="cta"]', wait: 3500 } },
+  { key: 'babycare', title: 'Baby Care', id: 'ios_pp_babycare_ds1_varb_pw_duo_v1', orient: 'portrait' }
 ]
 
 /**
@@ -130,7 +142,10 @@ try {
   for (const screen of SCREENS) {
     const name = screen.title
     // 1. Первое открытие
-    let { page, frame } = await emulator({ screen: screen.id, device: 'iphone' })
+    const orient = screen.orient ? { orient: screen.orient } : {}
+    // Вертикальный телефон выше окна 800: рамка уменьшилась бы, а клик мышью в уменьшенный iframe попадает мимо
+    const viewport = screen.orient === 'portrait' ? { width: 1400, height: 1000 } : undefined
+    let { page, frame } = await emulator({ screen: screen.id, device: 'iphone', ...orient }, viewport)
     let lines = await log(page)
     const opened = await state(page)
     check(`${name}: «готов» один раз, экран открыт`, count(lines, 'ready') === 1 && opened.phase === 'open', JSON.stringify(opened))
@@ -183,12 +198,12 @@ try {
     await page.close()
 
     // 4. Пресеты: нет продукта — экран не показывается; триал был; евро
-    ;({ page } = await emulator({ screen: screen.id, preset: 'noProduct' }))
+    ;({ page } = await emulator({ screen: screen.id, preset: 'noProduct', ...orient }))
     lines = await log(page)
     check(`${name}, нет продукта: закрыт без «готов»`, count(lines, 'ready') === 0 && count(lines, 'close') === 1 && (await state(page)).phase === 'closed', lines.map(l => l.text).join(' | '))
     await page.close()
     for (const preset of ['wasTrial', 'euro']) {
-      ;({ page } = await emulator({ screen: screen.id, preset }))
+      ;({ page } = await emulator({ screen: screen.id, preset, ...orient }))
       lines = await log(page)
       const current = await state(page)
       check(`${name}, ${preset}: открыт без ошибок`, current.phase === 'open' && problems(lines).length === 0, JSON.stringify(current))
@@ -196,8 +211,8 @@ try {
     }
 
     // 5. Размеры и немецкий: главная кнопка, тарифы, заголовок, документы и крестик — целиком на экране
-    for (const device of ['se', 'iphone8', 'iphone', 'promax', 'ipad', 'tall', 'duo-folded-l', 'duo-folded-r', 'duo-unfolded', 'duo-unfolded-r']) {
-      ;({ page, frame } = await emulator({ screen: screen.id, device, lang: 'de' }))
+    for (const device of screen.devices ?? ['se', 'iphone8', 'iphone', 'promax', 'ipad', 'tall', 'duo-folded-l', 'duo-folded-r', 'duo-unfolded', 'duo-unfolded-r']) {
+      ;({ page, frame } = await emulator({ screen: screen.id, device, lang: 'de', ...orient }))
       await sleep(3300)
       const geometry = await inapp(page, () => window.__inapp.screen)
       const boxes = await frame.$$eval('[data-pw="cta"], [data-pw="close"], [role="radio"], [role="switch"], h1, [data-legal]', els => els.map((el) => {
@@ -300,8 +315,8 @@ try {
   }
 
   // iPhone Duo: все позы, немецкий (самый длинный текст) и состояния экрана, где появляются новые кнопки
-  for (const { title, id, state } of DUO_SCREENS.filter(item => !only || item.key === only)) {
-    for (const { device, orient } of DUO_POSES) {
+  for (const { title, id, state, orient: screenOrient } of DUO_SCREENS.filter(item => !only || item.key === only)) {
+    for (const { device, orient } of DUO_POSES.filter(pose => !screenOrient || pose.orient === screenOrient)) {
       const { page, frame } = await emulator({ screen: id, device, orient, lang: 'de' })
       await sleep(3300)
       const { duo } = await inapp(page, () => window.__inapp.screen)

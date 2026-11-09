@@ -132,7 +132,7 @@ const preview: Preview = {
     options: {
       storySort: {
         order: [
-          'Пейволлы', ['Cars 2', 'Farm · On start', 'Farm · On click'],
+          'Пейволлы', ['Cars 2', 'Farm · On start', 'Farm · On click', 'Baby Care'],
           'Онбординги', ['Farm'],
           'Лендинги',
           'Общее', ['Кнопка', 'Крестик', 'Выбор тарифа', 'Текст', 'Плашки и списки', 'Картинка', 'Подгонка по высоте'],

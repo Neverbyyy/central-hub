@@ -93,6 +93,14 @@
       },
       "border-selected": {
         "$value": "{color.amaya.green}"
+      },
+      "text": {
+        "$value": "{color.amaya.ink-900}",
+        "$description": "Текст невыбранного тарифа (в Baby Care — приглушённый)"
+      },
+      "text-selected": {
+        "$value": "{color.amaya.ink-900}",
+        "$description": "Текст выбранного тарифа"
       }
     },
     "radio": {
@@ -356,6 +364,10 @@
   "surface": {
     "$type": "gradient",
     "$description": "Заливки, которые бывают градиентом: класс ds:surface-<имя> ставит background",
+    "screen": {
+      "$value": "{color.white}",
+      "$description": "Фон экрана, если он градиент (Baby Care); у base — как color.bg.screen"
+    },
     "cta": {
       "$value": "{color.amaya.orange}"
     },

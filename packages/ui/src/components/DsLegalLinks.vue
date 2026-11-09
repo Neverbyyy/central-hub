@@ -4,7 +4,8 @@
  * (common.link.terms_of_use, common.link.privacy_policy, common.button.restore); нет текста — нет ссылки.
  * Когда использовать: низ пейволла и футер лендинга. Компонент только отдаёт события: адреса документов,
  * родительский гейт и восстановление покупок — дело экрана (интерфейс окружения), он не знает про InApp.
- * Вид по макетам Cars 2 и Farm: подчёркнутые ссылки стилем text.legal через промежуток, без точек.
+ * Вид по макетам Cars 2 и Farm: подчёркнутые ссылки стилем text.legal через промежуток, без точек; underline=false —
+ * без подчёркивания (Baby Care).
  * На узком экране строка переносится. Если ссылки стоят в разных углах экрана (Cars 2) — экран ставит DsLink сам.
  */
 import { computed } from 'vue'
@@ -17,6 +18,7 @@ const props = withDefaults(defineProps<{
   privacy?: string
   restore?: string
   tone?: 'link' | 'secondary' | 'muted' | 'inverse'
+  underline?: boolean
   // Подпись блока для скринридера
   label?: string
 }>(), {
@@ -24,6 +26,7 @@ const props = withDefaults(defineProps<{
   privacy: undefined,
   restore: undefined,
   tone: 'link',
+  underline: true,
   label: undefined
 })
 
@@ -51,6 +54,7 @@ const select = (item: LegalItem) => {
       :key="item"
       class="ds:mx-1.5 ds:my-0.5"
       :tone="tone"
+      :underline="underline"
       :data-legal="item"
       @click="select(item)"
     >

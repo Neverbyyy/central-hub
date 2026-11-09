@@ -135,7 +135,7 @@ describe('токены дизайн-системы', () => {
     const { list } = build()
     const accent = list.tokens.find(t => t.name === 'color.accent')!
     expect(accent.kind).toBe('theme')
-    expect(accent.values).toEqual({ 'base': '#FF8D24', 'cars2': '#64BF07', 'farm': '#FF8D24', 'cars2-go': '#FF8D24' })
+    expect(accent.values).toEqual({ 'base': '#FF8D24', 'cars2': '#64BF07', 'farm': '#FF8D24', 'cars2-go': '#FF8D24', 'babycare': '#FF8D24' })
     const size = list.tokens.find(t => t.name === 'text.title-lg.size')!
     expect(size.kind).toBe('size')
     expect((size.values as Record<string, unknown>).base).toEqual({ small: '16px', medium: '20px', large: '32px' })

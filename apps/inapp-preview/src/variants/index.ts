@@ -35,6 +35,13 @@ export const screens: ScreenEntry[] = [
     presets: () => import('./ios/as/farm/ds1/pw-trio/presets')
   },
   {
+    id: 'ios_pp_babycare_ds1_varb_pw_duo_v1',
+    title: 'Baby Care — пейволл B',
+    match: /^ios_pp_babycare_ds1_.*pw_duo_v1$/,
+    load: () => import('./ios/pp/babycare/ds1/pw-duo/index.vue'),
+    presets: () => import('./ios/pp/babycare/ds1/pw-duo/presets')
+  },
+  {
     id: 'ios_as_farm_ds1_varb_ut1_onboarding_v1',
     title: 'Farm — онбординг B',
     match: /^ios_as_farm_ds1_.*onboarding_v1$/,

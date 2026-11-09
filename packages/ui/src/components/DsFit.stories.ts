@@ -37,3 +37,28 @@ export const Fit: StoryObj<typeof meta & { args: { height: number } }> = {
     `
   })
 }
+
+// grow: места больше — блок увеличивается целиком (не больше maxScale, здесь 1,5), как вертикальный пейволл на iPad.
+// Содержимое — своей высоты, без растяжения на всю: DsFit меряет именно её
+export const Grow: StoryObj<typeof meta & { args: { height: number } }> = {
+  name: 'Подгонка с увеличением (grow)',
+  args: { height: 320 } as never,
+  argTypes: { height: { name: 'Высота места, px', control: { type: 'range', min: 120, max: 480, step: 10 } } } as never,
+  render: args => ({
+    components: { DsFit, DsText, DsBenefitList, DsButton },
+    setup: () => ({ args: args as typeof args & { height: number }, FEATURE_KEYS, APPS_COUNT, maxScale: () => 1.5, ...useStoryTexts() }),
+    template: `
+      <div class="ds:p-6">
+        <div :style="{ width: '320px', height: args.height + 'px', outline: '1px dashed rgb(0 0 0 / 0.3)' }">
+          <DsFit class="ds:size-full" :min-scale="args.minScale" grow :max-scale="maxScale">
+            <div class="ds:flex ds:flex-col ds:items-center ds:p-4">
+              <DsText as="h2" variant="title-lg" align="center">{{ t('common.plus.title.unlimited') }}</DsText>
+              <DsBenefitList class="ds:mt-3" :items="FEATURE_KEYS.map(key => t(key, { count: APPS_COUNT }))" />
+              <DsButton class="ds:mt-3">{{ t('common.button.continue.default') }}</DsButton>
+            </div>
+          </DsFit>
+        </div>
+      </div>
+    `
+  })
+}
