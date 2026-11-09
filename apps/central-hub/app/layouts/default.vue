@@ -13,6 +13,9 @@ const breadcrumbs = computed(() => {
   return items
 })
 
+// Кто ещё в сервисе и что правит — одна подписка на вкладку, страницы читают её через usePresence
+usePresenceConnection()
+
 // Меню на узком экране — шторка с тем же сайдбаром; переход по ссылке её закрывает
 const menuOpen = ref(false)
 watch(() => route.fullPath, () => {
@@ -65,6 +68,8 @@ watch(() => route.fullPath, () => {
             </div>
           </template>
         </UBreadcrumb>
+
+        <PresenceAvatars class="ml-auto" />
       </header>
 
       <!-- Страницы с гридом занимают её высоту целиком (h-full), остальные прокручиваются здесь -->

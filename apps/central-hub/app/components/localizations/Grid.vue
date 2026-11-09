@@ -10,6 +10,8 @@ const props = defineProps<{
   hasMore: boolean
   // Ключи, помеченные устаревшими: смотреть можно, править — только после «Вернуть»
   readonly?: boolean
+  // Кто из коллег что правит: ключ → язык → имена (метки на ячейках)
+  editors?: Record<string, Record<string, string[]>>
 }>()
 
 const emit = defineEmits<{
@@ -27,6 +29,8 @@ const emit = defineEmits<{
   escape: []
   // На касании правка — в шторке страницы, а не в ячейке
   edit: [key: string, lang: string]
+  // Какую ячейку человек сейчас правит (null — никакую): коллеги видят метку на ней
+  editing: [cell: { key: string, lang: string } | null]
 }>()
 
 const toast = useToast()
@@ -83,6 +87,30 @@ const allSelected = computed(() => props.rows.length > 0 && selectedCount.value 
 const active = ref<{ row: number, col: number } | null>(null)
 // previous — значение ячейки на момент начала правки (initial может быть первым напечатанным символом)
 const editing = ref<{ key: string, col: number, initial: string, previous: string } | null>(null)
+
+// Ключи коллег появляются и пропадают на лету: курсор и прокрутка держатся за ключ, а не за номер строки.
+// Синхронно, до наблюдателя ниже: иначе открытая панель успела бы перескочить на соседний ключ
+watch(() => props.rows, (next, prev) => {
+  if (!prev?.length || !next.length || next === prev) return
+  const indexOf = (key: string | undefined) => (key ? next.findIndex(r => r.technical_key === key) : -1)
+  const a = active.value
+  const moved = a ? indexOf(prev[a.row]?.technical_key) : -1
+  if (a && moved >= 0 && moved !== a.row) active.value = { row: moved, col: a.col }
+  // Строку добавили или убрали выше видимой части — сдвигаем прокрутку на столько же, и таблица не дёргается
+  const el = scrollEl.value
+  if (!el) return
+  const top = Math.floor(el.scrollTop / sizes.rowH)
+  const from = indexOf(prev[top]?.technical_key)
+  if (from >= 0 && from !== top) {
+    nextTick(() => {
+      el.scrollTop += (from - top) * sizes.rowH
+    })
+  }
+}, { flush: 'sync' })
+
+watch(editing, (e) => {
+  emit('editing', e ? { key: e.key, lang: props.languages[e.col - 1]! } : null)
+})
 
 watch(() => props.rows[active.value?.row ?? -1]?.technical_key, (key) => {
   if (key) emit('focusRow', key)
@@ -373,6 +401,7 @@ defineExpose({ reset })
         :editing-col="editing?.key === row.technical_key ? editing.col : -1"
         :edit-initial="editing?.key === row.technical_key ? editing.initial : ''"
         :selected="selectedKeys.has(row.technical_key)"
+        :editors="editors?.[row.technical_key]"
         @cell-down="onCellDown"
         @cell-dblclick="onCellDblclick"
         @toggle="(key, value) => emit('toggle', key, value)"
@@ -430,6 +459,9 @@ defineExpose({ reset })
 
 /* Размеры грида; скрипт виртуализации читает их отсюда же */
 .loc-grid {
+  /* Строку коллеги выше видимой части компенсирует сам грид (наблюдатель rows): браузерная привязка прокрутки
+     есть не везде (Safari), а в Chrome она сдвинула бы таблицу второй раз */
+  overflow-anchor: none;
   --loc-row-h: 36px;
   --loc-key-w: 260px;
   --loc-lang-w: 220px;
@@ -491,6 +523,31 @@ defineExpose({ reset })
 .loc-header,
 .loc-header .loc-cell {
   height: 36px;
+}
+
+/* Ячейку правит коллега: рамка его цвета (outline — не спорит с рамкой своего курсора) и подпись в углу */
+.loc-cell.has-presence {
+  outline: 2px solid var(--presence);
+  outline-offset: -2px;
+}
+
+.loc-presence {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  z-index: 1;
+  max-width: calc(100% - 4px);
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--presence);
+  padding: 0 4px;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 .loc-cell {

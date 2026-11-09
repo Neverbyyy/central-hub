@@ -36,6 +36,13 @@ const done = ref(0)
 
 const item = computed(() => items.value[0])
 const value = ref('')
+
+// Присутствие: открытая строка очереди — это правка ячейки, коллеги видят метку в таблице;
+// если её уже правит кто-то другой — та же метка здесь
+const { editors, setEditing } = usePresence()
+watchEffect(() => setEditing(item.value && lang.value ? { key: item.value.key, lang: lang.value } : null))
+onBeforeUnmount(() => setEditing(null))
+const busyBy = computed(() => (item.value && lang.value ? editors.value[item.value.key]?.[lang.value] ?? [] : []))
 const field = useTemplateRef('field')
 
 const focusField = () => nextTick(() => field.value?.textareaRef?.focus())
@@ -287,7 +294,14 @@ const length = computed(() => [...value.value].length)
 
           <div>
             <div class="mb-1 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-muted">
-              <span>{{ lang.toUpperCase() }}</span>
+              <span class="flex items-center gap-2">
+                {{ lang.toUpperCase() }}
+                <span
+                  v-if="busyBy.length"
+                  class="rounded px-1.5 font-semibold normal-case tracking-normal text-white"
+                  :style="{ backgroundColor: presenceColor(busyBy[0]!) }"
+                >{{ presenceLabel(busyBy, lang) }}</span>
+              </span>
               <span
                 class="font-normal normal-case tracking-normal"
                 :class="item.max_length && length > item.max_length ? 'text-red-600 dark:text-red-400' : ''"

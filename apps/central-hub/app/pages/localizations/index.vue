@@ -36,7 +36,8 @@ const {
   redo,
   deprecateKeys,
   restoreKeys,
-  fetchAll
+  fetchAll,
+  keysVersion
 } = useLocalizations()
 
 const route = useRoute()
@@ -76,6 +77,11 @@ const treeDrawer = ref(false)
 // Растёт после создания ключа — дерево перечитывает счётчики
 const treeVersion = ref(0)
 const treeShown = computed(() => screen.lg.value && treeOpen.value)
+// Коллеги добавили ключи или пометили их устаревшими — счётчики разделов и список тегов тоже свежие
+watch(keysVersion, () => {
+  treeVersion.value++
+  fetchTags()
+})
 
 const toggleTree = () => {
   if (screen.lg.value) treeOpen.value = !treeOpen.value
@@ -356,6 +362,14 @@ const editFromPanel = (lang: string) => {
 const saveSheet = (value: string) => {
   if (sheet.value) setTranslation(sheet.value.key, sheet.value.lang, value, sheet.value.initial)
 }
+
+// --- Присутствие: коллеги видят, какую ячейку человек правит — в таблице или в шторке ---
+const { editors, setEditing } = usePresence()
+const gridEditing = ref<{ key: string, lang: string } | null>(null)
+watchEffect(() => {
+  setEditing(sheetOpen.value && sheet.value ? { key: sheet.value.key, lang: sheet.value.lang } : gridEditing.value)
+})
+onBeforeUnmount(() => setEditing(null))
 </script>
 
 <template>
@@ -693,6 +707,7 @@ const saveSheet = (value: string) => {
         :initial-loading="initialLoading"
         :has-more="hasMore"
         :readonly="filters.deprecated"
+        :editors="editors"
         @load-more="load()"
         @save="setTranslation"
         @toggle="toggleRow"
@@ -703,6 +718,7 @@ const saveSheet = (value: string) => {
         @focus-row="focusedKey = $event"
         @escape="closePanel"
         @edit="openSheet"
+        @editing="gridEditing = $event"
       />
 
       <div

@@ -12,6 +12,8 @@ const props = defineProps<{
   editingCol: number
   editInitial: string
   selected: boolean
+  // Коллеги, которые сейчас правят ячейки этой строки: язык → имена
+  editors?: Record<string, string[]>
 }>()
 
 const emit = defineEmits<{
@@ -71,10 +73,17 @@ const cellTitle = (lang: string) => {
       v-for="(lang, i) in languages"
       :key="lang"
       class="loc-cell px-3 text-xs"
-      :class="{ 'is-active': activeCol === i + 1 }"
+      :class="{ 'is-active': activeCol === i + 1, 'has-presence': editors?.[lang]?.length }"
+      :style="editors?.[lang]?.length ? { '--presence': presenceColor(editors[lang]![0]!) } : undefined"
       @mousedown="emit('cellDown', index, i + 1)"
       @dblclick="emit('cellDblclick', index, i + 1)"
     >
+      <!-- Ячейку правит коллега: рамка его цвета и подпись. Править можно и самому — сервер не даст молча
+           перетереть чужой текст (конфликт 409) -->
+      <span
+        v-if="editors?.[lang]?.length"
+        class="loc-presence"
+      >{{ presenceLabel(editors[lang]!, lang) }}</span>
       <span
         v-if="row.translations?.[lang]"
         class="truncate"

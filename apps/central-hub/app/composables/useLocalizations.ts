@@ -218,7 +218,10 @@ export function useLocalizations() {
       hasMore.value = false
     } else {
       const page = (data ?? []) as Localization[]
-      rows.value = reset ? page : rows.value.concat(page)
+      // Коллега добавил ключ в уже загруженную часть, пока шёл запрос: страница сдвинулась на строку, и её первая
+      // строка у нас уже есть — второй раз не добавляем
+      const present = new Set(reset ? [] : rows.value.map(r => r.technical_key))
+      rows.value = reset ? page : rows.value.concat(page.filter(r => !present.has(r.technical_key)))
       hasMore.value = page.length === PAGE_SIZE
       if (count !== null && count !== undefined) total.value = count
     }
@@ -402,6 +405,80 @@ export function useLocalizations() {
     return all
   }
 
+  // --- Ключи коллег: новые, помеченные устаревшими и вернувшиеся появляются и пропадают сразу ---
+  // Порядок как у базы (order by technical_key): её правила сравнения совпадают с en, а не с кодами символов —
+  // проверено на всех ключах
+  const collator = new Intl.Collator('en')
+
+  type Incoming = Localization & { tags?: string[] }
+
+  // Подходит ли строка под текущую выборку — те же условия, что applyFilters в запросе к базе
+  const matchesView = (row: Incoming) => {
+    if (!!row.deprecated_at !== filters.deprecated) return false
+    const term = q.value.trim().toLowerCase()
+    // search_text в базе — ключ и все переводы через пробел, в нижнем регистре
+    if (term && !`${row.technical_key} ${Object.values(row.translations ?? {}).join(' ')}`.toLowerCase().includes(term)) return false
+    if (selectedTags.value.length && !selectedTags.value.every(tag => row.tags?.includes(tag))) return false
+    const statuses = Object.values(row.status ?? {})
+    if (filters.status === 'pending' && !statuses.some(s => s === 'draft' || s === 'ai')) return false
+    if (filters.status && filters.status !== 'pending' && !statuses.includes(filters.status)) return false
+    if (filters.stale && !row.stale_langs?.length) return false
+    if (filters.missing && row.translations?.[filters.missing] != null) return false
+    if (filters.recent && Date.parse(row.updated_at) < Date.now() - WEEK) return false
+    if (filters.prefix && !row.technical_key.startsWith(filters.prefix)) return false
+    return true
+  }
+
+  // Растёт, когда ключи появились или пропали: страница по нему обновляет дерево разделов и теги
+  const keysVersion = ref(0)
+  const bumpKeys = useDebounceFn(() => keysVersion.value++, 1000)
+
+  // Импорт, «Утвердить всё», пометка многих ключей — сотни событий подряд: список перестраивается раз на пачку
+  const pending = new Map<string, { row: Incoming, inserted: boolean }>()
+  let flushTimer: ReturnType<typeof setTimeout> | undefined
+
+  const flushPending = () => {
+    flushTimer = undefined
+    let list = rows.value
+    let changed = false
+    let structure = false
+    for (const { row, inserted } of pending.values()) {
+      const index = list.findIndex(r => r.technical_key === row.technical_key)
+      if (index >= 0) {
+        // Ключ пометили устаревшим или вернули — из этой выборки (действующие / устаревшие) он уходит.
+        // Остальные правки уже на месте; строка, переставшая подходить под фильтр после правки, остаётся до
+        // перезагрузки — иначе она пропадала бы из-под курсора у того, кто её правит
+        if (!!row.deprecated_at === filters.deprecated) continue
+        list = list.filter(r => r.technical_key !== row.technical_key)
+        if (total.value !== null) total.value -= 1
+        changed = structure = true
+        continue
+      }
+      if (inserted) structure = true
+      if (!matchesView(row)) continue
+      // Строка дальше загруженной части придёт со следующей страницей. Новый ключ там всё равно прибавляет к счётчику,
+      // а изменённый — нет: он и раньше мог подходить под выборку, просто не был загружен
+      const last = list[list.length - 1]
+      if (hasMore.value && last && collator.compare(row.technical_key, last.technical_key) > 0) {
+        if (inserted && total.value !== null) total.value += 1
+        continue
+      }
+      const at = list.findIndex(r => collator.compare(r.technical_key, row.technical_key) > 0)
+      list = [...list.slice(0, at < 0 ? list.length : at), row, ...list.slice(at < 0 ? list.length : at)]
+      if (total.value !== null) total.value += 1
+      changed = structure = true
+    }
+    pending.clear()
+    if (changed) rows.value = list
+    if (structure) bumpKeys()
+  }
+
+  const queueRow = (row: Incoming, inserted: boolean) => {
+    const previous = pending.get(row.technical_key)
+    pending.set(row.technical_key, { row, inserted: inserted || !!previous?.inserted })
+    flushTimer ??= setTimeout(flushPending, 100)
+  }
+
   // --- Live-обновления от коллег ---
   let channel: RealtimeChannel | null = null
 
@@ -413,16 +490,19 @@ export function useLocalizations() {
 
     channel = supabase
       .channel('localizations-grid')
+      // Новый ключ — из сервиса, нейросетью, CLI или импортом: появляется, если подходит под выборку
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'localizations' }, (payload) => {
+        queueRow(payload.new as Incoming, true)
+      })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'localizations' }, (payload) => {
-        const incoming = payload.new as Localization
-        // Ключ пометили устаревшим или вернули — из текущей выборки (действующие / устаревшие) он уходит
-        if (!!incoming.deprecated_at !== filters.deprecated) {
-          rows.value = rows.value.filter(r => r.technical_key !== incoming.technical_key)
+        const incoming = payload.new as Incoming
+        const row = findRow(incoming.technical_key)
+        // Строки нет в таблице (ключ вернули, пометили устаревшим при просмотре устаревших, он стал подходить
+        // под фильтр) или она уходит из выборки — решает пачка изменений
+        if (!row || !!incoming.deprecated_at !== filters.deprecated) {
+          queueRow(incoming, false)
           return
         }
-
-        const row = findRow(incoming.technical_key)
-        if (!row) return
 
         // Языки, которые мы сами сейчас сохраняем, не трогаем — придёт наше же событие
         const merged = { ...incoming.translations }
@@ -441,6 +521,7 @@ export function useLocalizations() {
 
   onBeforeUnmount(() => {
     if (channel) supabase.removeChannel(channel)
+    clearTimeout(flushTimer)
   })
 
   return {
@@ -469,6 +550,7 @@ export function useLocalizations() {
     redo,
     deprecateKeys,
     restoreKeys,
-    fetchAll
+    fetchAll,
+    keysVersion
   }
 }
