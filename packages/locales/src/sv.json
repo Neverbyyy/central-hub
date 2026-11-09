@@ -45,9 +45,11 @@
     },
     "plus": {
       "feature": {
+        "activities": "Många nyttiga aktiviteter",
         "apps": "Över {count} appar",
         "hours": "1000+ timmars spel",
         "offline": "Spela offline",
+        "safe_fun": "Säkert, roligt och utan annonser",
         "updates": "Regelbundna uppdateringar"
       },
       "full_access": "Full tillgång till alla Amaya Plus-appar.",
@@ -108,7 +110,8 @@
       "free_trial": "Gratis provperiod",
       "then_per_month": "{days} dag gratis, sedan {price} per månad. | {days} dagar gratis, sedan {price} per månad.",
       "then_per_week": "{days} dag gratis, sedan {price} per vecka. | {days} dagar gratis, sedan {price} per vecka.",
-      "then_per_year": "{days} dag gratis, sedan {price} per år. | {days} dagar gratis, sedan {price} per år."
+      "then_per_year": "{days} dag gratis, sedan {price} per år. | {days} dagar gratis, sedan {price} per år.",
+      "then_price": "sedan {price}"
     }
   },
   "ds": {

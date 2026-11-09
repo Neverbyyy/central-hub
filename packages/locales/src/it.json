@@ -45,9 +45,11 @@
     },
     "plus": {
       "feature": {
+        "activities": "Tante attività utili",
         "apps": "+{count} app",
         "hours": "+1000 ore di gioco",
         "offline": "Gioca offline",
+        "safe_fun": "Sicuro, divertente e senza spot",
         "updates": "Aggiornamenti regolari"
       },
       "full_access": "Accesso completo a tutte le app di Amaya Plus.",
@@ -108,7 +110,8 @@
       "free_trial": "Prova gratuita",
       "then_per_month": "{days} giorno gratis, poi {price} al mese. | {days} giorni gratis, poi {price} al mese.",
       "then_per_week": "{days} giorno gratis, poi {price} a settimana. | {days} giorni gratis, poi {price} a settimana.",
-      "then_per_year": "{days} giorno gratis, poi {price} all’anno. | {days} giorni gratis, poi {price} all’anno."
+      "then_per_year": "{days} giorno gratis, poi {price} all’anno. | {days} giorni gratis, poi {price} all’anno.",
+      "then_price": "poi {price}"
     }
   },
   "ds": {
