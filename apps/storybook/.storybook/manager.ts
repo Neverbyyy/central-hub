@@ -37,6 +37,25 @@ addons.register('amaya/viewport', (api) => {
   })
 })
 
+// Ручки рамки: на каждое движение мыши Storybook 10 прокручивает область к краю рамки — scrollIntoView({ block: 'center',
+// inline: 'center' }) у невидимой полосы вдоль края. Правая полоса — во всю высоту рамки и стоит под ней (без top),
+// поэтому, если рамка выше окна (телефон 390×844), область прыгала вниз, стоило потянуть за правый край; у нижней полосы
+// так же по горизонтали — у рамки шире окна (десктоп лендинга). Прокрутка нужна только вдоль оси, которую тянут:
+// Storybook прокручивает как хочет, а по другой оси положение сразу возвращается — в том же кадре, прыжка не видно.
+// Угол (both) — как в Storybook
+const scrollIntoView = Element.prototype.scrollIntoView
+Element.prototype.scrollIntoView = function (this: Element, options?: boolean | ScrollIntoViewOptions) {
+  const edge = this instanceof HTMLElement ? this.dataset.edge : undefined
+  if (edge !== 'right' && edge !== 'bottom') return scrollIntoView.call(this, options)
+  const keep: [Element, number][] = []
+  for (let el = this.parentElement; el; el = el.parentElement) keep.push([el, edge === 'right' ? el.scrollTop : el.scrollLeft])
+  scrollIntoView.call(this, options)
+  for (const [el, value] of keep) {
+    if (edge === 'right') el.scrollTop = value
+    else el.scrollLeft = value
+  }
+}
+
 // Поля W/H: Storybook обновляет их, только когда отпустили кнопку мыши, а во время перетаскивания меняет рамку и подпись
 // на ручке напрямую, мимо React. Подпись — уже готовое число с учётом масштаба, её и показываем в полях. Пишем прямо в DOM:
 // `resize()` на каждое движение мыши перерисовывал бы историю и менял адрес, а итог всё равно запишет сам Storybook.
