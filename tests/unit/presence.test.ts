@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  presenceCell,
   presenceColor,
   presenceDevice,
   presenceDuration,
@@ -54,6 +55,14 @@ describe('присутствие: состояние канала', () => {
     // Своя вкладка ещё не подключилась — себя всё равно считаем
     expect(presenceOnline([person('t1', 'Кирилл')], SELF)).toBe(2)
     expect(presenceSelf([person('t1', 'Кирилл')], SELF)).toBeNull()
+  })
+
+  it('ячейка из сообщения чужой вкладки: только ключ и язык строками', () => {
+    expect(presenceCell({ key: 'common.a', lang: 'de', extra: '<b>' })).toEqual({ key: 'common.a', lang: 'de' })
+    expect(presenceCell({ key: 'common.a' })).toBeNull()
+    expect(presenceCell({ key: 1, lang: 'de' })).toBeNull()
+    expect(presenceCell(null)).toBeNull()
+    expect(presenceCell('common.a')).toBeNull()
   })
 
   it('кто что правит: ключ → язык → имена, без себя и без повторов', () => {

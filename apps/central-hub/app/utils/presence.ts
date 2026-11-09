@@ -44,6 +44,11 @@ export function presenceColor(name: string): string {
 const isCell = (value: unknown): value is PresenceCell =>
   !!value && typeof (value as PresenceCell).key === 'string' && typeof (value as PresenceCell).lang === 'string'
 
+/** Ячейка из сообщения чужой вкладки: только ключ и язык строками, остальное — null. */
+export function presenceCell(value: unknown): PresenceCell | null {
+  return isCell(value) ? { key: value.key, lang: value.lang } : null
+}
+
 /**
  * Состояние канала присутствия → люди. Пришло от чужих вкладок, поэтому проверяем форму: запись без имени
  * пропускаем, непонятную ячейку считаем «ничего не правит». У вкладки берём последнее состояние.
