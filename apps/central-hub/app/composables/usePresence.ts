@@ -5,6 +5,8 @@ import type { PresenceCell, PresenceMeta, PresencePerson } from '~/utils/presenc
 // Одна подписка на вкладку — её открывает лейаут; шапка, грид и очередь читают общее состояние.
 // Вкладка — ключ присутствия: у человека с двумя вкладками две записи, в шапке он один
 let tab = ''
+// Когда вкладку открыли: «в сервисе 12 мин»
+let since = 0
 let channel: RealtimeChannel | null = null
 
 const usePeople = () => useState<PresencePerson[]>('presence-people', () => [])
@@ -18,6 +20,10 @@ export function usePresence() {
 
   // Кто ещё в сервисе — для шапки
   const others = computed(() => presenceOthers(people.value, self.value))
+  // Сам человек, как его видят другие; пока вкладка не подключилась — null
+  const me = computed(() => presenceSelf(people.value, self.value))
+  // Сколько человек в сервисе, включая себя
+  const online = computed(() => presenceOnline(people.value, self.value))
   // Кто что правит: ключ → язык → имена — для меток на ячейках
   const editors = computed(() => presenceEditors(people.value, self.value))
 
@@ -27,7 +33,7 @@ export function usePresence() {
     if (!same && (cell || editing.value)) editing.value = cell ? { key: cell.key, lang: cell.lang } : null
   }
 
-  return { others, editors, setEditing }
+  return { others, me, online, editors, setEditing }
 }
 
 /** Подключение — одно на вкладку, из лейаута: шлёт имя, страницу и правку, принимает остальных. */
@@ -38,12 +44,19 @@ export function usePresenceConnection() {
   const people = usePeople()
   const editing = useEditing()
   let subscribed = false
+  // Телефон, планшет или компьютер — по экрану; поворот и смена окна пересчитывают
+  const coarse = useMediaQuery('(pointer: coarse)')
+  const { width, height } = useWindowSize()
+  const device = computed(() => presenceDevice(coarse.value, width.value, height.value))
+
+  // Где человек — заголовок страницы, как в хлебных крошках; у главной его нет
+  const page = () => String(route.meta.title ?? (route.path === '/' ? 'Главная' : route.path))
 
   // Человек не представился — его не видно, но других он видит
   const send = () => {
     if (!channel || !subscribed) return
     const meta: PresenceMeta | null = user.value.name
-      ? { name: user.value.name, page: String(route.meta.title ?? route.path), editing: editing.value }
+      ? { name: user.value.name, page: page(), editing: editing.value, since, device: device.value }
       : null
     if (meta) channel.track(meta)
     else channel.untrack()
@@ -51,6 +64,7 @@ export function usePresenceConnection() {
 
   onMounted(() => {
     tab ||= globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)
+    since ||= Date.now()
     const current = supabase.channel('hub-presence', { config: { presence: { key: tab } } })
     channel = current
     current
@@ -63,7 +77,7 @@ export function usePresenceConnection() {
       })
   })
 
-  watch([() => user.value.name, () => route.meta.title ?? route.path, editing], send)
+  watch([() => user.value.name, () => route.meta.title ?? route.path, editing, device], send)
 
   onBeforeUnmount(() => {
     if (channel) supabase.removeChannel(channel)
