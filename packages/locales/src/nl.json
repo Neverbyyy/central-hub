@@ -45,9 +45,11 @@
     },
     "plus": {
       "feature": {
+        "activities": "Veel nuttige activiteiten",
         "apps": "Meer dan {count} apps",
         "hours": "1000+ uur speelplezier",
         "offline": "Speel offline",
+        "safe_fun": "Veilig, leuk en zonder reclame",
         "updates": "Regelmatige updates"
       },
       "full_access": "Volledige toegang tot alle Amaya Plus-apps.",
@@ -108,7 +110,8 @@
       "free_trial": "Gratis proefperiode",
       "then_per_month": "{days} dag gratis, daarna {price} per maand. | {days} dagen gratis, daarna {price} per maand.",
       "then_per_week": "{days} dag gratis, daarna {price} per week. | {days} dagen gratis, daarna {price} per week.",
-      "then_per_year": "{days} dag gratis, daarna {price} per jaar. | {days} dagen gratis, daarna {price} per jaar."
+      "then_per_year": "{days} dag gratis, daarna {price} per jaar. | {days} dagen gratis, daarna {price} per jaar.",
+      "then_price": "daarna {price}"
     }
   },
   "ds": {
