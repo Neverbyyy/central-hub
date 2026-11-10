@@ -14,20 +14,14 @@ const props = defineProps<{
 
 const device = computed(() => PRESENCE_DEVICE[props.person.device])
 const duration = computed(() => presenceDuration(props.person.since, props.now))
-const editingTo = computed(() => props.person.editing
-  ? { path: '/localizations', query: { q: props.person.editing.key, key: props.person.editing.key } }
-  : undefined)
+const editingTo = computed(() => (props.person.editing ? keyRoute(props.person.editing.key) : undefined))
 </script>
 
 <template>
   <div class="flex min-w-0 items-start gap-2.5">
-    <UAvatar
-      :text="presenceInitials(person.name)"
-      :alt="person.name"
-      size="sm"
+    <PresenceAvatar
+      :name="person.name"
       class="shrink-0"
-      :style="{ backgroundColor: presenceColor(person.name) }"
-      :ui="{ fallback: 'font-semibold text-white' }"
     />
     <div class="min-w-0 flex-1 text-xs leading-5">
       <div class="flex items-center gap-1.5">

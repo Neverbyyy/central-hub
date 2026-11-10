@@ -90,3 +90,7 @@ export const actionSummary = (action: HistoryAction) => {
   const fields = [...new Set(entries.map(e => entryTitle(e)))]
   return `${entries.length} ${plural(entries.length, ['изменение', 'изменения', 'изменений'])}: ${fields.join(', ').toLowerCase()}`
 }
+
+// Панель ключа показывает историю порциями: сначала последние 10 действий, «Показать ещё» — по 20
+export const HISTORY_FIRST = 10
+export const HISTORY_MORE = 20

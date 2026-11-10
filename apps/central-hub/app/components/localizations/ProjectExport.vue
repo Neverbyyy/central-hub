@@ -5,7 +5,6 @@ import type { FileChange } from '~/utils/exportChanges'
 // Кнопка пишет только в свою ветку amaya-hub/<набор> и свой PR — в основную ветку тексты попадают после мержа.
 interface ExportSetInfo {
   name: string
-  project: string
   path: string
   repo: { repo: string, branch?: string } | null
   connected: boolean
@@ -19,7 +18,6 @@ interface ExportSetInfo {
 
 interface SyncResult {
   outcome: 'unchanged' | 'ready' | 'created' | 'updated' | 'closed'
-  base: string
   changes: FileChange[]
   pr: { number: number, url: string } | null
 }
@@ -37,8 +35,6 @@ const emit = defineEmits<{
 const toast = useToast()
 const authRedirect = useAuthRedirect()
 const notifyError = useNotifyError()
-
-const PROJECTS = EXPORT_PROJECTS
 
 const sets = ref<ExportSetInfo[] | null>(null)
 const setsError = ref('')
@@ -190,7 +186,7 @@ const push = async (set: ExportSetInfo) => {
     } else if (result.pr) {
       toast.add({
         title: OUTCOME_TITLE[result.outcome]!(result.pr.number),
-        description: `${PROJECTS[set.name] ?? set.name}: в основную ветку тексты попадут после мержа`,
+        description: `${exportProjectName(set.name)}: в основную ветку тексты попадут после мержа`,
         color: 'success',
         // Ссылка, а не onClick с window.open: обёртка действия в тосте перехватывает клик, ссылку открывает сам браузер
         actions: result.outcome === 'closed' ? [] : [{ label: 'Открыть на GitHub', color: 'neutral', variant: 'outline', to: result.pr.url, target: '_blank' }]
@@ -217,7 +213,7 @@ const pushAll = async () => {
   pushingAll.value = false
 
   const done = settled.flatMap((r, i) => r.status === 'fulfilled' && r.value.pr && r.value.outcome !== 'closed'
-    ? [{ project: PROJECTS[targets[i]!.name] ?? targets[i]!.name, result: r.value, pr: r.value.pr }]
+    ? [{ project: exportProjectName(targets[i]!.name), result: r.value, pr: r.value.pr }]
     : [])
   if (done.length) {
     toast.add({
@@ -228,14 +224,14 @@ const pushAll = async () => {
     })
   }
   for (const [i, r] of settled.entries()) {
-    if (r.status === 'rejected') await notifyError(`${PROJECTS[targets[i]!.name] ?? targets[i]!.name}: не выгрузилось`, r.reason)
+    if (r.status === 'rejected') await notifyError(`${exportProjectName(targets[i]!.name)}: не выгрузилось`, r.reason)
   }
   await loadSets()
 }
 
 // Ctrl+Enter в этом окне — выгрузить всё, что готово; в окне изменений сочетание обрабатывает оно само
 useEventListener('keydown', (event: KeyboardEvent) => {
-  if (!open.value || changesOpen.value || !(event.metaKey || event.ctrlKey) || event.key !== 'Enter') return
+  if (!open.value || changesOpen.value || !isModEnter(event)) return
   if (!readySets.value.length || pushing.value.size) return
   event.preventDefault()
   if (readySets.value.length > 1) pushAll()
@@ -292,7 +288,7 @@ const findKey = (key: string) => {
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0">
                 <h3 class="font-semibold text-highlighted">
-                  {{ PROJECTS[set.name] ?? set.name }}
+                  {{ exportProjectName(set.name) }}
                 </h3>
                 <template v-if="set.repo">
                   <a
@@ -338,7 +334,7 @@ const findKey = (key: string) => {
 
             <p
               v-if="set.repo && !set.connected"
-              class="mt-2 text-xs text-amber-700 dark:text-amber-400"
+              class="mt-2 text-xs text-warning"
             >
               NUXT_GITHUB_TOKEN не задан на сервере — выгружать нечем.
             </p>
@@ -393,7 +389,7 @@ const findKey = (key: string) => {
 
             <p
               v-if="set.pending"
-              class="mt-2 text-xs text-amber-700 dark:text-amber-400"
+              class="mt-2 text-xs text-warning"
             >
               Ждут утверждения: {{ keysCount(set.pending) }} — их правки в выгрузку не попадут.
               <!-- Черновики и тексты от ИИ — одной выборкой «Не утверждённые» -->
@@ -454,7 +450,7 @@ const findKey = (key: string) => {
         <LocalizationsExportChanges
           v-if="changesFor"
           v-model:open="changesOpen"
-          :project="PROJECTS[changesFor.name] ?? changesFor.name"
+          :project="exportProjectName(changesFor.name)"
           :repo="changesFor.repo?.repo ?? null"
           :changes="previewOf(changesFor.name)?.changes ?? []"
           :pr-label="prLabel(changesFor)"

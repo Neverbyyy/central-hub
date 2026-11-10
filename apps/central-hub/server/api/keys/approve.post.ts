@@ -1,6 +1,6 @@
 // Утвердить переводы: статус «утверждён», пометка «устарел» снимается, текст уходит в выгрузку в проекты.
 // { key, langs } — языки одного ключа (панель, очередь); { keys } — выделенные ключи целиком, все языки с текстом.
-export default defineEventHandler(async (event) => {
+export default defineHubHandler(async (event) => {
   const actor = await requireHubUser(event)
   const body = await readBody<{ key?: unknown, langs?: unknown, keys?: unknown }>(event)
 

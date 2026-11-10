@@ -1,11 +1,6 @@
 import type { RealtimeChannel } from '@supabase/supabase-js'
-import { escapeLike, type RegistryKind } from '@amaya/l10n-core'
-
-export interface RegistryEntry {
-  kind: RegistryKind
-  code: string
-  title: string
-}
+import { escapeLike } from '@amaya/l10n-core'
+import type { RegistryCode } from '~/utils/keySuggestions'
 
 export interface Language {
   code: string
@@ -20,9 +15,6 @@ export interface Localization {
   technical_key: string
   translations: Record<string, string>
   status: Record<string, TranslationStatus>
-  // Версия исходного текста, с которой сделан перевод; меньше source_rev — перевод устарел
-  based_on: Record<string, number>
-  source_rev: number
   // Языки с переводом, устаревшим после правки английского (считает база)
   stale_langs: string[]
   deprecated_at: string | null
@@ -43,13 +35,39 @@ export const canApproveLang = (row: Pick<Localization, 'translations' | 'status'
   !!row.translations?.[lang] && (row.status?.[lang] !== 'approved' || !!row.stale_langs?.includes(lang))
 
 const PAGE_SIZE = 100
-const SELECT = 'technical_key, translations, status, based_on, source_rev, stale_langs, deprecated_at, created_at, updated_at'
+// Устаревшие переводы база считает сама (stale_langs) — версии исходного текста интерфейсу не нужны
+const SELECT = 'technical_key, translations, status, stale_langs, deprecated_at, created_at, updated_at'
 const WEEK = 7 * 24 * 60 * 60 * 1000
 
-// Параметры адреса, которые описывают выборку; остальные (key, new) не трогаем
-const FILTER_PARAMS = ['q', 'tags', 'status', 'stale', 'missing', 'recent', 'prefix', 'deprecated']
-
 const asString = (value: unknown) => (typeof value === 'string' ? value : '')
+
+// Фильтры выборки и как они лежат в адресе. Новый фильтр — строка здесь, условие в applyFilters (запрос к базе)
+// и в matchesView (строки коллег из Realtime)
+const flag = { read: (value: string) => value === '1', write: (value: boolean) => (value ? '1' : '') }
+const text = { read: (value: string) => value, write: (value: string) => value }
+const FILTERS = {
+  status: {
+    read: (value: string) => (['ai', 'draft', 'approved', 'pending'].includes(value) ? value : '') as StatusFilter,
+    write: (value: StatusFilter) => value
+  },
+  // Только с переводами, устаревшими после правки английского
+  stale: flag,
+  // Код языка: нет перевода на него
+  missing: { read: (value: string) => (/^[a-z]{2,3}(-[A-Za-z0-9]{2,4})?$/.test(value) ? value : ''), write: (value: string) => value },
+  // Изменённые за неделю
+  recent: flag,
+  // Раздел из дерева, например app.cars2.
+  prefix: text,
+  // Вместо действующих ключей — помеченные устаревшими (их нет в выгрузках)
+  deprecated: flag
+}
+type FilterName = keyof typeof FILTERS
+type Filters = { [Name in FilterName]: ReturnType<(typeof FILTERS)[Name]['read']> }
+const FILTER_NAMES = Object.keys(FILTERS) as FilterName[]
+const emptyFilters = () => Object.fromEntries(FILTER_NAMES.map(name => [name, FILTERS[name].read('')])) as Filters
+
+// Параметры адреса, которые описывают выборку; остальные (key, new) не трогаем
+const FILTER_PARAMS = ['q', 'tags', ...FILTER_NAMES]
 
 interface Edit {
   key: string
@@ -58,13 +76,13 @@ interface Edit {
   next: string
 }
 
-interface Conflict {
+export interface Conflict {
   current: string | null
   actor?: string
 }
 
-// Ответ 409 от PUT /api/translations: ячейку изменили, пока человек её правил
-const conflictOf = (error: unknown): Conflict | null => {
+/** Ответ 409 от PUT /api/translations: ячейку изменили, пока человек её правил (грид и очередь перевода). */
+export const conflictOf = (error: unknown): Conflict | null => {
   const { statusCode, data } = (error ?? {}) as { statusCode?: number, data?: { data?: Conflict } }
   return statusCode === 409 && data?.data && 'current' in data.data ? data.data : null
 }
@@ -81,7 +99,7 @@ export function useLocalizations() {
   const { languages, error: languagesError, load: loadLanguages } = useLanguages()
   const languageCodes = computed(() => languages.value.map(l => l.code))
   // Коды игр, сайтов, брендов, тестов — по ним проверяется имя нового ключа
-  const registry = ref<RegistryEntry[]>([])
+  const registry = ref<RegistryCode[]>([])
 
   const rows = ref<Localization[]>([])
   const total = ref<number | null>(null)
@@ -93,32 +111,13 @@ export function useLocalizations() {
   const q = ref('')
   const selectedTags = ref<string[]>([])
   const availableTags = ref<string[]>([])
-  const filters = reactive({
-    status: '' as StatusFilter,
-    // Только с переводами, устаревшими после правки английского
-    stale: false,
-    // Код языка: нет перевода на него
-    missing: '',
-    // Изменённые за неделю
-    recent: false,
-    // Раздел из дерева, например app.cars2.
-    prefix: '',
-    // Вместо действующих ключей — помеченные устаревшими (их нет в выгрузках)
-    deprecated: false
-  })
+  const filters = reactive(emptyFilters())
 
   const readQuery = () => {
     const query = route.query
     q.value = asString(query.q)
     selectedTags.value = asString(query.tags).split(',').filter(Boolean)
-    const status = asString(query.status)
-    filters.status = (['ai', 'draft', 'approved', 'pending'].includes(status) ? status : '') as StatusFilter
-    filters.stale = query.stale === '1'
-    const missing = asString(query.missing)
-    filters.missing = /^[a-z]{2,3}(-[A-Za-z0-9]{2,4})?$/.test(missing) ? missing : ''
-    filters.recent = query.recent === '1'
-    filters.prefix = asString(query.prefix)
-    filters.deprecated = query.deprecated === '1'
+    for (const name of FILTER_NAMES) (filters as Record<FilterName, unknown>)[name] = FILTERS[name].read(asString(query[name]))
   }
 
   const buildQuery = () => {
@@ -128,12 +127,10 @@ export function useLocalizations() {
     }
     if (q.value.trim()) next.q = q.value.trim()
     if (selectedTags.value.length) next.tags = selectedTags.value.join(',')
-    if (filters.status) next.status = filters.status
-    if (filters.stale) next.stale = '1'
-    if (filters.missing) next.missing = filters.missing
-    if (filters.recent) next.recent = '1'
-    if (filters.prefix) next.prefix = filters.prefix
-    if (filters.deprecated) next.deprecated = '1'
+    for (const name of FILTER_NAMES) {
+      const value = (FILTERS[name].write as (value: unknown) => string)(filters[name])
+      if (value) next[name] = value
+    }
     return next
   }
 
@@ -145,14 +142,12 @@ export function useLocalizations() {
     if (!sameQuery(route.query, next)) router.replace({ query: next })
   }
 
-  const hasFilters = computed(() =>
-    !!(q.value.trim() || selectedTags.value.length || filters.status || filters.stale || filters.missing || filters.recent || filters.prefix || filters.deprecated)
-  )
+  const hasFilters = computed(() => !!(q.value.trim() || selectedTags.value.length || FILTER_NAMES.some(name => filters[name])))
 
   const resetFilters = () => {
     q.value = ''
     selectedTags.value = []
-    Object.assign(filters, { status: '', stale: false, missing: '', recent: false, prefix: '', deprecated: false })
+    Object.assign(filters, emptyFilters())
   }
 
   // Каждый новый поиск/фильтр увеличивает поколение, ответы старых запросов выбрасываются
@@ -192,7 +187,7 @@ export function useLocalizations() {
 
   const loadRegistry = async () => {
     const { data, error } = await supabase.from('registry').select('kind, code, title').order('kind').order('code')
-    if (!error) registry.value = (data ?? []) as RegistryEntry[]
+    if (!error) registry.value = (data ?? []) as RegistryCode[]
   }
 
   const load = async (reset = false) => {
@@ -399,7 +394,8 @@ export function useLocalizations() {
           .range(from, from + step - 1)
       )
       if (error) throw error
-      all.push(...(data ?? []))
+      // translations в базе — JSON: в интерфейсе это тексты по языкам
+      all.push(...((data ?? []) as Pick<Localization, 'technical_key' | 'translations'>[]))
       if (!data || data.length < step) break
     }
     return all
@@ -511,8 +507,6 @@ export function useLocalizations() {
         }
         row.translations = merged
         row.status = incoming.status
-        row.based_on = incoming.based_on
-        row.source_rev = incoming.source_rev
         row.stale_langs = incoming.stale_langs
         row.updated_at = incoming.updated_at
       })
@@ -551,6 +545,7 @@ export function useLocalizations() {
     deprecateKeys,
     restoreKeys,
     fetchAll,
+    findRow,
     keysVersion
   }
 }

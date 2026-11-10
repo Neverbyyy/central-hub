@@ -1,9 +1,7 @@
 import { importSet } from '../../../lib/sync'
 
 // `amaya-l10n import`: файлы проекта как есть → строки legacy.<проект>. и шаблоны выгрузки
-export default defineHubHandler(async (event) => {
-  requireToken(event, 'cli')
-
+export default defineTokenHandler('cli', async (event) => {
   const body = await readBody<{ files?: unknown, sourceRef?: unknown, actor?: unknown }>(event)
   const files = body?.files
   if (!files || typeof files !== 'object' || !Object.values(files).every(v => typeof v === 'string')) {

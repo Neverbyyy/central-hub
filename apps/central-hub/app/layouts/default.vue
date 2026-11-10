@@ -63,7 +63,7 @@ watch(() => route.fullPath, () => {
 
           <template #item="{ item, active }">
             <!-- Один из двух цветов, а не оба сразу: иначе побеждает тот, что позже в CSS -->
-            <div :class="['bg-gray-0 color-blue font-normal rounded-lg', active ? 'text-highlighted' : 'text-muted']">
+            <div :class="['font-normal rounded-lg', active ? 'text-highlighted' : 'text-muted']">
               {{ item.label }}
             </div>
           </template>

@@ -58,7 +58,7 @@ const truncated = computed(() => props.changes.filter(c => c.truncated))
 
 // Ctrl+Enter — выгрузить, как в окне Figma
 useEventListener('keydown', (event: KeyboardEvent) => {
-  if (!open.value || !(event.metaKey || event.ctrlKey) || event.key !== 'Enter') return
+  if (!open.value || !isModEnter(event)) return
   if (!props.canPush || props.pushing) return
   event.preventDefault()
   emit('push')
@@ -77,7 +77,7 @@ useEventListener('keydown', (event: KeyboardEvent) => {
         <p
           v-for="change in truncated"
           :key="change.path"
-          class="text-xs text-amber-700 dark:text-amber-400"
+          class="text-xs text-warning"
         >
           В {{ changeFileName(change.path) }} показаны первые {{ change.lines.length }} из
           {{ change.added + change.changed + change.removed }} изменений — все будут в PR.

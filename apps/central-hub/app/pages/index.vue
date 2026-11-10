@@ -2,7 +2,7 @@
 // Главная: сервисы по группам. Список — app/utils/services.ts, тот же, что в палитре команд
 const user = useHubUser()
 // Та же палитра, что по Ctrl+K / ⌘K (CommandPalette в лейауте)
-const paletteOpen = useState('command-palette-open', () => false)
+const paletteOpen = useCommandPaletteOpen()
 
 const groups = HUB_SERVICE_GROUPS.map(group => ({
   ...group,

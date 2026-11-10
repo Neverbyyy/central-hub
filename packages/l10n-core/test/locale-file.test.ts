@@ -1,12 +1,7 @@
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { findExportConflicts, readLocaleFile, renderLocaleFile, type LocaleEntry } from '../src'
+import { filePath, findExportConflicts, readLocaleFile, renderLocaleFile, type LocaleEntry } from '../src'
 
-const LANGS = ['en', 'ru', 'de', 'es', 'it', 'pt', 'fr', 'sv', 'nl']
-const FIXTURES = join(import.meta.dirname, '../../../fixtures/legacy')
-const fixture = (project: string, lang: string) =>
-  readFileSync(join(FIXTURES, project === 'inapp' ? 'inapp/src/locales' : 'pages-hub/i18n/locales', `${lang}.json`), 'utf8')
+import { LANGS, readFixture as fixture } from '../../../tests/fixtures'
 
 const asMap = (entries: readonly LocaleEntry[]) => new Map(entries.map(e => [JSON.stringify(e.path), e.value]))
 
@@ -32,7 +27,7 @@ describe('выгрузка совпадает с исходными файлам
   })
 
   it.each(LANGS)('Pages Hub %s.json — и по шаблону, и без него', (lang) => {
-    const file = fixture('pages-hub', lang)
+    const file = fixture('pages_hub', lang)
     const entries = readLocaleFile(file)
     expect(renderLocaleFile({ template: file, entries })).toBe(file)
     expect(renderLocaleFile({ entries, finalNewline: false })).toBe(file)
@@ -196,5 +191,23 @@ describe('findExportConflicts', () => {
 
   it('выгрузка с конфликтом падает, а не перезаписывает молча', () => {
     expect(() => renderLocaleFile({ entries: [{ path: ['a'], value: '1' }, { path: ['a', 'b'], value: '2' }] })).toThrow('Конфликт путей')
+  })
+})
+
+describe('filePath — где строка лежит в файле проекта', () => {
+  it('у legacy-строки — её путь из исходного файла, даже в плоском формате', () => {
+    expect(filePath('legacy.inapp.a.b', 'nested', ['a', 'b'])).toEqual(['a', 'b'])
+    expect(filePath('legacy.inapp.a', 'flat', ['a.b'])).toEqual(['a.b'])
+  })
+  it('у нового ключа: в плоском формате — ключ целиком, во вложенном — по точкам', () => {
+    expect(filePath('app.cars2.paywall.title', 'flat')).toEqual(['app.cars2.paywall.title'])
+    expect(filePath('app.cars2.paywall.title', 'nested')).toEqual(['app', 'cars2', 'paywall', 'title'])
+    expect(filePath('app.cars2.title', 'nested', [])).toEqual(['app', 'cars2', 'title'])
+    expect(filePath('app.cars2.title', 'nested', null)).toEqual(['app', 'cars2', 'title'])
+  })
+  it('путь — копия: правка результата не портит исходный', () => {
+    const legacy = ['a', 'b']
+    filePath('legacy.x.a.b', 'nested', legacy).push('c')
+    expect(legacy).toEqual(['a', 'b'])
   })
 })

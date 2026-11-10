@@ -20,7 +20,7 @@ const person = (tab: string, name: string, extra: Partial<PresencePerson> = {}):
   ({ tab, name, page: 'Локализации', editing: null, since: 1000, device: 'desktop', ...extra })
 
 describe('присутствие: состояние канала', () => {
-  it('у вкладки берётся последнее состояние; без имени отсеивается, непонятные поля — по умолчанию', () => {
+  it('у вкладки берётся последнее состояние; без имени отсеивается, непонятные поля — по умолчанию; editing — не отсюда', () => {
     const people = presencePeople({
       a: [{ name: 'Антон', page: 'Главная', editing: null }, { name: 'Антон', page: 'Локализации', editing: { key: 'app.cars2.paywall.title', lang: 'de' }, since: 5000, device: 'phone' }],
       b: [{ name: '  ', page: 'Главная' }],
@@ -29,7 +29,7 @@ describe('присутствие: состояние канала', () => {
       e: []
     })
     expect(people).toEqual([
-      { tab: 'a', name: 'Антон', page: 'Локализации', editing: { key: 'app.cars2.paywall.title', lang: 'de' }, since: 5000, device: 'phone' },
+      { tab: 'a', name: 'Антон', page: 'Локализации', editing: null, since: 5000, device: 'phone' },
       { tab: 'd', name: 'Кирилл', page: '', editing: null, since: 0, device: 'desktop' }
     ])
   })

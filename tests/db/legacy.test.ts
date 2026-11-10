@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { readLocaleFile } from '../../packages/l10n-core/src'
 import { exportSet, importSet } from '../../apps/central-hub/server/lib/sync'
-import { ACTOR, service } from './clients'
+import { ACTOR, service, setTranslation } from './clients'
 import { IMPORTER, LANGS, readFixtures, SETS } from './fixtures'
 
 // Строки уже занёс global-setup.ts; здесь проверяем, что повторный импорт ничего не меняет
 // и что выгрузка возвращает исходные файлы. База тестовая — правки людей тут не пострадают.
 describe.each(Object.entries(SETS))('набор %s', (name, set) => {
-  const files = readFixtures(set.dir)
+  const files = readFixtures(name as keyof typeof SETS)
 
   it('импорт копий, повторный импорт ничего не меняет', async () => {
     const first = await importSet(service, name, files, { actor: IMPORTER, sourceRef: set.commit })
@@ -40,8 +40,7 @@ describe.each(Object.entries(SETS))('набор %s', (name, set) => {
 
 describe('правка в сервисе', () => {
   const KEY = 'legacy.pages_hub.a.gift_card.common.gift_card_code'
-  const setTranslation = (value: string) =>
-    service.rpc('set_translation', { p_key: KEY, p_lang: 'de', p_value: value, p_actor: ACTOR, p_source: 'test' })
+  const setDe = (value: string) => setTranslation(KEY, 'de', value)
 
   it('без утверждения не меняет выгрузку, после — ровно одну строку одного файла', async () => {
     const before = await exportSet(service, 'pages_hub')
@@ -49,7 +48,7 @@ describe('правка в сервисе', () => {
     const original = row!.translations.de as string
 
     try {
-      expect((await setTranslation(`${original} (тест)`)).error).toBeNull()
+      expect((await setDe(`${original} (тест)`)).error).toBeNull()
       // Черновик в проект не уходит
       expect((await exportSet(service, 'pages_hub')).revision).toBe(before.revision)
 
@@ -66,7 +65,7 @@ describe('правка в сервисе', () => {
         expect(changed).toEqual(file.lang === 'de' ? [expect.stringContaining('(тест)')] : [])
       }
     } finally {
-      await setTranslation(original)
+      await setDe(original)
       // Импортированная строка была утверждённой — возвращаем и статус
       await service.from('localizations').update({ status: row!.status }).eq('technical_key', KEY)
     }

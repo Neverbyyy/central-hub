@@ -38,6 +38,7 @@ class FakeVariable {
     this.valuesByMode[modeId] = value
     this.writes++
   }
+
   getPluginData(key: string) { return this.data.get(key) ?? '' }
   setPluginData(key: string, value: string) { this.data.set(key, value) }
 }
@@ -63,6 +64,8 @@ function setup({ command = 'open', token = 'secret', settings = null as object |
   const variables = new Map<string, FakeVariable>()
   const root = new Map<string, string>(settings ? [['settings', JSON.stringify(settings)]] : [])
   const storage = new Map<string, string>([['token', token]])
+  // Сообщения окну разной формы — тест читает их поля как есть
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const posted: any[] = []
   const requests: { url: string, auth: string }[] = []
   const timers: { fn: () => void, delay: number, cleared?: boolean }[] = []
@@ -302,7 +305,7 @@ describe('плагин Figma: живое обновление', () => {
 
     t.env.respond = () => ({ status: 200, body: texts([variable('common.a.one', 'One', { ru: 'Один' })], ['common.a.two'], '2026-10-29T10:00:05.000Z') })
     t.pendingTimer()!.fn()
-    const live = await t.waitFor('live')
+    const live = await t.waitFor('live-result')
     expect(t.requests.at(-1)!.url).toContain('since=2026-10-29T10%3A00%3A00.000Z')
     expect(live).toMatchObject({ changed: 1, extra: ['common/a/two'] })
     expect(t.valueOf('common/a/one', 'Russian')).toBe('Один')
@@ -310,7 +313,7 @@ describe('плагин Figma: живое обновление', () => {
     // Следующий опрос — с now последнего ответа
     t.env.respond = () => ({ status: 200, body: texts([], [], '2026-10-29T10:00:10.000Z') })
     t.pendingTimer()!.fn()
-    await t.waitFor('live', 2)
+    await t.waitFor('live-result', 2)
     expect(t.requests.at(-1)!.url).toContain('since=2026-10-29T10%3A00%3A05.000Z')
     // Архив без адреса Supabase — подписку окну не заказывают
     expect(t.posted.some(m => m.type === 'realtime-start')).toBe(false)
@@ -376,7 +379,7 @@ describe('плагин Figma: мгновенное обновление чере
     // Правки, сделанные пока шло подключение, — одним запросом сразу
     expect(t.pendingTimer()!.delay).toBe(0)
     t.pendingTimer()!.fn()
-    await t.waitFor('live')
+    await t.waitFor('live-result')
     expect(t.pendingTimer()!.delay).toBe(60000)
 
     // Связь пропала — снова опрос
@@ -393,7 +396,7 @@ describe('плагин Figma: мгновенное обновление чере
     const t = await loaded({ realtime: true })
     t.ui({ type: 'realtime', state: 'on' })
     t.pendingTimer()!.fn()
-    await t.waitFor('live')
+    await t.waitFor('live-result')
     const before = t.textRequests().length
 
     // commonx — не раздел common
@@ -412,19 +415,19 @@ describe('плагин Figma: мгновенное обновление чере
     // Запрос в пути — пришла ещё пачка: после него — ещё один, а не по запросу на событие
     t.ui({ type: 'changed', keys: ['common.a.one'] })
     t.ui({ type: 'changed', keys: ['common.a.one'] })
-    const live = await t.waitFor('live', 2)
+    const live = await t.waitFor('live-result', 2)
     expect(live.changed).toBe(1)
     expect(t.valueOf('common/a/one', 'English')).toBe('One!')
     expect(t.pendingTimer()!.delay).toBe(300)
     t.pendingTimer()!.fn()
-    await t.waitFor('live', 3)
+    await t.waitFor('live-result', 3)
     expect(t.pendingTimer()!.delay).toBe(60000)
     expect(t.textRequests().length).toBe(before + 2)
   })
 
   it('галка «Живое обновление» снята — подписка и опрос остановлены, запоздалые сообщения окна их не оживляют', async () => {
     const t = await loaded({ realtime: true })
-    t.ui({ type: 'live', on: false })
+    t.ui({ type: 'live-toggle', on: false })
     expect(t.last('realtime-stop')).toBeDefined()
     expect(t.pendingTimer()).toBeUndefined()
 
@@ -432,7 +435,7 @@ describe('плагин Figma: мгновенное обновление чере
     t.ui({ type: 'changed', keys: ['common.a.one'] })
     expect(t.pendingTimer()).toBeUndefined()
 
-    t.ui({ type: 'live', on: true })
+    t.ui({ type: 'live-toggle', on: true })
     expect(t.posted.filter(m => m.type === 'realtime-start')).toHaveLength(2)
     expect(t.pendingTimer()!.delay).toBe(0)
   })
@@ -462,13 +465,13 @@ describe('плагин Figma: фоновый режим', () => {
     t.ui({ type: 'realtime', state: 'on' })
     t.env.respond = () => ({ status: 200, body: texts([variable('common.a.one', 'One!'), variable('common.a.two', 'Two')], [], '2026-10-29T10:01:00.000Z') })
     t.pendingTimer()!.fn()
-    await t.waitFor('live')
+    await t.waitFor('live-result')
     const note = t.env.notes.at(-1)!
     expect(note.message).toBe('Amaya Hub: обновлено 2 текста')
     // Без изменений уведомлений нет
     const count = t.env.notes.length
     t.pendingTimer()!.fn()
-    await t.waitFor('live', 2)
+    await t.waitFor('live-result', 2)
     expect(t.env.notes).toHaveLength(count)
 
     note.options!.button!.action()
@@ -533,5 +536,33 @@ describe('плагин Figma: фоновый режим', () => {
     t.start()
     expect((await t.waitFor('error')).message).toBe('Неизвестные языки: xx')
     expect(t.env.visible).toBe(true)
+  })
+})
+
+describe('плагин Figma: токен', () => {
+  it('без токена окно просит его; вставленный — сохраняется, разделы и выборка файла загружаются сразу', async () => {
+    const t = setup({ token: '', settings: { prefixes: ['common'], langs: ['en'], live: false } })
+    t.env.respond = () => ({ status: 200, body: texts([variable('common.a.one', 'One')]) })
+    t.start()
+    expect((await t.waitFor('init')).hasToken).toBe(false)
+    expect(t.requests).toEqual([])
+
+    t.ui({ type: 'token', token: '  new-secret  ' })
+    await t.waitFor('result')
+    expect(t.storage.get('token')).toBe('new-secret')
+    expect(t.last('sections')).toBeDefined()
+    expect(t.requests.length).toBeGreaterThan(0)
+    expect(t.requests.every(r => r.auth === 'Bearer new-secret')).toBe(true)
+  })
+
+  it('«Сменить токен» — токен забыт, опрос и подписка остановлены, окно просит новый', async () => {
+    const t = await loaded({ realtime: true })
+    expect(t.pendingTimer()).toBeDefined()
+
+    t.ui({ type: 'forget-token' })
+    expect(await t.waitFor('auth')).toEqual({ type: 'auth', message: '' })
+    expect(t.storage.get('token')).toBe('')
+    expect(t.last('realtime-stop')).toBeDefined()
+    expect(t.pendingTimer()).toBeUndefined()
   })
 })

@@ -2,6 +2,7 @@
 // Без Nuxt-глобалов: используется маршрутом /api/keys/history и тестами базы.
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { fetchAllPages } from './paging'
 
 export interface HistoryEntry {
   lang: string | null
@@ -26,8 +27,6 @@ interface HistoryRow extends HistoryEntry {
   source: string
 }
 
-const PAGE = 1000
-
 /**
  * Действия ключа от новых к старым, срез [offset, offset + limit).
  * Одна правка — одна транзакция, а now() в ней один: строки с одинаковыми временем, автором и источником —
@@ -38,19 +37,13 @@ export async function keyHistory(
   key: string,
   { offset = 0, limit = 10 }: { offset?: number, limit?: number } = {}
 ): Promise<{ total: number, actions: HistoryAction[] }> {
-  const rows: HistoryRow[] = []
-  for (let from = 0; ; from += PAGE) {
-    const { data, error } = await db
-      .from('history')
-      .select('id, lang, field, old_value, new_value, actor, source, created_at')
-      .eq('technical_key', key)
-      .order('created_at', { ascending: false })
-      .order('id', { ascending: true })
-      .range(from, from + PAGE - 1)
-    if (error) throw error
-    rows.push(...(data as HistoryRow[]))
-    if (data.length < PAGE) break
-  }
+  const rows = await fetchAllPages<HistoryRow>((from, to) => db
+    .from('history')
+    .select('id, lang, field, old_value, new_value, actor, source, created_at')
+    .eq('technical_key', key)
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: true })
+    .range(from, to))
 
   const actions: HistoryAction[] = []
   for (const { id, created_at, actor, source, ...entry } of rows) {

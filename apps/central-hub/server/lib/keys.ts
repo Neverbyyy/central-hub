@@ -2,13 +2,12 @@
 // Без Nuxt-глобалов: общий для маршрутов интерфейса, MCP и тестов базы.
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { checkText, descriptionError, escapeLike, figmaUrlError, MAX_VALUE_LENGTH, newKeyError, type KeyContext, type RegistryKind, type TextIssue } from '@amaya/l10n-core'
+import { checkText, descriptionError, escapeLike, figmaUrlError, isRegistryCode, MAX_LENGTH_LIMIT, MAX_VALUE_LENGTH, newKeyError, REGISTRY_KINDS, type KeyContext, type RegistryKind, type TextIssue } from '@amaya/l10n-core'
 import { HubError } from './errors'
+import { fetchAllPages } from './paging'
 
 export type KeyStatus = 'draft' | 'ai' | 'approved'
 export type KeySource = 'ui' | 'mcp'
-
-export const REGISTRY_KINDS: RegistryKind[] = ['game', 'site', 'brand', 'test', 'project']
 
 export interface CreateKeyInput {
   key: string
@@ -40,21 +39,26 @@ interface KeyRow {
   updated_by: string | null
 }
 
-const PAGE = 1000
+/** Коды языков в порядке грида; editorOnly — только видимые в редакторе (режимы Figma). */
+export async function loadLanguages(db: SupabaseClient, { editorOnly = false } = {}): Promise<string[]> {
+  let request = db.from('languages').select('code').order('position')
+  if (editorOnly) request = request.eq('in_editor', true)
+  const { data, error } = await request
+  if (error) throw error
+  return (data as { code: string }[]).map(l => l.code)
+}
+
+const unknownLanguage = (lang: string) => new HubError(`Неизвестный язык «${lang}»`)
 
 /** Справочник и языки — то, по чему проверяется имя ключа. */
 export async function loadKeyContext(db: SupabaseClient): Promise<KeyContext> {
-  const [registry, languages] = await Promise.all([
-    db.from('registry').select('kind, code'),
-    db.from('languages').select('code').order('position')
-  ])
+  const [registry, languages] = await Promise.all([db.from('registry').select('kind, code'), loadLanguages(db)])
   if (registry.error) throw registry.error
-  if (languages.error) throw languages.error
   const byKind: KeyContext['registry'] = {}
   for (const { kind, code } of registry.data as { kind: RegistryKind, code: string }[]) {
     byKind[kind] = [...(byKind[kind] ?? []), code]
   }
-  return { registry: byKind, languages: (languages.data as { code: string }[]).map(l => l.code) }
+  return { registry: byKind, languages }
 }
 
 function normalizeTags(tags: unknown): string[] {
@@ -69,7 +73,7 @@ function normalizeTags(tags: unknown): string[] {
 
 function parseMaxLength(value: unknown): number | null {
   if (value === undefined || value === null || value === '') return null
-  if (typeof value !== 'number' || !Number.isInteger(value) || value < 1 || value > 10_000) {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 1 || value > MAX_LENGTH_LIMIT) {
     throw new HubError('Лимит длины — целое число от 1 до 10 000')
   }
   return value
@@ -92,7 +96,7 @@ export async function createKey(
 
   const translations: Record<string, string> = {}
   for (const [lang, value] of Object.entries(input.translations ?? {})) {
-    if (!context.languages.includes(lang)) throw new HubError(`Неизвестный язык «${lang}»`)
+    if (!context.languages.includes(lang)) throw unknownLanguage(lang)
     if (typeof value !== 'string') throw new HubError(`Текст «${lang}» должен быть строкой`)
     if (value.length > MAX_VALUE_LENGTH) throw new HubError(`Текст «${lang}» длиннее ${MAX_VALUE_LENGTH} символов`)
     if (value) translations[lang] = value
@@ -191,12 +195,12 @@ export async function searchStrings(
 
 /** Всё о строке: тексты, статусы, что не переведено и что устарело после правки английского. */
 export async function getString(db: SupabaseClient, key: string) {
-  const [row, context] = await Promise.all([
+  const [row, languages] = await Promise.all([
     db.from('localizations')
       .select('technical_key, translations, status, stale_langs, description, tags, max_length, deprecated_at, updated_at, updated_by')
       .eq('technical_key', key)
       .maybeSingle(),
-    loadKeyContext(db)
+    loadLanguages(db)
   ])
   if (row.error) throw row.error
   if (!row.data) throw new HubError(`Ключ «${key}» не найден`, 404)
@@ -209,7 +213,7 @@ export async function getString(db: SupabaseClient, key: string) {
     deprecated: !!data.deprecated_at,
     translations: data.translations,
     status: data.status,
-    missing: context.languages.filter(lang => !data.translations[lang]),
+    missing: languages.filter(lang => !data.translations[lang]),
     stale: data.stale_langs,
     updated_at: data.updated_at,
     updated_by: data.updated_by
@@ -220,17 +224,29 @@ export async function getString(db: SupabaseClient, key: string) {
  * Все действующие ключи (или ключи раздела) постранично — PostgREST отдаёт не больше 1000 строк за раз.
  * С since — только изменённые с этого момента, включая помеченные устаревшими.
  */
-export async function allKeys<T>(db: SupabaseClient, columns: string, prefix?: string, { since }: { since?: string } = {}): Promise<T[]> {
-  const rows: T[] = []
-  for (let from = 0; ; from += PAGE) {
-    let request = db.from('localizations').select(columns).order('technical_key').range(from, from + PAGE - 1)
+export function allKeys<T>(db: SupabaseClient, columns: string, prefix?: string, { since }: { since?: string } = {}): Promise<T[]> {
+  return fetchAllPages<T>((from, to) => {
+    let request = db.from('localizations').select(columns).order('technical_key').range(from, to)
     request = since ? request.gte('updated_at', since) : request.is('deprecated_at', null)
     if (prefix?.trim()) request = request.like('technical_key', `${escapeLike(prefix.trim())}%`)
-    const { data, error } = await request
-    if (error) throw error
-    rows.push(...(data as T[]))
-    if (data.length < PAGE) return rows
-  }
+    return request
+  })
+}
+
+/**
+ * Ключи нескольких разделов без повторов (раздел может лежать внутри другого). Разделы читаются параллельно,
+ * а порядок — как у разделов: от него зависит порядок строк в файлах выгрузки без шаблона.
+ */
+export async function keysByPrefixes<T extends { technical_key: string }>(
+  db: SupabaseClient,
+  columns: string,
+  prefixes: readonly string[],
+  options: { since?: string } = {}
+): Promise<T[]> {
+  const pages = await Promise.all(prefixes.map(prefix => allKeys<T>(db, columns, prefix, options)))
+  const rows = new Map<string, T>()
+  for (const row of pages.flat()) rows.set(row.technical_key, row)
+  return [...rows.values()]
 }
 
 /** Дерево ключей от общего к частному: сегменты после prefix и сколько ключей внутри. */
@@ -294,9 +310,9 @@ export async function listRegistry(db: SupabaseClient, kind?: string) {
 }
 
 export async function addRegistryCode(db: SupabaseClient, { kind, code, title }: { kind: string, code: string, title: string }) {
-  if (!REGISTRY_KINDS.includes(kind as RegistryKind)) throw new HubError(`Неизвестный раздел справочника «${kind}»`)
+  if (!(REGISTRY_KINDS as readonly string[]).includes(kind)) throw new HubError(`Неизвестный раздел справочника «${kind}»`)
   if (kind === 'project') throw new HubError('Проекты добавляются вместе с набором выгрузки, не из формы')
-  if (!/^[a-z0-9_]+$/.test(code)) throw new HubError('Код — строчная латиница, цифры и _')
+  if (!isRegistryCode(code)) throw new HubError('Код — строчная латиница, цифры и _')
   if (!title?.trim()) throw new HubError('Нужно название')
   const { error } = await db.from('registry').insert({ kind, code, title: title.trim().slice(0, 80) })
   if (error?.code === '23505') throw new HubError(`Код «${code}» уже есть в справочнике`, 409)
@@ -314,48 +330,62 @@ export interface QueueItem {
   max_length: number | null
 }
 
+const QUEUE_COLUMNS = 'technical_key, translations, stale_langs, description, max_length'
+
+/**
+ * Строки очереди языка — фильтром в базе, без чтения всех ключей: действующий ключ раздела, английский не пустой,
+ * а перевода нет (пустая строка — тоже нет) или он устарел после правки английского. reason — только одна причина;
+ * head — только число. lang попадает в текст фильтра, поэтому сюда приходит лишь код из таблицы языков.
+ */
+function queueRequest(db: SupabaseClient, lang: string, { prefix, reason, head = false }: { prefix?: string, reason?: QueueItem['reason'], head?: boolean }) {
+  const text = `translations->>${lang}`
+  let request = db.from('localizations')
+    .select(head ? 'technical_key' : QUEUE_COLUMNS, { count: 'exact', head })
+    .is('deprecated_at', null)
+    // NULL <> '' — не истина: без английского строка в очередь не попадает
+    .neq('translations->>en', '')
+  if (prefix?.trim()) request = request.like('technical_key', `${escapeLike(prefix.trim())}%`)
+  if (reason === 'missing') return request.or(`${text}.is.null,${text}.eq.""`)
+  if (reason === 'stale') return request.neq(text, '').contains('stale_langs', [lang])
+  return request.or(`${text}.is.null,${text}.eq."",stale_langs.cs.{${lang}}`)
+}
+
 /** Очередь перевода: строки с английским, но без перевода на язык или с устаревшим переводом. */
 export async function translationQueue(
   db: SupabaseClient,
   { lang, prefix, limit = 50 }: { lang: string, prefix?: string, limit?: number }
 ): Promise<{ total: number, items: QueueItem[] }> {
-  const context = await loadKeyContext(db)
-  if (!context.languages.includes(lang)) throw new HubError(`Неизвестный язык «${lang}»`)
+  const languages = await loadLanguages(db)
+  if (!languages.includes(lang)) throw unknownLanguage(lang)
   if (lang === 'en') throw new HubError('Английский — исходный язык, его не переводят')
 
-  const rows = await allKeys<KeyRow>(db, 'technical_key, translations, stale_langs, description, max_length', prefix)
-  const items: QueueItem[] = []
-  for (const row of rows) {
-    if (!row.translations.en) continue
-    const reason = !row.translations[lang] ? 'missing' : row.stale_langs.includes(lang) ? 'stale' : null
-    if (!reason) continue
-    items.push({
+  const size = Math.min(Math.max(limit, 1), 200)
+  const { data, error, count } = await queueRequest(db, lang, { prefix }).order('technical_key').range(0, size - 1)
+  if (error) throw error
+  const items = (data as unknown as Pick<KeyRow, 'technical_key' | 'translations' | 'stale_langs' | 'description' | 'max_length'>[])
+    .map(row => ({
       key: row.technical_key,
-      en: row.translations.en,
+      en: row.translations.en!,
       current: row.translations[lang] ?? null,
-      reason,
+      reason: row.translations[lang] ? 'stale' as const : 'missing' as const,
       description: row.description,
       max_length: row.max_length
-    })
-  }
-  return { total: items.length, items: items.slice(0, Math.min(Math.max(limit, 1), 200)) }
+    }))
+  return { total: count ?? 0, items }
 }
 
-/** Размер очереди по каждому языку перевода — за один проход по ключам, для меню «Очередь перевода». */
+/** Размер очереди по каждому языку перевода для меню «Очередь перевода»: только подсчёты, параллельно. */
 export async function queueCounts(db: SupabaseClient, { prefix }: { prefix?: string } = {}) {
-  const context = await loadKeyContext(db)
-  const langs = context.languages.filter(lang => lang !== 'en')
-  const counts = Object.fromEntries(langs.map(lang => [lang, { lang, missing: 0, stale: 0 }]))
-
-  const rows = await allKeys<KeyRow>(db, 'technical_key, translations, stale_langs', prefix)
-  for (const row of rows) {
-    if (!row.translations.en) continue
-    for (const lang of langs) {
-      if (!row.translations[lang]) counts[lang]!.missing++
-      else if (row.stale_langs.includes(lang)) counts[lang]!.stale++
-    }
+  const langs = (await loadLanguages(db)).filter(lang => lang !== 'en')
+  const count = async (lang: string, reason: QueueItem['reason']) => {
+    const { count, error } = await queueRequest(db, lang, { prefix, reason, head: true })
+    if (error) throw error
+    return count ?? 0
   }
-  return langs.map(lang => counts[lang]!)
+  return Promise.all(langs.map(async (lang) => {
+    const [missing, stale] = await Promise.all([count(lang, 'missing'), count(lang, 'stale')])
+    return { lang, missing, stale }
+  }))
 }
 
 /** Ключи без перевода на язык или с переводом, устаревшим после правки английского. */

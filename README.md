@@ -165,7 +165,7 @@ cp .env.example .env   # и заполнить значения
 pnpm dev          # сервис на http://localhost:3000
 pnpm storybook    # Storybook на http://localhost:6006 (токены пересобираются при правке JSON)
 pnpm build        # весь монорепо одной командой (turbo): токены → Storybook, сервис; повтор берёт кеш
-pnpm lint         # turbo: у сервиса известные ошибки в прототипных ab-tests и audit-page
+pnpm lint         # turbo: у сервиса известные ошибки в прототипных ab-tests и audit-page; code.js плагина Figma — не новее ES2017
 pnpm typecheck    # turbo: то же
 pnpm l10n pull    # тексты набора ds со стенда → packages/locales (нужен AMAYA_L10N_TOKEN в .env)
 pnpm test         # unit-тесты packages/* и tests/unit
@@ -173,11 +173,12 @@ pnpm db:start     # локальный Supabase в Docker: миграции с �
 pnpm test:db      # тесты базы — только на локальном Supabase, строки InApp и Pages Hub берутся из fixtures
 pnpm test:stand   # права настоящего стенда из .env: публичный ключ ничего не может записать
 pnpm db:stop      # остановить локальный Supabase и стереть его данные
+pnpm db:types     # типы схемы для сервиса (app/types/database.types.ts) из локальной базы — после каждой миграции
 ```
 
 `test:db` против основной базы не запускается: тесты импортируют копии файлов InApp и Pages Hub,
 а импорт заменил бы правки людей в этих строках значениями из файлов. `test:stand` безопасен —
-он только пытается писать публичным ключом и ждёт отказа.
+он только пытается писать публичным ключом и ждёт отказа, а секретным ключом на стенде лишь читает.
 
 ## CI и бэкапы
 
@@ -211,6 +212,7 @@ pnpm exec supabase login                               # один раз
 pnpm exec supabase link --project-ref <project-ref>    # один раз, спросит пароль базы
 pnpm db:push                                           # применить новые миграции
 pnpm db:new <name>                                     # создать миграцию
+pnpm db:types                                          # после миграции: обновить типы схемы (локальная база)
 ```
 
 Справочники (языки, коды игр и сайтов) — тоже в миграциях, seed не используется:

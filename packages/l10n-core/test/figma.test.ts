@@ -1,7 +1,10 @@
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { figmaModeFiles, figmaModeName, figmaName, figmaText, figmaVariables, readLocaleFile } from '../src'
+import { LANGS, readFixture } from '../../../tests/fixtures'
+import { figmaModeFiles, figmaModeName, figmaName, figmaText, figmaVariables, readLocaleFile, type FigmaGroup, type FigmaToken } from '../src'
+
+// Значение переменной по ключу: группы файла — по частям ключа
+const valueAt = (group: FigmaGroup, key: string) =>
+  (key.split('.').reduce<FigmaGroup | FigmaToken>((node, part) => (node as FigmaGroup)[part]!, group) as FigmaToken).$value
 
 describe('figmaName', () => {
   it('точки → /, чтобы в Figma получилось дерево', () => {
@@ -30,9 +33,9 @@ describe('figmaModeFiles', () => {
 
   it('каждый ключ есть в каждом файле — иначе Figma не создаст переменную', () => {
     const files = figmaModeFiles(rows, { languages: ['en', 'de'] })
-    expect((files.de as any).app.cars2.paywall.title.$value).toBe('')
-    expect((files.de as any).common.button.continue.default.$value).toBe('')
-    expect((files.en as any).app.cars2.paywall.title.$value).toBe('Unlock all cars!')
+    expect(valueAt(files.de!, 'app.cars2.paywall.title')).toBe('')
+    expect(valueAt(files.de!, 'common.button.continue.default')).toBe('')
+    expect(valueAt(files.en!, 'app.cars2.paywall.title')).toBe('Unlock all cars!')
   })
 
   it('ключ внутри строки или совпадение с группой — ошибка, а не молчаливая потеря', () => {
@@ -144,11 +147,10 @@ describe('figmaText — разметку Figma не понимает, в пер�
   })
 
   it('во всех строках InApp и Pages Hub после figmaText не остаётся ни тегов, ни сущностей', () => {
-    const FIXTURES = join(import.meta.dirname, '../../../fixtures/legacy')
     const left: string[] = []
-    for (const dir of ['inapp/src/locales', 'pages-hub/i18n/locales']) {
-      for (const lang of ['en', 'ru', 'de', 'es', 'it', 'pt', 'fr', 'sv', 'nl']) {
-        for (const { path, value } of readLocaleFile(readFileSync(join(FIXTURES, dir, `${lang}.json`), 'utf8'))) {
+    for (const dir of ['inapp', 'pages_hub'] as const) {
+      for (const lang of LANGS) {
+        for (const { path, value } of readLocaleFile(readFixture(dir, lang))) {
           const text = figmaText(value ?? '')
           if (/<\/?[a-z#][^<>]*>|&[a-z#][a-z0-9]*;/i.test(text)) left.push(`${dir}/${lang}: ${path.join('.')} → ${text}`)
         }

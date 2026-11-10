@@ -37,6 +37,7 @@ const {
   deprecateKeys,
   restoreKeys,
   fetchAll,
+  findRow,
   keysVersion
 } = useLocalizations()
 
@@ -53,6 +54,9 @@ const clearSearch = () => {
 
 // --- Выделение строк ---
 const selectedKeys = ref(new Set<string>())
+const clearSelection = () => {
+  selectedKeys.value = new Set()
+}
 
 const toggleRow = (key: string, value: boolean) => {
   const next = new Set(selectedKeys.value)
@@ -68,13 +72,13 @@ const toggleAll = (value: boolean) => {
 // Новый поиск / фильтр — в начало таблицы, выделение сбрасываем
 watch([q, filtersKey], () => {
   grid.value?.reset()
-  selectedKeys.value = new Set()
+  clearSelection()
 })
 
 // --- Дерево разделов: от 1024 px колонкой слева (свёрнута или нет — помним в браузере), уже — шторкой ---
 const treeOpen = useLocalStorage('hub.localizations.tree', true, { initOnMounted: true })
 const treeDrawer = ref(false)
-// Растёт после создания ключа — дерево перечитывает счётчики
+// Растёт, когда ключи появились или пропали (здесь или у коллег) — дерево перечитывает счётчики
 const treeVersion = ref(0)
 const treeShown = computed(() => screen.lg.value && treeOpen.value)
 // Коллеги добавили ключи или пометили их устаревшими — счётчики разделов и список тегов тоже свежие
@@ -102,7 +106,7 @@ watch(screen.lg, (lg) => {
 
 // --- Панель ключа справа: ?key= в адресе, чтобы ссылкой можно было открыть конкретный ключ ---
 const panelKey = ref<string | null>(null)
-const panelRow = computed(() => rows.value.find(r => r.technical_key === panelKey.value))
+const panelRow = computed(() => (panelKey.value ? findRow(panelKey.value) : undefined))
 
 const setKeyParam = (key: string | null) => {
   const query = { ...route.query }
@@ -190,32 +194,27 @@ const deprecateFromPanel = async (key: string) => {
   }
 }
 
-// Без подтверждения: действие обратимо — в тосте есть «Вернуть»
+// Без подтверждения: действие обратимо — в тосте есть «Вернуть». В выборке «Ключ устарел» та же кнопка возвращает.
+// Получилось — выделение снимается, дерево перечитывает счётчики
 const deprecating = ref(false)
 
-const deprecateSelected = async () => {
+const withSelected = async (action: (keys: string[]) => Promise<boolean>) => {
   const keys = [...selectedKeys.value]
   if (!keys.length) return
 
   deprecating.value = true
-  if (await deprecateKeys(keys)) {
-    selectedKeys.value = new Set()
+  if (await action(keys)) {
+    clearSelection()
     treeVersion.value++
   }
   deprecating.value = false
 }
 
-// В выборке «Ключ устарел» та же кнопка возвращает выделенные ключи
-const restoreSelected = async () => {
-  const keys = [...selectedKeys.value]
-  if (!keys.length) return
-
-  deprecating.value = true
+const deprecateSelected = () => withSelected(deprecateKeys)
+const restoreSelected = () => withSelected(async (keys) => {
   await restoreKeys(keys)
-  selectedKeys.value = new Set()
-  treeVersion.value++
-  deprecating.value = false
-}
+  return true
+})
 
 // Выделенные ключи целиком: все языки с текстом становятся утверждёнными и уходят в выгрузку в проекты
 const approving = ref(false)
@@ -238,7 +237,7 @@ const approveSelected = async () => {
     toast.add(count
       ? { title: `Утверждено: ${count} ${plural(count, ['перевод', 'перевода', 'переводов'])}`, color: 'success' }
       : { title: 'Всё выделенное уже утверждено', color: 'neutral' })
-    selectedKeys.value = new Set()
+    clearSelection()
   } catch (error) {
     await notifyError('Не утвердилось', error)
   } finally {
@@ -248,8 +247,6 @@ const approveSelected = async () => {
 
 // --- «Выгрузить в код»: PR с утверждёнными текстами в репозитории InApp и Pages Hub ---
 const projectsOpen = ref(false)
-// Открытые PR — бадж на кнопке: видно, что кто-то выгрузил и PR ждёт мержа
-const { openPrs } = useOpenPrs()
 
 // Строка из окна изменений: путь в файле проекта входит в ключ сервиса — ищем его без фильтров
 const findKey = (key: string) => {
@@ -263,42 +260,9 @@ const showPending = () => {
   filters.status = 'pending'
 }
 
-// --- Очередь перевода: меню по языкам; сколько строк ждёт, считаем при открытии — с учётом раздела ---
-const queueCounts = ref<Record<string, number> | null>(null)
-
-const loadQueueCounts = async (open: boolean) => {
-  if (!open) return
-  queueCounts.value = null
-  try {
-    const counts = await $fetch<{ lang: string, missing: number, stale: number }[]>('/api/queue/counts', {
-      query: { prefix: filters.prefix || undefined }
-    })
-    queueCounts.value = Object.fromEntries(counts.map(c => [c.lang, c.missing + c.stale]))
-  } catch (error) {
-    console.error(error)
-    queueCounts.value = {}
-  }
-}
-
-const queueItems = computed<DropdownMenuItem[][]>(() => [
-  [{ type: 'label', label: filters.prefix ? `Раздел ${filters.prefix}` : 'Все ключи' }],
-  languages.value.filter(l => !l.is_source).map(l => ({
-    label: `${l.code.toUpperCase()} — ${l.name}`,
-    // Свой хвост со счётчиком (#queue-trailing) — и в кнопке очереди, и в подменю «Ещё»
-    slot: 'queue',
-    count: queueCounts.value ? (queueCounts.value[l.code] ?? 0) : undefined,
-    onSelect: () => {
-      navigateTo({ path: '/localizations/queue', query: { lang: l.code, ...(filters.prefix ? { prefix: filters.prefix } : {}) } })
-    }
-  }))
-])
-
-// Хвост пункта языка: сколько ждёт перевода. unknown — тип пункта в своём слоте Nuxt UI выводит только для
-// литерала slot, а у пунктов, собранных в computed, он string
-const queueCount = (item: unknown) => {
-  const count = (item as { count?: number }).count
-  return count === undefined ? '…' : count || '✓'
-}
+// --- Очередь перевода: меню по языкам со счётчиком; хвост пункта — один шаблон на оба меню ---
+const { queueItems, loadQueueCounts, queueCount } = useQueueMenu(toRef(filters, 'prefix'))
+const [DefineQueueCount, ReuseQueueCount] = createReusableTemplate<{ item: unknown }>()
 
 // --- Экспорт: ZIP — всё под текущими фильтрами, Figma — выборка разделов в отдельном окне ---
 const figmaOpen = ref(false)
@@ -308,15 +272,10 @@ const exportZip = async () => {
   exporting.value = true
   try {
     const all = await fetchAll()
-    // JSZip — только по нажатию: ~150 КБ не грузятся вместе со страницей
-    const { default: JSZip } = await import('jszip')
-    const zip = new JSZip()
-    for (const lang of languageCodes.value) {
-      const file: Record<string, string> = {}
-      for (const row of all) file[row.technical_key] = row.translations?.[lang] ?? ''
-      zip.file(`${lang}.json`, JSON.stringify(file, null, 2))
-    }
-    downloadBlob(await zip.generateAsync({ type: 'blob' }), 'localizations.zip')
+    // Файл на язык: ключ → текст, пустая строка — перевода нет
+    const files = Object.fromEntries(languageCodes.value.map(lang =>
+      [`${lang}.json`, Object.fromEntries(all.map(row => [row.technical_key, row.translations?.[lang] ?? '']))]))
+    await downloadJsonZip(files, 'localizations.zip')
     toast.add({ title: 'Экспорт ZIP завершён', color: 'success' })
   } catch (error) {
     toast.add({ title: 'Ошибка экспорта', description: (error as Error).message, color: 'error' })
@@ -343,11 +302,11 @@ const sourceLang = computed(() => languages.value.find(l => l.is_source)?.code ?
 // Английский рядом с полем перевода; у самого английского — нет
 const sheetSource = computed(() => {
   if (!sheet.value || sheet.value.lang === sourceLang.value) return undefined
-  return rows.value.find(r => r.technical_key === sheet.value!.key)?.translations?.[sourceLang.value] ?? ''
+  return findRow(sheet.value.key)?.translations?.[sourceLang.value] ?? ''
 })
 
 const openSheet = (key: string, lang: string) => {
-  const row = rows.value.find(r => r.technical_key === key)
+  const row = findRow(key)
   // Ключа нет среди загруженных строк (панель открыта по ссылке) — сохранить правку было бы некуда
   if (!row) return
   sheet.value = { key, lang, initial: row.translations?.[lang] ?? '' }
@@ -364,16 +323,19 @@ const saveSheet = (value: string) => {
 }
 
 // --- Присутствие: коллеги видят, какую ячейку человек правит — в таблице или в шторке ---
-const { editors, setEditing } = usePresence()
+const { editors } = usePresence()
 const gridEditing = ref<{ key: string, lang: string } | null>(null)
-watchEffect(() => {
-  setEditing(sheetOpen.value && sheet.value ? { key: sheet.value.key, lang: sheet.value.lang } : gridEditing.value)
-})
-onBeforeUnmount(() => setEditing(null))
+usePresenceEditing(() => (sheetOpen.value && sheet.value ? { key: sheet.value.key, lang: sheet.value.lang } : gridEditing.value))
 </script>
 
 <template>
   <div class="flex h-full flex-col overflow-hidden bg-default text-highlighted">
+    <DefineQueueCount v-slot="{ item }">
+      <span class="text-xs tabular-nums text-muted">
+        {{ queueCount(item) }}
+      </span>
+    </DefineQueueCount>
+
     <DefineTags v-slot="{ inFilters }">
       <USelectMenu
         v-model="selectedTags"
@@ -481,9 +443,7 @@ onBeforeUnmount(() => setEditing(null))
             <span class="max-[1365px]:sr-only">Очередь перевода</span>
           </UButton>
           <template #queue-trailing="{ item }">
-            <span class="text-xs tabular-nums text-muted">
-              {{ queueCount(item) }}
-            </span>
+            <ReuseQueueCount :item="item" />
           </template>
         </UDropdownMenu>
 
@@ -513,49 +473,7 @@ onBeforeUnmount(() => setEditing(null))
           <span class="max-[1535px]:sr-only">Export Figma</span>
         </UButton>
 
-        <!-- Главное действие сервиса — выделено. Бадж — сколько PR выгрузки открыто и ждёт мержа, у всех сразу -->
-        <!-- У тултипа Nuxt UI высота в одну строку (h-6): список PR вылезал бы за фон -->
-        <UTooltip
-          :disabled="!openPrs.length"
-          :content="{ side: 'bottom' }"
-          :ui="{ content: 'h-auto px-3 py-2' }"
-        >
-          <UButton
-            icon="i-lucide-git-pull-request"
-            color="neutral"
-            class="relative"
-            title="Выгрузить в код"
-            @click="projectsOpen = true"
-          >
-            <!-- Главное действие видно всегда; уже 768 px — значком с баджем -->
-            <span class="max-md:sr-only">Выгрузить в код</span>
-            <template
-              v-if="openPrs.length"
-              #trailing
-            >
-              <span
-                class="absolute -right-1.5 -top-1.5 min-w-4 rounded-full bg-primary px-1 text-center text-[10px] font-semibold leading-4 text-inverted ring-2 ring-(--ui-bg)"
-                :aria-label="`открыто PR: ${openPrs.length}`"
-              >{{ openPrs.length }}</span>
-            </template>
-          </UButton>
-          <template #content>
-            <div class="text-xs">
-              <p class="mb-1.5 text-muted">
-                {{ openPrs.length === 1 ? 'Открыт PR — ждёт мержа' : 'Открыты PR — ждут мержа' }}
-              </p>
-              <div class="grid grid-cols-[auto_auto] gap-x-4 gap-y-1">
-                <template
-                  v-for="pr in openPrs"
-                  :key="pr.set"
-                >
-                  <span class="font-medium">{{ exportProjectName(pr.set) }} #{{ pr.number }}</span>
-                  <span class="text-muted">{{ pr.actor ? `${pr.actor} · ${formatDateTime(pr.at, { year: false })}` : '' }}</span>
-                </template>
-              </div>
-            </div>
-          </template>
-        </UTooltip>
+        <LocalizationsExportButton @click="projectsOpen = true" />
 
         <UButton
           icon="i-lucide-plus"
@@ -578,9 +496,7 @@ onBeforeUnmount(() => setEditing(null))
             aria-label="Ещё"
           />
           <template #queue-trailing="{ item }">
-            <span class="text-xs tabular-nums text-muted">
-              {{ queueCount(item) }}
-            </span>
+            <ReuseQueueCount :item="item" />
           </template>
         </UDropdownMenu>
       </div>
@@ -628,62 +544,18 @@ onBeforeUnmount(() => setEditing(null))
     </LocalizationsFilters>
 
     <div class="relative flex min-h-0 flex-1">
-      <!-- Действия с выделенными строками — плашкой над гридом: в шапке им не хватает места -->
-      <div
+      <LocalizationsSelectionBar
         v-if="selectedKeys.size"
-        class="pointer-events-none absolute inset-x-0 bottom-4 z-20 flex justify-center px-3"
-      >
-        <div class="pointer-events-auto flex items-center gap-2 whitespace-nowrap rounded-xl border border-default bg-default py-1.5 pl-3 pr-1.5 shadow-lg sm:pl-4">
-          <!-- На телефоне подписи короче, иначе плашка шире экрана -->
-          <span class="mr-1 text-sm text-toned">
-            <span class="max-sm:hidden">Выбрано: </span>{{ keysCount(selectedKeys.size) }}
-          </span>
-          <UButton
-            v-if="filters.deprecated"
-            icon="i-lucide-archive-restore"
-            color="warning"
-            variant="soft"
-            :loading="deprecating"
-            @click="restoreSelected"
-          >
-            Вернуть
-          </UButton>
-          <template v-else>
-            <!-- Нечего утверждать — кнопки нет. Число — только если утверждать нужно не все выделенные: «Выбрано: 5 · Утвердить (2)» -->
-            <UButton
-              v-if="keysToApprove.length"
-              icon="i-lucide-check-check"
-              color="success"
-              variant="soft"
-              :loading="approving"
-              :disabled="deprecating"
-              @click="approveSelected"
-            >
-              Утвердить<template v-if="keysToApprove.length !== selectedKeys.size">
-                ({{ keysToApprove.length }})
-              </template>
-            </UButton>
-            <UButton
-              icon="i-lucide-archive"
-              color="warning"
-              variant="soft"
-              :loading="deprecating"
-              :disabled="approving"
-              title="Пометить устаревшими"
-              @click="deprecateSelected"
-            >
-              <span class="max-sm:sr-only">Пометить устаревшими</span>
-            </UButton>
-          </template>
-          <UButton
-            icon="i-lucide-x"
-            color="neutral"
-            variant="ghost"
-            aria-label="Снять выделение"
-            @click="selectedKeys = new Set()"
-          />
-        </div>
-      </div>
+        :count="selectedKeys.size"
+        :to-approve="keysToApprove.length"
+        :deprecated-view="filters.deprecated"
+        :approving="approving"
+        :deprecating="deprecating"
+        @approve="approveSelected"
+        @deprecate="deprecateSelected"
+        @restore="restoreSelected"
+        @clear="clearSelection"
+      />
 
       <!-- Колонки дерева и панели — от 1024 и 1280 px. Классы прячут их уже и в HTML с сервера, до скриптов -->
       <div
@@ -778,13 +650,13 @@ onBeforeUnmount(() => setEditing(null))
       @save="saveSheet"
     />
 
-    <!-- Одна строка: что не влезло, прячется, а не переносится. Уже 1024 px клавиатуры обычно нет — полосы тоже -->
-    <div class="hotkeys hidden shrink-0 items-center gap-4 overflow-hidden whitespace-nowrap border-t border-default px-4 py-1.5 text-[11px] text-muted lg:flex">
+    <!-- Одна строка: что не влезло, прячется, а не переносится -->
+    <AppHotkeys class="overflow-hidden whitespace-nowrap">
       <span><kbd>↑↓←→</kbd> навигация</span>
       <span><kbd>Enter</kbd> / печатай — правка · <kbd>Shift+Enter</kbd> перенос · <kbd>Esc</kbd> отмена</span>
       <span><kbd>⌘C</kbd> / <kbd>⌘V</kbd> · <kbd>Del</kbd> очистить · <kbd>⌘Z</kbd> отменить</span>
       <span><kbd>Enter</kbd> на ключе — панель</span>
       <span class="ml-auto"><kbd>Ctrl+K</kbd> поиск и команды</span>
-    </div>
+    </AppHotkeys>
   </div>
 </template>

@@ -1,12 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import type { FigmaGroup, FigmaToken } from '../../packages/l10n-core/src'
 import { figmaExport, figmaPluginSections, figmaPluginTexts } from '../../apps/central-hub/server/lib/figma'
-import { ACTOR, ANCHOR, ensureAnchor, service } from './clients'
+import { ANCHOR, deprecateKeys, ensureAnchor, restoreKeys, service, setTranslation } from './clients'
 
-const restore = () => service.rpc('restore_keys', { p_keys: [ANCHOR], p_actor: ACTOR, p_source: 'test' })
-const deprecate = () => service.rpc('deprecate_keys', { p_keys: [ANCHOR], p_actor: ACTOR, p_source: 'test' })
-const translate = (lang: string, value: string) =>
-  service.rpc('set_translation', { p_key: ANCHOR, p_lang: lang, p_value: value, p_actor: ACTOR, p_source: 'test' })
+const restore = () => restoreKeys([ANCHOR])
+const deprecate = () => deprecateKeys([ANCHOR])
+const translate = (lang: string, value: string) => setTranslation(ANCHOR, lang, value)
 
 // Имена переменных так, как их покажет Figma: группы через /
 const names = (group: FigmaGroup, path: string[] = []): string[] => Object.entries(group).flatMap(([name, node]) =>

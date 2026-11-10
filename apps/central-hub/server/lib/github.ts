@@ -185,23 +185,31 @@ export async function syncExportToGithub(options: GithubSyncOptions): Promise<Gi
   // Писать можно только в свою ветку: основную не трогаем ни при каких настройках
   if (branch === base) throw new HubError(`Ветка ${branch} — основная в ${repo}, выгружать в неё нельзя`)
 
-  const baseSha = (await gh.get<{ object: { sha: string } }>(`/git/ref/heads/${encodePath(base)}`)).object.sha
-  const baseTree = (await gh.get<{ tree: { sha: string } }>(`/git/commits/${baseSha}`)).tree.sha
+  const contentsPath = (path: string) => `/contents/${encodePath(path)}?ref=${encodeURIComponent(base)}`
 
-  // sha файлов основной ветки — списком по папкам
+  // Чтение — параллельно: сам коммит основной ветки, открытый PR и sha файлов по папкам. Предпросмотр идёт
+  // по всем наборам при каждом открытии окна «Выгрузка в код», а по очереди это были секунды
+  const [baseSha, prs, lists] = await Promise.all([
+    gh.get<{ object: { sha: string } }>(`/git/ref/heads/${encodePath(base)}`).then(r => r.object.sha),
+    gh.get<PullRequest[]>(openPrQuery(repo, branch, base)),
+    Promise.all([...new Set(files.map(f => dirOf(f.path)))].map(dir => gh.find<{ type: string, path: string, sha: string }[]>(contentsPath(dir))))
+  ])
   const remote = new Map<string, string>()
-  for (const dir of new Set(files.map(f => dirOf(f.path)))) {
-    const list = await gh.find<{ type: string, path: string, sha: string }[]>(`/contents/${encodePath(dir)}?ref=${encodeURIComponent(base)}`)
+  for (const list of lists) {
     if (Array.isArray(list)) for (const item of list) if (item.type === 'file') remote.set(item.path, item.sha)
   }
 
+  // Изменённые файлы — те, чей sha не совпал (с LF или CRLF); прежнее содержимое — тоже параллельно
+  const changed = files.filter((file) => {
+    const sha = remote.get(file.path)
+    return !(sha && (sha === blobSha(file.content) || sha === blobSha(file.content.replace(/\n/g, '\r\n'))))
+  })
+  const olds = await Promise.all(changed.map(file => (remote.has(file.path) ? gh.raw(contentsPath(file.path)) : null)))
+
   const changes: FileChange[] = []
   const tree: { path: string, mode: '100644', type: 'blob', content: string }[] = []
-  for (const file of files) {
-    const sha = remote.get(file.path)
-    if (sha && (sha === blobSha(file.content) || sha === blobSha(file.content.replace(/\n/g, '\r\n')))) continue
-
-    const old = sha ? await gh.raw(`/contents/${encodePath(file.path)}?ref=${encodeURIComponent(base)}`) : null
+  for (const [index, file] of changed.entries()) {
+    const old = olds[index]!
     // Файл с CRLF так и остаётся с CRLF
     const content = old?.includes('\r\n') ? file.content.replace(/\n/g, '\r\n') : file.content
     const diff = describeLocaleChanges(old === null ? null : old.replace(/\r\n/g, '\n'), file.content)
@@ -218,7 +226,6 @@ export async function syncExportToGithub(options: GithubSyncOptions): Promise<Gi
     tree.push({ path: file.path, mode: '100644', type: 'blob', content })
   }
 
-  const prs = await gh.get<PullRequest[]>(openPrQuery(repo, branch, base))
   const open = prs[0] ? { number: prs[0].number, url: prs[0].html_url } : null
   const result = { repo, base, branch, changes, pr: open }
 
@@ -231,7 +238,9 @@ export async function syncExportToGithub(options: GithubSyncOptions): Promise<Gi
     return { ...result, outcome: 'closed' }
   }
 
-  // Своя ветка каждый раз пересобирается от основной: после мержа в PR только новое
+  // Своя ветка каждый раз пересобирается от основной: после мержа в PR только новое. Дерево коммита нужно
+  // только для записи — предпросмотр его не читает
+  const baseTree = (await gh.get<{ tree: { sha: string } }>(`/git/commits/${baseSha}`)).tree.sha
   const created = await gh.post<{ sha: string }>('/git/trees', { base_tree: baseTree, tree })
   const commit = await gh.post<{ sha: string }>('/git/commits', {
     message: `Тексты из Amaya Hub: ${summary(changes)}\n\nВыгрузил: ${actor}, ревизия ${revision}`,

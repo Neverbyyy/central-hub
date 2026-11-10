@@ -43,9 +43,13 @@ const TYPICAL: Record<string, Record<string, string>> = {
 }
 
 const KIND_ADD: Record<RegistryKind, string> = { game: 'игру', site: 'сайт', brand: 'бренд', test: 'тест', project: 'проект' }
+const KIND_NEW: Record<RegistryKind, string> = { game: 'новую игру', site: 'новый сайт', brand: 'новый бренд', test: 'новый тест', project: 'новый проект' }
 
 /** «добавить игру в справочник» — винительный падеж вида кода. */
 export const addCodeLabel = (kind: RegistryKind) => `добавить ${KIND_ADD[kind]} в справочник`
+
+/** «как новую игру» — код, которого ещё нет в справочнике. */
+export const newCodeLabel = (kind: RegistryKind) => KIND_NEW[kind]
 
 /** Справочник второй части нового ключа: app → игры, web → сайты. legacy.* новым ключам нельзя — для него никакого. */
 export const newKeyRegistryKind = (root: string) => (root === 'legacy' ? undefined : registryKindOf(root))

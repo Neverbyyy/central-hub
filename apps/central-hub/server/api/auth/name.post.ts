@@ -1,7 +1,7 @@
 export default defineEventHandler(async (event) => {
   const session = await useHubSession(event)
   if (!session.data.authed) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized', message: 'Нужен вход' })
+    throw unauthorized()
   }
 
   const body = await readBody<{ name?: unknown }>(event)

@@ -55,12 +55,7 @@ const submit = async () => {
       @submit.prevent="submit"
     >
       <div class="mb-6 flex items-center gap-2 text-sm font-bold">
-        <div class="flex items-center justify-center rounded-xl bg-inverted p-1 text-inverted">
-          <UIcon
-            name="i-lucide-languages"
-            class="size-6"
-          />
-        </div>
+        <AppLogo />
         Amaya Central Hub
       </div>
 

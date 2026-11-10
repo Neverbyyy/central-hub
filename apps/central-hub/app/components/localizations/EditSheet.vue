@@ -42,7 +42,7 @@ const save = () => {
 
 // С клавиатурой (планшет) — ⌘/Ctrl+Enter сохраняет; просто Enter — перенос строки
 const onKeydown = (e: KeyboardEvent) => {
-  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && !e.isComposing) {
+  if (isModEnter(e) && !e.isComposing) {
     e.preventDefault()
     save()
   }
@@ -82,18 +82,7 @@ const onKeydown = (e: KeyboardEvent) => {
           :placeholder="`Текст на ${lang.toUpperCase()}`"
           @keydown="onKeydown"
         />
-        <ul
-          v-if="issues.length"
-          class="mt-1 flex flex-col gap-0.5 text-xs"
-        >
-          <li
-            v-for="issue in issues"
-            :key="issue.message"
-            :class="issue.level === 'error' ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400'"
-          >
-            {{ issue.message }}
-          </li>
-        </ul>
+        <LocalizationsTextIssues :issues="issues" />
       </div>
     </template>
 

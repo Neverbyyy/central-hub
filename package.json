@@ -19,7 +19,8 @@
     "db:start": "supabase start -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,supavisor,storage-api,postgres-meta",
     "db:stop": "supabase stop --no-backup",
     "db:push": "supabase db push --linked",
-    "db:new": "supabase migration new"
+    "db:new": "supabase migration new",
+    "db:types": "supabase gen types typescript --db-url postgresql://postgres:postgres@127.0.0.1:54322/postgres --schema public > apps/central-hub/app/types/database.types.ts"
   },
   "devDependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",

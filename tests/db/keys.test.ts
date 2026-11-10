@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, it } from 'vitest'
 import { createKey, findSimilar } from '../../apps/central-hub/server/lib/keys'
-import { ACTOR, service } from './clients'
+import { ACTOR, deprecateKeys, restoreKeys, service, setTranslation } from './clients'
 
 // Служебный ключ: создаётся при первом прогоне, дальше уже существует (удалить строки нельзя).
 // Выгрузка его не видит — common.selftest.* исключены из наборов.
@@ -14,12 +14,11 @@ const create = (key: string, extra: Partial<Parameters<typeof createKey>[1]> = {
 const setAi = (lang: string, value: string) =>
   service.rpc('set_ai_translation', { p_key: KEY, p_lang: lang, p_value: value, p_actor: 'Автотест ИИ' })
 
-const setHuman = (lang: string, value: string) =>
-  service.rpc('set_translation', { p_key: KEY, p_lang: lang, p_value: value, p_actor: ACTOR, p_source: 'test' })
+const setHuman = (lang: string, value: string) => setTranslation(KEY, lang, value)
 
 afterAll(async () => {
   await setHuman('de', '')
-  await service.rpc('deprecate_keys', { p_keys: [KEY], p_actor: ACTOR, p_source: 'test' })
+  await deprecateKeys([KEY])
 })
 
 describe('создание ключа из интерфейса', () => {
@@ -27,7 +26,7 @@ describe('создание ключа из интерфейса', () => {
     const first = await create(KEY).then(() => 'created', (error: Error) => error.message)
     expect(['created', `Ключ «${KEY}» уже есть`]).toContain(first)
     await expect(create(KEY)).rejects.toThrow('уже есть')
-    await service.rpc('restore_keys', { p_keys: [KEY], p_actor: ACTOR, p_source: 'test' })
+    await restoreKeys([KEY])
 
     const { data: row } = await service.from('localizations').select('status, description').eq('technical_key', KEY).single()
     expect(row!.status.en).toBe('draft')

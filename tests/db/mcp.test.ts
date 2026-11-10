@@ -3,7 +3,7 @@ import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { placeholders } from '../../packages/l10n-core/src'
 import { createMcpServer, MCP_TOOLS } from '../../apps/central-hub/server/lib/mcp'
-import { ACTOR, service } from './clients'
+import { deprecateKeys, restoreKeys, service } from './clients'
 
 // Сервер MCP с настоящей базой, клиент — в том же процессе
 const KEY = 'common.selftest.mcp_created.default'
@@ -23,7 +23,7 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
-  await service.rpc('deprecate_keys', { p_keys: [KEY], p_actor: ACTOR, p_source: 'test' })
+  await deprecateKeys([KEY])
   await client.close()
 })
 
@@ -69,7 +69,7 @@ describe('MCP', () => {
     const first = await call('create_key', args)
     if (first.isError) expect(first.text).toContain('уже есть')
     expect((await call('create_key', args)).text).toContain('уже есть')
-    await service.rpc('restore_keys', { p_keys: [KEY], p_actor: ACTOR, p_source: 'test' })
+    await restoreKeys([KEY])
 
     const string = JSON.parse((await call('get_string', { key: KEY })).text)
     expect(string.status.en).toBe('ai')

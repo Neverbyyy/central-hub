@@ -2,7 +2,7 @@ import { MAX_VALUE_LENGTH } from '@amaya/l10n-core'
 
 // Сохраняет перевод одной ячейки. Существование ключа и языка проверяет set_translation в базе.
 // expected — значение, от которого человек начинал правку: если ячейку тем временем изменили, будет 409.
-export default defineEventHandler(async (event) => {
+export default defineHubHandler(async (event) => {
   const actor = await requireHubUser(event)
 
   const body = await readBody<{ key?: unknown, lang?: unknown, value?: unknown, expected?: unknown }>(event)

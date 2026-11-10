@@ -52,4 +52,17 @@ export default createConfigForNuxt({
   rules: {
     'vue/multi-word-component-names': 'off'
   }
+}, {
+  // Плагин Figma без сборки: песочница Figma понимает синтаксис не новее ES2017 — `?.`, `??` и разворот объекта
+  // `{ ...x }` (ES2018) парсер здесь не пропустит. Глобальные — от Figma: figma, __html__
+  files: ['packages/figma-plugin/src/code.js'],
+  languageOptions: {
+    ecmaVersion: 2017,
+    sourceType: 'script',
+    globals: { figma: 'readonly', __html__: 'readonly', console: 'readonly', setTimeout: 'readonly', clearTimeout: 'readonly', fetch: 'readonly' }
+  },
+  rules: {
+    // catch без переменной — ES2019, поэтому неиспользуемая переменная в catch здесь нужна
+    'no-unused-vars': ['error', { caughtErrors: 'none' }]
+  }
 })

@@ -23,3 +23,10 @@ export const defineFigmaPluginHandler = <T>(handler: (event: H3Event) => Promise
       return { error: message }
     }
   })
+
+/** Выборка Figma из адреса: ?prefixes=common.,app.cars2.&langs=en,ru — для окна «Тексты в Figma» и плагина. */
+export function figmaSelection(event: H3Event): { prefixes: string[], languages?: string[] } {
+  const { prefixes, langs } = getQuery(event)
+  if (typeof prefixes !== 'string' || !prefixes) throw badRequest('Нужен prefixes — разделы через запятую')
+  return { prefixes: prefixes.split(','), languages: typeof langs === 'string' && langs ? langs.split(',') : undefined }
+}

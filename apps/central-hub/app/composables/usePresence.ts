@@ -57,6 +57,13 @@ export function usePresence() {
   return { others, me, online, editors, setEditing }
 }
 
+/** Страница сообщает коллегам, какую ячейку правит (грид, шторка, очередь); ушли со страницы — ничего. */
+export function usePresenceEditing(cell: () => PresenceCell | null) {
+  const { setEditing } = usePresence()
+  watchEffect(() => setEditing(cell()))
+  onBeforeUnmount(() => setEditing(null))
+}
+
 /** Подключение — одно на вкладку, из лейаута: шлёт своё и принимает остальных, после обрыва подключается снова. */
 export function usePresenceConnection() {
   const supabase = useSupabaseClient()
@@ -92,7 +99,7 @@ export function usePresenceConnection() {
       return
     }
     lastTrack = Date.now()
-    if (user.value.name) channel.track({ name: user.value.name, page: page(), since, device: device.value } satisfies Omit<PresenceMeta, 'editing'>)
+    if (user.value.name) channel.track({ name: user.value.name, page: page(), since, device: device.value } satisfies PresenceMeta)
     else channel.untrack()
   }
 

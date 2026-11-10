@@ -20,46 +20,24 @@ const logout = async () => {
       <ULink
         raw
         to="/"
-        class="flex text-sm font-bold px-4 py-2 mb-4 rounded-lg flex gap-2 items-center"
+        class="flex text-sm font-bold px-4 py-2 mb-4 rounded-lg gap-2 items-center"
       >
-        <div class="bg-inverted p-1 rounded-xl text-inverted flex items-center justify-center">
-          <UIcon
-            name="i-lucide-languages"
-            class="size-6"
-          />
-        </div>
-
+        <AppLogo />
         Amaya Central Hub
       </ULink>
 
-      <div class="d-flex">
-        <ULink
-          raw
+      <div>
+        <AppSidebarLink
           to="/"
-          class="flex px-4 py-2 mb-1 rounded-lg text-sm text-highlighted hover:bg-mist-100 dark:hover:bg-gray-800"
-          active-class="bg-mist-100 dark:bg-gray-800 font-bold"
-          inactive-class=""
-        >
-          <UIcon
-            name="ri:home-line"
-            class="size-5 mr-2"
-          />
-          Главная
-        </ULink>
-
-        <ULink
-          raw
+          icon="ri:home-line"
+          label="Главная"
+          class="mb-1"
+        />
+        <AppSidebarLink
           to="/localizations"
-          class="flex px-4 py-2 rounded-lg text-sm text-highlighted hover:bg-mist-100 dark:hover:bg-gray-800"
-          active-class="bg-mist-100 dark:bg-gray-800 font-bold"
-          inactive-class=""
-        >
-          <UIcon
-            name="ri:earth-line"
-            class="size-5 mr-2"
-          />
-          Локализации
-        </ULink>
+          icon="ri:earth-line"
+          label="Локализации"
+        />
 
         <!-- A/B-тестов в сервисе пока нет: пункт виден, но не ведёт на страницу прототипа -->
         <span
@@ -80,33 +58,18 @@ const logout = async () => {
     <footer>
       <!-- MCP и Настройки — внизу, над именем: нужны редко и не мешают разделам. MCP — подключение нейросетей
            (адрес, общий токен, инструкция), страница /ai: на /mcp сам MCP-сервер -->
-      <ULink
-        raw
+      <AppSidebarLink
         to="/ai"
-        class="flex mx-2 mb-1 px-4 py-2 rounded-lg text-sm text-highlighted hover:bg-mist-100 dark:hover:bg-gray-800"
-        active-class="bg-mist-100 dark:bg-gray-800 font-bold"
-        inactive-class=""
-      >
-        <UIcon
-          name="ri:robot-2-line"
-          class="size-5 mr-2"
-        />
-        MCP
-      </ULink>
-
-      <ULink
-        raw
+        icon="ri:robot-2-line"
+        label="MCP"
+        class="mx-2 mb-1"
+      />
+      <AppSidebarLink
         to="/settings"
-        class="flex mx-2 mb-2 px-4 py-2 rounded-lg text-sm text-highlighted hover:bg-mist-100 dark:hover:bg-gray-800"
-        active-class="bg-mist-100 dark:bg-gray-800 font-bold"
-        inactive-class=""
-      >
-        <UIcon
-          name="ri:settings-3-line"
-          class="size-5 mr-2"
-        />
-        Настройки
-      </ULink>
+        icon="ri:settings-3-line"
+        label="Настройки"
+        class="mx-2 mb-2"
+      />
 
       <div
         v-if="user.name"

@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import { descriptionError, escapeLike, MIN_DESCRIPTION_LENGTH, MIN_SEGMENTS, NEW_KEY_ROOTS, newKeyError, type KeyContext, type RegistryKind } from '@amaya/l10n-core'
-import { addCodeLabel, findSimilarCodes, keySuggestions, newKeyRegistryKind, type KeySuggestion } from '~/utils/keySuggestions'
-import type { RegistryEntry } from '~/composables/useLocalizations'
+import { descriptionError, escapeLike, isNewKeyRoot, isRegistryCode, MIN_DESCRIPTION_LENGTH, MIN_SEGMENTS, newKeyError, type KeyContext } from '@amaya/l10n-core'
+import { addCodeLabel, findSimilarCodes, keySuggestions, newCodeLabel, newKeyRegistryKind, type KeySuggestion, type RegistryCode } from '~/utils/keySuggestions'
 
 // Новый ключ: имя проверяется на лету теми же правилами, что и в базе (packages/l10n-core),
 // а похожие строки показываются до создания — чтобы брать существующий ключ, а не плодить дубль.
 // Схему не нужно помнить: под полем — подсказки к следующей части ключа.
 const props = defineProps<{
-  registry: RegistryEntry[]
+  registry: RegistryCode[]
   languages: string[]
   // Раздел, открытый в дереве (app.cars2), — с него начинается новый ключ
   prefix?: string
@@ -84,7 +83,7 @@ watch(open, (value) => {
   // Дерево обычно уже загружено для панели слева; панель скрыта или дерево не загрузилось — грузим сейчас
   if (!tree.value) refreshTree()
   // Стоите в дереве в app → cars2 — ключ начинается с app.cars2.; legacy новым ключам нельзя
-  const prefix = props.prefix?.replace(/\.$/, '')
+  const prefix = props.prefix === undefined ? undefined : sectionPath(props.prefix)
   if (!form.key && prefix && prefix.split('.')[0] !== 'legacy') form.key = `${prefix}.`
 }, { immediate: true })
 
@@ -95,7 +94,7 @@ const { rules: exportRules, targetNames } = useExportRules()
 const keyTargets = computed(() => {
   const value = key.value
   const root = value.split('.')[0]!
-  if (!exportRules.value.length || !value.includes('.') || !(NEW_KEY_ROOTS as readonly string[]).includes(root)) return null
+  if (!exportRules.value.length || !value.includes('.') || !isNewKeyRoot(root)) return null
   return targetNames(value.endsWith('.') ? value : `${value}.`)
 })
 
@@ -198,7 +197,7 @@ const unfinished = computed(() => {
   // legacy — не «недописано»: такое начало новому ключу нельзя, объясняем сразу
   if (parts[0] === 'legacy') return false
   if (value.endsWith('.') || suggestions.value.length) return true
-  return parts.length < MIN_SEGMENTS && parts.every(Boolean) && (NEW_KEY_ROOTS as readonly string[]).includes(parts[0]!)
+  return parts.length < MIN_SEGMENTS && parts.every(Boolean) && isNewKeyRoot(parts[0]!)
 })
 
 const shownKeyMessage = computed(() => (keyFocused.value && unfinished.value ? null : keyMessage.value))
@@ -211,15 +210,13 @@ const openTaken = () => {
 // Пока поле пустое, не ругаемся — об этом скажет подсказка у кнопки
 const descriptionMessage = computed(() => (form.description.trim() ? descriptionError(form.description) : null))
 
-// Код из справочника, которого ещё нет: app.<игра>, web.<сайт>, brand.<бренд>, test.<тест>
-const KIND_NEW: Record<RegistryKind, string> = { game: 'новую игру', site: 'новый сайт', brand: 'новый бренд', test: 'новый тест', project: 'новый проект' }
-
+// Код из справочника, которого ещё нет: app.<игра>, web.<сайт>, brand.<бренд>, test.<тест>.
 // Предлагаем добавить код, только когда он дописан — после него уже есть точка.
 // Иначе на полпути к app.cars2 форма предложит завести игру «car».
 const missingCode = computed(() => {
   const [root, code, ...rest] = key.value.split('.')
   const kind = newKeyRegistryKind(root ?? '')
-  if (!kind || !code || !rest.length || !/^[a-z0-9_]+$/.test(code) || context.value.registry[kind]?.includes(code)) return null
+  if (!kind || !code || !rest.length || !isRegistryCode(code) || context.value.registry[kind]?.includes(code)) return null
   return { kind, code }
 })
 
@@ -314,7 +311,7 @@ const submit = async () => {
 }
 
 const onKeydown = (event: KeyboardEvent) => {
-  if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+  if (isModEnter(event)) {
     event.preventDefault()
     submit()
   }
@@ -462,7 +459,7 @@ const onKeydown = (event: KeyboardEvent) => {
               {{ entry.code }} — {{ entry.title }}
             </UButton>
           </div>
-          <span>{{ similarCodes.length ? 'Или добавить' : 'Добавить' }} в справочник как {{ KIND_NEW[missingCode.kind] }}:</span>
+          <span>{{ similarCodes.length ? 'Или добавить' : 'Добавить' }} в справочник как {{ newCodeLabel(missingCode.kind) }}:</span>
           <div class="flex gap-2">
             <UInput
               ref="codeTitleInput"
@@ -554,7 +551,7 @@ const onKeydown = (event: KeyboardEvent) => {
         </span>
         <span
           v-else-if="blockers.length"
-          class="text-xs text-amber-700 dark:text-amber-400"
+          class="text-xs text-warning"
           role="status"
         >
           Чтобы создать, нужно: {{ blockers.join(', ') }}

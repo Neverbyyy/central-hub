@@ -7,12 +7,11 @@ export interface PresenceCell {
 
 export type PresenceDevice = 'desktop' | 'tablet' | 'phone'
 
+// Что вкладка сообщает о себе через присутствие (track): меняется редко
 export interface PresenceMeta {
   name: string
   // Где человек: название страницы
   page: string
-  // Какую ячейку правит (ключ и язык) или null
-  editing: PresenceCell | null
   // Когда открыл вкладку, мс
   since: number
   device: PresenceDevice
@@ -21,6 +20,8 @@ export interface PresenceMeta {
 export interface PresencePerson extends PresenceMeta {
   // Вкладка: у одного человека их бывает несколько
   tab: string
+  // Какую ячейку правит (ключ и язык) или null — приходит сообщением, не через присутствие (usePresence)
+  editing: PresenceCell | null
 }
 
 const DEVICES: PresenceDevice[] = ['desktop', 'tablet', 'phone']
@@ -56,7 +57,8 @@ export function presencePeople(state: Record<string, unknown[]>): PresencePerson
       tab,
       name: last.name.trim(),
       page: typeof last.page === 'string' ? last.page : '',
-      editing: isCell(last.editing) ? { key: last.editing.key, lang: last.editing.lang } : null,
+      // Что правит — не из присутствия, а из сообщений: usePresence подставит
+      editing: null,
       since: typeof last.since === 'number' && Number.isFinite(last.since) ? last.since : 0,
       device: DEVICES.includes(last.device as PresenceDevice) ? last.device as PresenceDevice : 'desktop'
     }]

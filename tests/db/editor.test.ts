@@ -1,20 +1,13 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { type KeyMetaInput, queueCounts, translationQueue, updateKeyMeta } from '../../apps/central-hub/server/lib/keys'
-import { ACTOR, ANCHOR, ensureAnchor, readAnchor, service } from './clients'
+import { ACTOR, ANCHOR, deprecateKeys, readAnchor, restoreKeys, service, setTranslation, useLiveAnchor } from './clients'
 
 const set = (lang: string, value: string, expected?: string) =>
-  service.rpc('set_translation', { p_key: ANCHOR, p_lang: lang, p_value: value, p_actor: ACTOR, p_source: 'test', ...(expected === undefined ? {} : { p_expected: expected }) })
+  setTranslation(ANCHOR, lang, value, expected)
 
 const approve = (langs: string[]) => service.rpc('approve_translations', { p_key: ANCHOR, p_langs: langs, p_actor: ACTOR })
 
-beforeAll(async () => {
-  await ensureAnchor()
-  await service.rpc('restore_keys', { p_keys: [ANCHOR], p_actor: ACTOR, p_source: 'test' })
-})
-
-afterAll(async () => {
-  await service.rpc('deprecate_keys', { p_keys: [ANCHOR], p_actor: ACTOR, p_source: 'test' })
-})
+useLiveAnchor()
 
 describe('устаревшие и статусы для фильтров', () => {
   it('stale_langs и status_values считаются сами', async () => {
@@ -168,8 +161,8 @@ describe('свойства ключа', () => {
   })
 
   it('ключ, помеченный устаревшим, не правится', async () => {
-    await service.rpc('deprecate_keys', { p_keys: [ANCHOR], p_actor: ACTOR, p_source: 'test' })
+    await deprecateKeys([ANCHOR])
     await expect(meta({ maxLength: 10 })).rejects.toMatchObject({ message: expect.stringContaining('помечен устаревшим') })
-    await service.rpc('restore_keys', { p_keys: [ANCHOR], p_actor: ACTOR, p_source: 'test' })
+    await restoreKeys([ANCHOR])
   })
 })

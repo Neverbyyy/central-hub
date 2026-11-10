@@ -13,7 +13,7 @@ interface Item {
 const props = defineProps<{
   // Текущий фильтр, например app.cars2.
   prefix: string
-  // Меняется — дерево перечитывается (после создания ключа)
+  // Меняется — дерево перечитывается: ключ создали, пометили устаревшим, вернули или так сделал коллега
   version: number
   // В шторке узкого экрана: пункты крупнее — под палец
   drawer?: boolean
@@ -50,8 +50,6 @@ const items = computed(() => toItems(data.value ?? []))
 // а данные приходят позже. Верхний уровень и путь к выбранному разделу раскрываем сами.
 const expanded = ref<string[]>([])
 
-const ancestors = (path: string) => path.split('.').slice(0, -1).map((_, i, parts) => parts.slice(0, i + 1).join('.'))
-
 let topExpanded = false
 
 watch([items, () => props.prefix], ([list, prefix]) => {
@@ -60,7 +58,7 @@ watch([items, () => props.prefix], ([list, prefix]) => {
     topExpanded = true
     for (const item of list) open.add(item.value)
   }
-  for (const path of ancestors(prefix.replace(/\.$/, ''))) open.add(path)
+  for (const path of sectionAncestors(sectionPath(prefix))) open.add(path)
   if (open.size !== expanded.value.length) expanded.value = [...open]
 }, { immediate: true })
 
@@ -69,8 +67,8 @@ watch([items, () => props.prefix], ([list, prefix]) => {
 // как если бы его выбрали в дереве. Верхний уровень остаётся раскрытым
 watch(() => props.prefix, (prefix, previous) => {
   if (!previous || prefix === previous || !previous.startsWith(prefix)) return
-  const left = previous.replace(/\.$/, '')
-  const close = new Set(prefix ? [...ancestors(left), left].filter(path => path.startsWith(prefix)) : [left])
+  const left = sectionPath(previous)
+  const close = new Set(prefix ? [...sectionAncestors(left), left].filter(path => path.startsWith(prefix)) : [left])
   for (const item of items.value) close.delete(item.value)
   expanded.value = expanded.value.filter(path => !close.has(path))
 })
@@ -79,7 +77,7 @@ watch(() => props.prefix, (prefix, previous) => {
 // Клик по выбранной снимает выбор и сворачивает; стрелки клавиатуры работают как обычно
 const onToggle = (event: { detail: { originalEvent: Event, isExpanded: boolean }, preventDefault: () => void }, item: Item) => {
   if (event.detail.originalEvent.type !== 'click') return
-  const wasSelected = props.prefix.replace(/\.$/, '') === item.value
+  const wasSelected = sectionPath(props.prefix) === item.value
   if (!wasSelected && event.detail.isExpanded) event.preventDefault()
 }
 
@@ -91,7 +89,7 @@ const findItem = (list: Item[], value: string): Item | undefined => {
   }
 }
 
-const selected = computed(() => findItem(items.value, props.prefix.replace(/\.$/, '')))
+const selected = computed(() => findItem(items.value, sectionPath(props.prefix)))
 
 // Повторный клик по выбранному разделу снимает выбор — вместе с ним снимается и фильтр
 const onSelect = (item: Item | undefined) => {

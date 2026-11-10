@@ -7,10 +7,9 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { z } from 'zod'
-import { checkText } from '@amaya/l10n-core'
+import { checkText, MAX_KEY_LENGTH, MAX_LENGTH_LIMIT, MIN_DESCRIPTION_LENGTH, REGISTRY_KINDS } from '@amaya/l10n-core'
 import { errorText, HubError } from './errors'
 import {
-  REGISTRY_KINDS,
   checkKeyText,
   createKey,
   findSimilar,
@@ -35,7 +34,7 @@ export const MCP_TOOLS = [
 ] as const
 
 // С таким совпадением похожая строка — повод взять существующий ключ, а не плодить дубль
-export const DUPLICATE_SCORE = 0.6
+const DUPLICATE_SCORE = 0.6
 
 const INSTRUCTIONS = `Сервис локализации Amaya: все тексты продуктов в одном месте.
 - Перед созданием ключа найдите похожие строки (find_similar). Если смысл тот же — используйте существующий ключ.
@@ -55,15 +54,19 @@ async function run(action: () => Promise<unknown>) {
   try {
     return reply(await action())
   } catch (error) {
+    // HubError — ожидаемый отказ; остальное (ошибка базы, сети) — ещё и в лог сервера. Нейросеть видит тот же текст
+    if (!(error instanceof HubError)) console.error('[mcp]', error)
     return refuse(errorText(error))
   }
 }
 
+// Схемы параметров — одни на все серверы: /mcp создаёт сервер на каждый запрос
+const lang = z.string().regex(/^[a-z]{2,3}(-[A-Za-z0-9]{2,4})?$/).describe('Код языка: en, ru, de, es, it, pt, fr, sv, nl')
+const key = z.string().min(3).max(MAX_KEY_LENGTH).describe('Ключ строки, например app.cars2.paywall.title')
+
 export function createMcpServer(db: SupabaseClient, { actor = 'Нейросеть (MCP)' }: { actor?: string } = {}) {
   const server = new McpServer({ name: 'amaya-hub', version: '1.0.0' }, { instructions: INSTRUCTIONS })
 
-  const lang = z.string().regex(/^[a-z]{2,3}(-[A-Za-z0-9]{2,4})?$/).describe('Код языка: en, ru, de, es, it, pt, fr, sv, nl')
-  const key = z.string().min(3).max(200).describe('Ключ строки, например app.cars2.paywall.title')
   const readOnly = { readOnlyHint: true, openWorldHint: false }
   const writes = { readOnlyHint: false, destructiveHint: false, openWorldHint: false }
 
@@ -110,7 +113,7 @@ export function createMcpServer(db: SupabaseClient, { actor = 'Нейросет�
   server.registerTool('list_registry', {
     title: 'Справочник',
     description: 'Коды игр, сайтов, брендов, тестов и проектов — из них составляются ключи.',
-    inputSchema: { kind: z.enum(REGISTRY_KINDS as [string, ...string[]]).optional() },
+    inputSchema: { kind: z.enum(REGISTRY_KINDS).optional() },
     annotations: readOnly
   }, args => run(() => listRegistry(db, args.kind)))
 
@@ -120,10 +123,10 @@ export function createMcpServer(db: SupabaseClient, { actor = 'Нейросет�
       + 'пока в not_duplicate_reason не объяснено, чем новая строка отличается.',
     inputSchema: {
       key,
-      description: z.string().min(10).describe('Где показывается строка и какие у неё ограничения'),
+      description: z.string().min(MIN_DESCRIPTION_LENGTH).describe('Где показывается строка и какие у неё ограничения'),
       en: z.string().min(1).describe('Текст на английском'),
       tags: z.array(z.string()).optional(),
-      max_length: z.number().int().min(1).max(10_000).optional(),
+      max_length: z.number().int().min(1).max(MAX_LENGTH_LIMIT).optional(),
       not_duplicate_reason: z.string().optional().describe('Почему нельзя взять похожую существующую строку')
     },
     annotations: writes

@@ -12,7 +12,11 @@ const ALLOWED = [
 
 const PERMISSION_DENIED = '42501'
 
-beforeAll(ensureAnchor)
+// Локально якорь создаём; на настоящем стенде секретным ключом только читаем
+const STAND = process.env.AMAYA_TEST_TARGET === 'stand'
+beforeAll(async () => {
+  if (!STAND) await ensureAnchor()
+})
 
 describe('права в базе', () => {
   it('у anon и authenticated только белый список, RLS включён на всех таблицах', async () => {
@@ -31,7 +35,8 @@ describe('публичный ключ ничего не может записа�
     registry: { kind: 'game', code: 'selftest', title: 'Test' },
     history: { technical_key: ANCHOR, field: 'translation', actor: 'anon', source: 'anon' },
     export_sets: { name: 'selftest', project: 'inapp', format: 'flat', languages: ['en'], path_template: '{lang}.json' },
-    export_templates: { set_name: 'inapp', lang: 'en', content: '{}' }
+    export_templates: { set_name: 'inapp', lang: 'en', content: '{}' },
+    export_runs: { set_name: 'inapp', outcome: 'created', revision: 'selftest', actor: 'anon' }
   } as const
 
   // Фильтр обязателен: без него запрос отклонили бы по другой причине и тест прошёл бы впустую
@@ -41,7 +46,8 @@ describe('публичный ключ ничего не может записа�
     registry: ['code', 'cars2'],
     history: ['technical_key', ANCHOR],
     export_sets: ['name', 'inapp'],
-    export_templates: ['set_name', 'inapp']
+    export_templates: ['set_name', 'inapp'],
+    export_runs: ['set_name', 'inapp']
   } as const
 
   it.each(Object.keys(rows) as (keyof typeof rows)[])('%s: insert, upsert, update и delete отклоняются', async (table) => {
@@ -55,7 +61,10 @@ describe('публичный ключ ничего не может записа�
     for (const { error } of attempts) expect(error?.code).toBe(PERMISSION_DENIED)
   })
 
-  it('строка не изменилась после попыток anon', async () => {
+  it('строка не изменилась после попыток anon', async (ctx) => {
+    // На стенде якорь не создаём: если его там нет, сверять нечего
+    const { data: exists } = await service.from('localizations').select('technical_key').eq('technical_key', ANCHOR).maybeSingle()
+    if (!exists) return ctx.skip()
     const before = await readAnchor()
     await anon.from('localizations').update({ description: 'взлом' }).eq('technical_key', ANCHOR)
     expect((await readAnchor()).description).toBe(before.description)
@@ -72,13 +81,14 @@ describe('публичный ключ ничего не может записа�
     ['set_ai_translation', { p_key: ANCHOR, p_lang: 'en', p_value: 'взлом', p_actor: 'anon' }],
     ['find_similar', { p_text: 'Continue', p_key: '', p_limit: 5 }],
     ['approve_translations', { p_key: ANCHOR, p_langs: ['en'], p_actor: 'anon' }],
+    ['approve_keys', { p_keys: [ANCHOR], p_actor: 'anon' }],
     ['update_key_meta', { p_key: ANCHOR, p_description: 'взлом описания', p_tags: [], p_max_length: null, p_figma_url: null, p_actor: 'anon' }]
   ])('функцию %s вызвать нельзя', async (fn, args) => {
     const { error } = await anon.rpc(fn, args)
     expect(error?.code).toBe(PERMISSION_DENIED)
   })
 
-  it.each(['history', 'export_sets', 'export_templates'])('%s прочитать нельзя', async (table) => {
+  it.each(['history', 'export_sets', 'export_templates', 'export_runs'])('%s прочитать нельзя', async (table) => {
     const { error } = await anon.from(table).select('*').limit(1)
     expect(error?.code).toBe(PERMISSION_DENIED)
   })

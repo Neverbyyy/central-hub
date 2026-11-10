@@ -1,6 +1,6 @@
 // Правила имени ключа из «Как называть ключи» (ТЗ, этап 1).
-// База проверяет то же самое функцией l10n_key_error — здесь правила нужны,
-// чтобы интерфейс, CLI и MCP подсказывали до запроса. Меняя одно, меняй и другое.
+// База проверяет то же самое функцией l10n_key_error — здесь правила нужны, чтобы интерфейс и MCP подсказывали
+// до запроса. Меняя одно, меняй и другое: совпадение проверяет tests/db/queue.test.ts.
 
 export const KEY_ROOTS = ['common', 'app', 'web', 'brand', 'ds', 'test', 'legacy'] as const
 export type KeyRoot = typeof KEY_ROOTS[number]
@@ -8,7 +8,12 @@ export type KeyRoot = typeof KEY_ROOTS[number]
 // Начала новых ключей: legacy.* приходит только импортом
 export const NEW_KEY_ROOTS = KEY_ROOTS.filter((root): root is Exclude<KeyRoot, 'legacy'> => root !== 'legacy')
 
-export type RegistryKind = 'game' | 'site' | 'brand' | 'test' | 'project'
+/** Начало, с которого можно создать новый ключ: всё, кроме legacy. */
+export const isNewKeyRoot = (value: string) => (NEW_KEY_ROOTS as readonly string[]).includes(value)
+
+// Разделы справочника: коды игр, сайтов, брендов, тестов и проектов
+export const REGISTRY_KINDS = ['game', 'site', 'brand', 'test', 'project'] as const
+export type RegistryKind = typeof REGISTRY_KINDS[number]
 
 export interface KeyContext {
   // Допустимые коды из справочника сервиса
@@ -20,6 +25,8 @@ export interface KeyContext {
 export const MIN_SEGMENTS = 3
 export const MAX_KEY_LENGTH = 200
 export const MAX_VALUE_LENGTH = 5000
+// Наибольший лимит длины, который можно задать строке (свойства ключа, создание ключа, MCP)
+export const MAX_LENGTH_LIMIT = 10_000
 
 // Второй сегмент ключа с этими началами — код из справочника
 const ROOT_REGISTRY: Partial<Record<KeyRoot, RegistryKind>> = {
@@ -42,6 +49,9 @@ const KIND_LABEL: Record<RegistryKind, string> = {
 }
 
 const SEGMENT = /^[a-z0-9_]+$/
+
+/** Код в справочнике — по тому же правилу, что часть ключа: строчная латиница, цифры и _. */
+export const isRegistryCode = (code: string) => SEGMENT.test(code)
 
 const isRoot = (value: string): value is KeyRoot => (KEY_ROOTS as readonly string[]).includes(value)
 
@@ -115,12 +125,4 @@ export function figmaUrlError(url: string): string | null {
   const value = url.trim()
   if (!value || (value.length <= 2000 && FIGMA_URL.test(value))) return null
   return 'Ссылка на Figma начинается с https://www.figma.com/'
-}
-
-/**
- * Один ключ не может быть началом другого: в JSON `continue` не может быть
- * одновременно строкой и папкой (`common.button.continue` и `common.button.continue.trial`).
- */
-export function isPrefixConflict(a: string, b: string): boolean {
-  return a !== b && (a.startsWith(`${b}.`) || b.startsWith(`${a}.`))
 }

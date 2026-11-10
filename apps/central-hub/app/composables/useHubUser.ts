@@ -16,7 +16,7 @@ export function useAuthRedirect() {
 
   return async (error: unknown) => {
     const { statusCode, statusMessage } = (error ?? {}) as { statusCode?: number, statusMessage?: string }
-    const needsName = statusCode === 403 && statusMessage === 'Name Required'
+    const needsName = statusCode === 403 && statusMessage === NAME_REQUIRED
     if (statusCode !== 401 && !needsName) return false
     if (statusCode === 401) user.value = { authed: false, name: null }
     await router.push({ path: '/login', query: { next: router.currentRoute.value.fullPath } })

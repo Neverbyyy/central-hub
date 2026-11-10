@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { createReusableTemplate } from '@vueuse/core'
 import type { Localization, TranslationStatus } from '~/composables/useLocalizations'
-import type { HistoryAction, HistoryEntry, HistoryPage } from '~/utils/history'
+import type { HistoryAction, HistoryPage } from '~/utils/history'
 
 // Панель ключа справа. Не модальная: грид остаётся под клавиатурой, панель следует за активной строкой.
 const props = defineProps<{
@@ -33,11 +32,7 @@ interface KeyDetails extends Localization {
   // Последний утверждённый текст по языкам — он и уходит в код проектов
   approved: Record<string, string | null>
   created_by: string | null
-  updated_by: string | null
 }
-
-const HISTORY_FIRST = 10
-const HISTORY_MORE = 20
 
 const supabase = useSupabaseClient()
 const toast = useToast()
@@ -65,7 +60,7 @@ const load = async (reset = false) => {
   const [row, log] = await Promise.all([
     supabase
       .from('localizations')
-      .select('technical_key, translations, status, based_on, source_rev, stale_langs, deprecated_at, created_at, updated_at, description, tags, max_length, figma_url, legacy_path, approved, created_by, updated_by')
+      .select('technical_key, translations, status, stale_langs, deprecated_at, created_at, updated_at, description, tags, max_length, figma_url, legacy_path, approved, created_by')
       .eq('technical_key', key)
       .maybeSingle(),
     fetchHistory(key, 0, limit).catch(() => ({ total: 0, actions: [] }) as HistoryPage)
@@ -114,7 +109,9 @@ const onMetaSaved = async () => {
   await load()
   emit('changed', props.technicalKey)
 }
-// Ключ поменяли (здесь, у коллеги или через MCP) — перечитываем статусы и историю
+// Ключ поменяли (здесь, у коллеги или через MCP) — перечитываем статусы и историю. После своего действия это
+// второе чтение: событие Realtime приходит раньше, чем панель успевает перечитать себя, — так проще и надёжнее,
+// чем угадывать, какое событие наше
 watch(() => props.row?.updated_at, (value, old) => {
   if (value && old && value !== old) load()
 })
@@ -201,8 +198,6 @@ const toggleAction = (id: number) => {
   if (!next.delete(id)) next.add(id)
   openActions.value = next
 }
-
-const [DefineEntry, ReuseEntry] = createReusableTemplate<{ entry: HistoryEntry }>()
 </script>
 
 <template>
@@ -457,129 +452,14 @@ const [DefineEntry, ReuseEntry] = createReusableTemplate<{ entry: HistoryEntry }
         </ul>
       </section>
 
-      <section>
-        <h3 class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted">
-          История
-          <span
-            v-if="historyTotal"
-            class="ml-1 font-normal normal-case tracking-normal text-muted"
-          >{{ historyTotal }}</span>
-        </h3>
-        <p
-          v-if="!history.length"
-          class="text-muted"
-        >
-          Пока пусто
-        </p>
-
-        <!-- Было / стало одной записи: статус строкой, текст — красным и зелёным -->
-        <DefineEntry v-slot="{ entry }">
-          <p
-            v-if="entry.field === 'status'"
-            class="text-toned"
-          >
-            {{ entryValueText(entry, entry.old_value) }} → <span class="font-medium text-gray-800 dark:text-gray-100">{{ entryValueText(entry, entry.new_value) }}</span>
-          </p>
-          <template v-else-if="entryHasDiff(entry)">
-            <p
-              v-if="entry.old_value"
-              class="whitespace-pre-line break-words rounded bg-red-50 dark:bg-red-950/40 px-2 py-1 text-red-800 dark:text-red-300 line-through decoration-red-300 dark:decoration-red-800"
-            >
-              {{ entry.old_value }}
-            </p>
-            <p
-              v-if="entry.new_value"
-              class="whitespace-pre-line break-words rounded bg-green-50 dark:bg-green-950/40 px-2 py-1 text-green-900 dark:text-green-200"
-            >
-              {{ entry.new_value }}
-            </p>
-            <p
-              v-else
-              class="italic text-muted"
-            >
-              Очищено
-            </p>
-          </template>
-        </DefineEntry>
-
-        <!-- Каждое действие — карточка: что и когда, было / стало, кто и откуда.
-             Правка на несколько записей (импорт, «Утвердить всё») — одна карточка со сводкой, подробности по клику -->
-        <ol class="space-y-2">
-          <li
-            v-for="action in history"
-            :key="action.id"
-            class="overflow-hidden rounded-lg border border-default"
-          >
-            <div class="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 bg-muted px-3 py-1.5">
-              <template v-if="action.entries.length === 1">
-                <span
-                  v-if="action.entries[0]!.lang"
-                  class="rounded bg-default px-1 font-mono text-[10px] font-semibold uppercase text-muted ring-1 ring-default"
-                >{{ action.entries[0]!.lang }}</span>
-                <span class="font-medium text-gray-800 dark:text-gray-100">{{ entryTitle(action.entries[0]!) }}</span>
-              </template>
-              <span
-                v-else
-                class="font-medium text-gray-800 dark:text-gray-100"
-              >{{ actionSummary(action) }}</span>
-              <span class="ml-auto shrink-0 text-[10px] tabular-nums text-muted">{{ formatDateTime(action.created_at) }}</span>
-            </div>
-            <div class="space-y-1 px-3 py-2">
-              <ReuseEntry
-                v-if="action.entries.length === 1"
-                :entry="action.entries[0]!"
-              />
-              <template v-else>
-                <button
-                  type="button"
-                  class="flex items-center gap-1 text-toned hover:text-highlighted"
-                  :aria-expanded="openActions.has(action.id)"
-                  @click="toggleAction(action.id)"
-                >
-                  <UIcon
-                    name="i-lucide-chevron-right"
-                    class="size-3.5 text-muted transition-transform"
-                    :class="{ 'rotate-90': openActions.has(action.id) }"
-                  />
-                  {{ openActions.has(action.id) ? (isCreationAction(action) ? 'Скрыть тексты' : 'Скрыть подробности') : actionDetailsLabel(action) }}
-                </button>
-                <ul
-                  v-if="openActions.has(action.id)"
-                  class="space-y-2 pt-1"
-                >
-                  <li
-                    v-for="(entry, i) in actionDetailEntries(action)"
-                    :key="i"
-                    class="space-y-1"
-                  >
-                    <div class="flex items-center gap-2">
-                      <span
-                        v-if="entry.lang"
-                        class="rounded bg-default px-1 font-mono text-[10px] font-semibold uppercase text-muted ring-1 ring-default"
-                      >{{ entry.lang }}</span>
-                      <span class="font-medium text-gray-800 dark:text-gray-100">{{ entryTitle(entry) }}</span>
-                    </div>
-                    <ReuseEntry :entry="entry" />
-                  </li>
-                </ul>
-              </template>
-              <p class="text-[10px] text-muted">
-                {{ action.actor || 'без имени' }} · {{ historySourceLabel(action.source) }}
-              </p>
-            </div>
-          </li>
-        </ol>
-
-        <button
-          v-if="history.length < historyTotal"
-          type="button"
-          class="mt-3 text-xs font-medium text-toned underline underline-offset-2 hover:text-highlighted disabled:opacity-50"
-          :disabled="loadingMore"
-          @click="loadMoreHistory"
-        >
-          {{ loadingMore ? 'Загружаю…' : history.length <= HISTORY_FIRST ? `Вся история (${historyTotal})` : `Показать ещё ${Math.min(HISTORY_MORE, historyTotal - history.length)}` }}
-        </button>
-      </section>
+      <LocalizationsKeyHistory
+        :actions="history"
+        :total="historyTotal"
+        :open="openActions"
+        :loading-more="loadingMore"
+        @toggle="toggleAction"
+        @more="loadMoreHistory"
+      />
     </div>
 
     <div

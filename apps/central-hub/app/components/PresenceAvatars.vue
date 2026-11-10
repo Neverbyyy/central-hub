@@ -40,14 +40,10 @@ const summary = computed(() => {
           :content="{ side: 'bottom', sideOffset: 8 }"
           :ui="{ content: 'h-auto w-72 px-3 py-2.5' }"
         >
-          <UAvatar
-            :text="presenceInitials(person.name)"
-            :alt="person.name"
-            size="sm"
+          <PresenceAvatar
+            :name="person.name"
             class="ring-2 ring-(--ui-bg)"
             :class="index ? '-ms-1.5' : ''"
-            :style="{ backgroundColor: presenceColor(person.name) }"
-            :ui="{ fallback: 'font-semibold text-white' }"
           />
           <template #content>
             <PresenceCard

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { descriptionError, figmaUrlError } from '@amaya/l10n-core'
+import { descriptionError, figmaUrlError, MAX_LENGTH_LIMIT } from '@amaya/l10n-core'
 
 // Свойства ключа прямо в панели: описание, теги, лимит длины, ссылка на Figma.
 // Ctrl+Enter — сохранить, Esc — отмена. Проверки те же, что на сервере (packages/l10n-core).
@@ -35,7 +35,7 @@ const figmaMessage = computed(() => figmaUrlError(form.figmaUrl))
 const limit = computed(() => (String(form.maxLength).trim() ? Number(form.maxLength) : null))
 const maxLengthMessage = computed(() => {
   const value = limit.value
-  return value !== null && (!Number.isInteger(value) || value < 1 || value > 10_000) ? 'Целое число от 1 до 10 000' : null
+  return value !== null && (!Number.isInteger(value) || value < 1 || value > MAX_LENGTH_LIMIT) ? 'Целое число от 1 до 10 000' : null
 })
 const canSave = computed(() => !descriptionMessage.value && !figmaMessage.value && !maxLengthMessage.value && !saving.value)
 
@@ -61,7 +61,7 @@ const save = async () => {
 }
 
 const onKeydown = (event: KeyboardEvent) => {
-  if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+  if (isModEnter(event)) {
     event.preventDefault()
     save()
   } else if (event.key === 'Escape') {

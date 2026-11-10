@@ -1,18 +1,10 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { keyHistory } from '../../apps/central-hub/server/lib/history'
-import { ACTOR, ANCHOR, ensureAnchor, service } from './clients'
+import { ACTOR, ANCHOR, service, setTranslation, useLiveAnchor } from './clients'
 
-const set = (lang: string, value: string) =>
-  service.rpc('set_translation', { p_key: ANCHOR, p_lang: lang, p_value: value, p_actor: ACTOR, p_source: 'test' })
+const set = (lang: string, value: string) => setTranslation(ANCHOR, lang, value)
 
-beforeAll(async () => {
-  await ensureAnchor()
-  await service.rpc('restore_keys', { p_keys: [ANCHOR], p_actor: ACTOR, p_source: 'test' })
-})
-
-afterAll(async () => {
-  await service.rpc('deprecate_keys', { p_keys: [ANCHOR], p_actor: ACTOR, p_source: 'test' })
-})
+useLiveAnchor()
 
 describe('история ключа действиями', () => {
   it('правка — одно действие, «Утвердить» нескольких языков — одно действие с записью на язык', async () => {

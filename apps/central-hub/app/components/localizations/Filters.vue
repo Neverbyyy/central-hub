@@ -55,7 +55,7 @@ const missingModel = computed({
 // Раздел — хлебными крошками: клик по части пути переводит фильтр на этот уровень, × снимает его целиком.
 // Любой уровень — один клик, сколько бы ни было вложенности
 const crumbs = computed(() => {
-  const parts = prefix.value.replace(/\.$/, '').split('.')
+  const parts = sectionPath(prefix.value).split('.')
   return parts.map((label, i) => ({ label, prefix: `${parts.slice(0, i + 1).join('.')}.` }))
 })
 

@@ -10,3 +10,7 @@ export function errorText(error: unknown): string {
   if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') return error.message
   return String(error)
 }
+
+/** Ошибка правила из l10n-core (выгрузка, Figma) — человеку её текстом; prefix — например путь файла. */
+export const asHubError = (error: unknown, prefix = '', status = 400) =>
+  new HubError(`${prefix}${(error as Error).message}`, status)

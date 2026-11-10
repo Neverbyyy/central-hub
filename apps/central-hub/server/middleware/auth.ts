@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
   if (session.data.authed) return
 
   if (pathname.startsWith('/api/')) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized', message: 'Нужен вход' })
+    throw unauthorized()
   }
   return sendRedirect(event, `/login?next=${encodeURIComponent(pathname + search)}`, 302)
 })

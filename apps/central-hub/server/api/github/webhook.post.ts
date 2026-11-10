@@ -5,11 +5,11 @@ import { prEventForSet, verifyGithubSignature } from '../../lib/github-webhook'
 export default defineEventHandler(async (event) => {
   const secret = useRuntimeConfig(event).githubWebhookSecret as string
   if (!secret) {
-    throw createError({ statusCode: 503, statusMessage: 'Webhook Disabled', message: 'NUXT_GITHUB_WEBHOOK_SECRET не задан на сервере' })
+    throw disabled('Webhook', 'NUXT_GITHUB_WEBHOOK_SECRET не задан на сервере')
   }
   const raw = (await readRawBody(event, false)) ?? Buffer.alloc(0)
   if (!verifyGithubSignature(raw, getHeader(event, 'x-hub-signature-256'), secret)) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized', message: 'Неверная подпись вебхука' })
+    throw unauthorized('Неверная подпись вебхука')
   }
 
   // GitHub проверяет вебхук сразу после настройки

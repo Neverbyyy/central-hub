@@ -30,10 +30,7 @@ const selected = ref(new Set<string>())
 const expanded = ref(new Set<string>())
 const chosenLanguages = ref<string[]>([])
 
-const current = computed(() => props.prefix.replace(/\.$/, ''))
-
-// Разделы над этим: legacy.inapp.coloring1 → legacy, legacy.inapp
-const ancestors = (path: string) => path.split('.').slice(0, -1).map((_, i, parts) => parts.slice(0, i + 1).join('.'))
+const current = computed(() => sectionPath(props.prefix))
 
 // Каждое открытие — от раздела, выбранного в дереве, плюс общие строки; путь к нему раскрыт
 watch(open, (value) => {
@@ -41,7 +38,7 @@ watch(open, (value) => {
   // Дерево обычно уже загружено для панели слева; панель скрыта — грузим сейчас
   if (!tree.value) refreshTree()
   selected.value = new Set(['common', ...(current.value ? [current.value] : [])])
-  expanded.value = new Set(current.value ? ancestors(current.value) : [])
+  expanded.value = new Set(current.value ? sectionAncestors(current.value) : [])
   chosenLanguages.value = [...props.languages]
 })
 
@@ -106,11 +103,8 @@ const exportFile = async () => {
       query: { prefixes: prefixes.map(p => `${p}.`).join(','), langs: chosenLanguages.value.join(',') }
     })
     // Имя файла станет именем режима в Figma: en, ru, de…
-    // JSZip — только по нажатию: ~150 КБ не грузятся вместе со страницей
-    const { default: JSZip } = await import('jszip')
-    const zip = new JSZip()
-    for (const [lang, tree] of Object.entries(result.files)) zip.file(`${lang}.json`, JSON.stringify(tree, null, 2))
-    downloadBlob(await zip.generateAsync({ type: 'blob' }), `figma-${prefixes.join('+')}.zip`)
+    const files = Object.fromEntries(Object.entries(result.files).map(([lang, tree]) => [`${lang}.json`, tree]))
+    await downloadJsonZip(files, `figma-${prefixes.join('+')}.zip`)
     toast.add({ title: `Для Figma выгружено: ${keysCount(result.keys)}`, color: 'success' })
     open.value = false
   } catch (error) {
@@ -121,7 +115,7 @@ const exportFile = async () => {
 }
 
 const onKeydown = (event: KeyboardEvent) => {
-  if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+  if (isModEnter(event)) {
     event.preventDefault()
     exportFile()
   }

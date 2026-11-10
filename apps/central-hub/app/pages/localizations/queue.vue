@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { checkText } from '@amaya/l10n-core'
+import { conflictOf } from '~/composables/useLocalizations'
 
 definePageMeta({ title: 'Очередь перевода' })
 
@@ -39,9 +40,8 @@ const value = ref('')
 
 // Присутствие: открытая строка очереди — это правка ячейки, коллеги видят метку в таблице;
 // если её уже правит кто-то другой — та же метка здесь
-const { editors, setEditing } = usePresence()
-watchEffect(() => setEditing(item.value && lang.value ? { key: item.value.key, lang: lang.value } : null))
-onBeforeUnmount(() => setEditing(null))
+const { editors } = usePresence()
+usePresenceEditing(() => (item.value && lang.value ? { key: item.value.key, lang: lang.value } : null))
 const busyBy = computed(() => (item.value && lang.value ? editors.value[item.value.key]?.[lang.value] ?? [] : []))
 const field = useTemplateRef('field')
 
@@ -149,13 +149,13 @@ const save = async () => {
     if (total.value !== null) total.value--
     advance()
   } catch (error) {
-    const { statusCode, data } = (error ?? {}) as { statusCode?: number, data?: { data?: { current: string | null, actor?: string } } }
-    if (statusCode === 409 && data?.data && 'current' in data.data) {
+    const conflict = conflictOf(error)
+    if (conflict) {
       // Пока переводили, строку перевёл кто-то ещё — показываем его вариант, свой текст остаётся в поле
-      current.current = data.data.current
+      current.current = conflict.current
       toast.add({
-        title: data.data.actor ? `Строку уже перевёл(а) ${data.data.actor}` : 'Строку уже перевели',
-        description: `Сейчас: «${data.data.current ?? '—'}». Enter ещё раз — сохранить ваш вариант.`,
+        title: conflict.actor ? `Строку уже перевёл(а) ${conflict.actor}` : 'Строку уже перевели',
+        description: `Сейчас: «${conflict.current ?? '—'}». Enter ещё раз — сохранить ваш вариант.`,
         color: 'warning'
       })
     } else {
@@ -319,18 +319,7 @@ const length = computed(() => [...value.value].length)
               :placeholder="`Перевод на ${lang.toUpperCase()}`"
               @keydown="onKeydown"
             />
-            <ul
-              v-if="issues.length"
-              class="mt-1 flex flex-col gap-0.5 text-xs"
-            >
-              <li
-                v-for="issue in issues"
-                :key="issue.message"
-                :class="issue.level === 'error' ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400'"
-              >
-                {{ issue.message }}
-              </li>
-            </ul>
+            <LocalizationsTextIssues :issues="issues" />
           </div>
 
           <div class="flex items-center gap-2">
@@ -353,13 +342,12 @@ const length = computed(() => [...value.value].length)
       </div>
     </div>
 
-    <!-- Уже 1024 px клавиатуры обычно нет — и полосы с клавишами тоже -->
-    <div class="hotkeys hidden shrink-0 items-center gap-4 border-t border-default px-4 py-1.5 text-[11px] text-muted lg:flex">
+    <AppHotkeys>
       <span><kbd>Enter</kbd> сохранить и дальше</span>
       <span><kbd>Shift+Enter</kbd> перенос строки</span>
       <span><kbd>Alt+→</kbd> пропустить</span>
       <span><kbd>Esc</kbd> к таблице</span>
       <span>Сохранённое — черновик, утвердить можно в панели ключа</span>
-    </div>
+    </AppHotkeys>
   </div>
 </template>

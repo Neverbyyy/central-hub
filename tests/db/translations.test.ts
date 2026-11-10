@@ -1,19 +1,11 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { ACTOR, ANCHOR, ensureAnchor, readAnchor, service } from './clients'
+import { describe, expect, it } from 'vitest'
+import { ACTOR, ANCHOR, deprecateKeys, readAnchor, restoreKeys, service, setTranslation as setText, useLiveAnchor } from './clients'
 
 const SOURCE = 'test'
 
-const setTranslation = (lang: string, value: string) =>
-  service.rpc('set_translation', { p_key: ANCHOR, p_lang: lang, p_value: value, p_actor: ACTOR, p_source: SOURCE })
+const setTranslation = (lang: string, value: string) => setText(ANCHOR, lang, value)
 
-beforeAll(async () => {
-  await ensureAnchor()
-  await service.rpc('restore_keys', { p_keys: [ANCHOR], p_actor: ACTOR, p_source: SOURCE })
-})
-
-afterAll(async () => {
-  await service.rpc('deprecate_keys', { p_keys: [ANCHOR], p_actor: ACTOR, p_source: SOURCE })
-})
+useLiveAnchor()
 
 describe('set_translation', () => {
   it('правка английского делает переводы устаревшими', async () => {
@@ -74,8 +66,8 @@ describe('история', () => {
   })
 
   it('пометка «устарел» и возврат тоже попадают в историю', async () => {
-    await service.rpc('deprecate_keys', { p_keys: [ANCHOR], p_actor: ACTOR, p_source: SOURCE })
-    await service.rpc('restore_keys', { p_keys: [ANCHOR], p_actor: ACTOR, p_source: SOURCE })
+    await deprecateKeys([ANCHOR])
+    await restoreKeys([ANCHOR])
 
     const { data } = await service
       .from('history')

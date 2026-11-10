@@ -1,27 +1,22 @@
-import { findOpenPr, findPr, type PrState } from '../../lib/github'
-import { pendingApproval } from '../../lib/sync'
+import { findPr, type PrState } from '../../lib/github'
+import { pendingApproval, type ExportSet } from '../../lib/sync'
 
 // Наборы для окна «Выгрузка в код»: куда уходят, сколько ждёт утверждения, последняя выгрузка, открытый PR
 // и что стало с PR последней выгрузки. Окно перечитывает их и по вебхуку GitHub (см. /api/github/webhook)
 export default defineHubHandler(async (event) => {
   const db = useDb(event)
   const repos = exportRepos(event)
-  const token = useRuntimeConfig(event).githubToken as string
+  const token = githubToken(event)
 
-  const { data: sets, error } = await db.from('export_sets').select('name, project, path_template').order('name')
+  // Наборы целиком — одним запросом: подсчёт неутверждённого не перечитывает каждый
+  const { data: sets, error } = await db.from('export_sets').select('*').order('name')
   if (error) throwDbError(error)
 
   // Открытый PR — одним запросом к GitHub, чтобы кнопка сразу была «Обновить PR #N».
   // GitHub не ответил — не беда: предпросмотр всё равно уточнит
   const openPr = async (set: string) => {
     const target = repos.get(set)
-    if (!token || !target) return null
-    try {
-      return await findOpenPr({ token, target, set })
-    } catch (error) {
-      console.error('[export] открытый PR', set, error)
-      return null
-    }
+    return token && target ? openPrOrNull(token, target, set) : null
   }
 
   // Что стало с PR последней выгрузки: открыт, смержен или закрыт — окно пишет «PR #7 смержен».
@@ -39,9 +34,9 @@ export default defineHubHandler(async (event) => {
     }
   }
 
-  return await Promise.all((sets as { name: string, project: string, path_template: string }[]).map(async (set) => {
+  return await Promise.all((sets as ExportSet[]).map(async (set) => {
     const [pending, last, pr] = await Promise.all([
-      pendingApproval(db, set.name),
+      pendingApproval(db, set),
       db.from('export_runs')
         .select('outcome, pr_number, pr_url, actor, created_at')
         .eq('set_name', set.name)

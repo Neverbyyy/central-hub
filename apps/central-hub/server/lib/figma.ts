@@ -5,18 +5,12 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { figmaModeFiles, figmaModeName, figmaVariables, type FigmaSourceRow } from '@amaya/l10n-core'
-import { HubError } from './errors'
-import { allKeys, keyTreeNested } from './keys'
+import { asHubError, HubError } from './errors'
+import { keysByPrefixes, keyTreeNested, loadLanguages } from './keys'
 
 // Живое обновление плагина просит изменения «с прошлого раза» с запасом: строка, закоммиченная позже начала
 // своей транзакции, и расхождение часов сервера и базы не теряются, а плагин всё равно применяет только отличия
 const SINCE_OVERLAP_MS = 30_000
-
-async function editorLanguages(db: SupabaseClient) {
-  const { data, error } = await db.from('languages').select('code').eq('in_editor', true).order('position')
-  if (error) throw error
-  return (data as { code: string }[]).map(l => l.code)
-}
 
 /** Разделы выборки без вложенных друг в друга и языки в порядке грида. */
 async function resolveSelection(db: SupabaseClient, { prefixes, languages }: { prefixes: string[], languages?: string[] }) {
@@ -25,7 +19,7 @@ async function resolveSelection(db: SupabaseClient, { prefixes, languages }: { p
   if (!sections.length) throw new HubError('Выберите хотя бы один раздел')
   if (sections.length > 50) throw new HubError('Не больше 50 разделов за раз')
 
-  const known = await editorLanguages(db)
+  const known = await loadLanguages(db, { editorOnly: true })
   const unknown = (languages ?? []).filter(lang => !known.includes(lang))
   if (unknown.length) throw new HubError(`Неизвестные языки: ${unknown.join(', ')}`)
   // Порядок режимов — как в гриде
@@ -38,7 +32,7 @@ async function resolveSelection(db: SupabaseClient, { prefixes, languages }: { p
 
 /** Дерево разделов — то же, что слева в сервисе, — и языки: для окна плагина. */
 export async function figmaPluginSections(db: SupabaseClient) {
-  const [sections, languages] = await Promise.all([keyTreeNested(db), editorLanguages(db)])
+  const [sections, languages] = await Promise.all([keyTreeNested(db), loadLanguages(db, { editorOnly: true })])
   return { sections, modes: languages.map(code => ({ code, name: figmaModeName(code) })) }
 }
 
@@ -60,14 +54,8 @@ export async function figmaPluginTexts(
     from = new Date(time - SINCE_OVERLAP_MS).toISOString()
   }
 
-  const rows = new Map<string, FigmaSourceRow & { deprecated_at?: string | null }>()
   const columns = `technical_key, translations, description${from ? ', deprecated_at' : ''}`
-  for (const prefix of roots) {
-    for (const row of await allKeys<FigmaSourceRow & { deprecated_at?: string | null }>(db, columns, prefix, { since: from })) {
-      rows.set(row.technical_key, row)
-    }
-  }
-  const all = [...rows.values()]
+  const all = await keysByPrefixes<FigmaSourceRow & { deprecated_at?: string | null }>(db, columns, roots, { since: from })
 
   try {
     return {
@@ -77,20 +65,17 @@ export async function figmaPluginTexts(
       removed: all.filter(row => row.deprecated_at).map(row => row.technical_key).sort()
     }
   } catch (error) {
-    throw new HubError((error as Error).message)
+    throw asHubError(error)
   }
 }
 
 export async function figmaExport(db: SupabaseClient, { prefixes, languages }: { prefixes: string[], languages?: string[] }) {
   const { roots, modes } = await resolveSelection(db, { prefixes, languages })
-  const rows = new Map<string, FigmaSourceRow>()
-  for (const prefix of roots) {
-    for (const row of await allKeys<FigmaSourceRow>(db, 'technical_key, translations, description', prefix)) rows.set(row.technical_key, row)
-  }
+  const rows = await keysByPrefixes<FigmaSourceRow>(db, 'technical_key, translations, description', roots)
 
   try {
-    return { keys: rows.size, languages: modes, files: figmaModeFiles([...rows.values()], { languages: modes }) }
+    return { keys: rows.length, languages: modes, files: figmaModeFiles(rows, { languages: modes }) }
   } catch (error) {
-    throw new HubError((error as Error).message)
+    throw asHubError(error)
   }
 }

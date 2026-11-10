@@ -1,21 +1,11 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { ACTOR, ANCHOR, ensureAnchor, readAnchor, service } from './clients'
+import { describe, expect, it } from 'vitest'
+import { ANCHOR, deprecateKeys, readAnchor, restoreKeys, service, useLiveAnchor } from './clients'
 
 // Здесь только записи, которые база обязана отклонить. Если правило сломается,
 // мусорная строка останется навсегда — удалять строки нельзя никому.
 
-const restore = (keys: string[]) => service.rpc('restore_keys', { p_keys: keys, p_actor: ACTOR, p_source: 'test' })
-const deprecate = (keys: string[]) => service.rpc('deprecate_keys', { p_keys: keys, p_actor: ACTOR, p_source: 'test' })
-
 // Начало ключа проверяется только среди действующих: якорь должен быть действующим
-beforeAll(async () => {
-  await ensureAnchor()
-  await restore([ANCHOR])
-})
-
-afterAll(async () => {
-  await deprecate([ANCHOR])
-})
+useLiveAnchor()
 
 const insert = (row: Record<string, unknown>) =>
   service.from('localizations').insert({ description: 'Автотест правил', ...row })
@@ -56,7 +46,7 @@ describe('правила имени ключа в базе', () => {
   it('устаревший ключ не занимает имя: внутри него можно создать ключ', async () => {
     const { data: leaf } = await service.from('localizations').select('technical_key').eq('technical_key', LEAF).maybeSingle()
     if (!leaf) expect((await insert({ technical_key: LEAF })).error).toBeNull()
-    await deprecate([LEAF])
+    await deprecateKeys([LEAF])
     // Повторный прогон: строка уже есть — upsert всё равно проходит проверку начала ключа в триггере
     const { error } = await service.from('localizations').upsert(
       { technical_key: INSIDE, description: 'Автотест правил: ключ внутри устаревшей строки', translations: { en: 'Selftest' } },
@@ -66,7 +56,7 @@ describe('правила имени ключа в базе', () => {
   })
 
   it('устаревший ключ не вернуть, если его место занял новый', async () => {
-    const { error } = await restore([LEAF])
+    const { error } = await restoreKeys([LEAF])
     expect(error?.message).toContain(`Ключ «${LEAF}» не вернуть: его место занял «${INSIDE}»`)
     const { data } = await service.from('localizations').select('deprecated_at').eq('technical_key', LEAF).single()
     expect(data!.deprecated_at).not.toBeNull()

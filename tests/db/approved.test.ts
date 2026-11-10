@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { readLocaleFile } from '../../packages/l10n-core/src'
 import { exportSet, pendingApproval } from '../../apps/central-hub/server/lib/sync'
-import { ACTOR, service } from './clients'
+import { ACTOR, deprecateKeys, restoreKeys, service, setTranslation } from './clients'
 
 // В проекты уходит только утверждённое. Свой набор на служебном ключе: настоящие наборы
 // исключают common.selftest.*, а этот берёт только его — выгрузки InApp и Pages Hub не задеваются.
@@ -15,7 +15,7 @@ const exported = async () => {
 }
 
 const setEn = async (value: string) => {
-  const { error } = await service.rpc('set_translation', { p_key: KEY, p_lang: 'en', p_value: value, p_actor: ACTOR, p_source: 'test' })
+  const { error } = await setTranslation(KEY, 'en', value)
   if (error) throw error
 }
 
@@ -37,12 +37,12 @@ beforeAll(async () => {
     { onConflict: 'technical_key', ignoreDuplicates: true }
   )
   if (key.error) throw key.error
-  const restored = await service.rpc('restore_keys', { p_keys: [KEY], p_actor: ACTOR, p_source: 'test' })
+  const restored = await restoreKeys([KEY])
   if (restored.error) throw restored.error
 })
 
 afterAll(async () => {
-  await service.rpc('deprecate_keys', { p_keys: [KEY], p_actor: ACTOR, p_source: 'test' })
+  await deprecateKeys([KEY])
   await service.from('export_sets').delete().eq('name', SET)
 })
 
@@ -80,8 +80,8 @@ describe('выгрузка утверждённых текстов', () => {
   })
 
   it('устаревший ключ из выгрузки пропадает', async () => {
-    await service.rpc('deprecate_keys', { p_keys: [KEY], p_actor: ACTOR, p_source: 'test' })
+    await deprecateKeys([KEY])
     expect(await exported()).toBeUndefined()
-    await service.rpc('restore_keys', { p_keys: [KEY], p_actor: ACTOR, p_source: 'test' })
+    await restoreKeys([KEY])
   })
 })

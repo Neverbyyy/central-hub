@@ -1,11 +1,11 @@
 // Импорт файлов локалей проекта в сервис и выгрузка обратно.
-// Без Nuxt-глобалов: используется и маршрутами /api/cli/*, и тестами базы.
+// Без Nuxt-глобалов: используется маршрутами /api/cli/* и /api/export/*, и тестами базы.
 
 import { createHash } from 'node:crypto'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { escapeLike, filePath, keyInExportSet, legacyKey, readLocaleFile, renderLocaleFile, type LocaleEntry, type LocaleFormat } from '@amaya/l10n-core'
-import { HubError } from './errors'
-import { allKeys } from './keys'
+import { asHubError, HubError } from './errors'
+import { keysByPrefixes } from './keys'
 
 export interface ExportSet {
   name: string
@@ -44,7 +44,7 @@ export interface ExportResult {
   files: ExportedFile[]
 }
 
-interface KeyRow {
+interface ExportKeyRow {
   technical_key: string
   // Последний утверждённый текст по языкам: черновики в проекты не уходят
   approved: Record<string, string | null>
@@ -88,7 +88,7 @@ export async function importSet(
       // Шаблон, который выгрузка не воспроизводит байт в байт, принимать нельзя
       if (renderLocaleFile({ template: text, entries }) !== text) throw new Error('файл не воспроизводится выгрузкой')
     } catch (error) {
-      throw new HubError(`${set.path_template.replaceAll('{lang}', lang)}: ${(error as Error).message}`)
+      throw asHubError(error, `${set.path_template.replaceAll('{lang}', lang)}: `)
     }
 
     for (const { path, value } of entries) {
@@ -121,20 +121,18 @@ export async function importSet(
 const setPrefixes = (set: ExportSet, legacyOnly = false) =>
   [...new Set([set.legacy_prefix, ...(legacyOnly ? [] : set.include_prefixes)].filter((p): p is string => !!p))]
 
-async function loadKeys(db: SupabaseClient, set: ExportSet, legacyOnly: boolean): Promise<KeyRow[]> {
-  const rows = new Map<string, KeyRow>()
-  for (const prefix of setPrefixes(set, legacyOnly)) {
-    for (const row of await allKeys<KeyRow>(db, 'technical_key, approved, legacy_path', prefix)) {
-      // То же правило показывает интерфейс: «Выгрузка в код: InApp»
-      if (keyInExportSet(set, row.technical_key)) rows.set(row.technical_key, row)
-    }
-  }
-  return [...rows.values()]
+async function loadKeys(db: SupabaseClient, set: ExportSet, legacyOnly: boolean): Promise<ExportKeyRow[]> {
+  const rows = await keysByPrefixes<ExportKeyRow>(db, 'technical_key, approved, legacy_path', setPrefixes(set, legacyOnly))
+  // То же правило показывает интерфейс: «Выгрузка в код: InApp»
+  return rows.filter(row => keyInExportSet(set, row.technical_key))
 }
 
-/** Сколько действующих ключей набора ждут утверждения хотя бы на одном языке: их правки в выгрузку не попадут. */
-export async function pendingApproval(db: SupabaseClient, setName: string): Promise<number> {
-  const set = await loadSet(db, setName)
+/**
+ * Сколько действующих ключей набора ждут утверждения хотя бы на одном языке: их правки в выгрузку не попадут.
+ * Набор — именем или уже загруженный (окно «Выгрузка в код» читает все наборы одним запросом).
+ */
+export async function pendingApproval(db: SupabaseClient, setOrName: string | ExportSet): Promise<number> {
+  const set = typeof setOrName === 'string' ? await loadSet(db, setOrName) : setOrName
   const prefixes = setPrefixes(set)
   const count = async (prefix: string) => {
     const { count, error } = await db
@@ -177,7 +175,7 @@ export async function exportSet(db: SupabaseClient, setName: string, { legacyOnl
       content = renderLocaleFile({ template: templateFor.get(lang), entries, finalNewline: set.final_newline })
     } catch (error) {
       // Например, новый ключ совпал со старым: выгрузка падает, а не перезаписывает молча
-      throw new HubError(`${path}: ${(error as Error).message}`, 409)
+      throw asHubError(error, `${path}: `, 409)
     }
     return { lang, path, content, sha256: sha256(content) }
   })

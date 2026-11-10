@@ -36,5 +36,5 @@ export function useOpenPrs() {
     if (value === 'visible') refreshSoon()
   })
 
-  return { openPrs, refresh }
+  return { openPrs }
 }

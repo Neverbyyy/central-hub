@@ -74,8 +74,8 @@ function authError(message) {
 
 function query(params) {
   return Object.keys(params)
-    .filter(function (name) { return params[name] })
-    .map(function (name) { return encodeURIComponent(name) + '=' + encodeURIComponent(params[name]) })
+    .filter(name => params[name])
+    .map(name => encodeURIComponent(name) + '=' + encodeURIComponent(params[name]))
     .join('&')
 }
 
@@ -102,7 +102,7 @@ async function api(path, params) {
 // Применения не накладываются: живое обновление ждёт, пока закончится загрузка, и наоборот
 function exclusive(task) {
   var next = running.then(task, task)
-  running = next.catch(function () {})
+  running = next.catch(() => {})
   return next
 }
 
@@ -110,7 +110,7 @@ async function findCollection(settings, modes) {
   // Ищем среди локальных коллекций, а не по id: удалённую коллекцию Figma по id ещё отдаёт,
   // и переменные создавались бы в ней — невидимыми
   var local = await figma.variables.getLocalVariableCollectionsAsync()
-  var existing = local.filter(function (collection) { return collection.id === settings.collectionId })[0]
+  var existing = local.filter(collection => collection.id === settings.collectionId)[0]
   if (existing) return existing
   var collection = figma.variables.createVariableCollection(COLLECTION_NAME)
   // В новой коллекции один режим «Mode 1» — он становится первым языком
@@ -123,7 +123,7 @@ async function findCollection(settings, modes) {
 function ensureModes(collection, modes) {
   var ids = {}
   modes.forEach(function (mode) {
-    var found = collection.modes.filter(function (m) { return m.name === mode.name })[0]
+    var found = collection.modes.filter(m => m.name === mode.name)[0]
     if (found) {
       ids[mode.code] = found.modeId
       return
@@ -195,7 +195,7 @@ async function applyTexts(payload, settings, full) {
       variable.description = item.description
       changed = true
     }
-    if (setValues(variable, payload.modes, modeIds, function (mode) { return item.values[mode.code] || '' })) changed = true
+    if (setValues(variable, payload.modes, modeIds, mode => item.values[mode.code] || '')) changed = true
     if (created) stats.created++
     else if (changed) stats.updated++
     else stats.unchanged++
@@ -208,10 +208,10 @@ async function applyTexts(payload, settings, full) {
   } else if (language.getPluginData('key') !== LANGUAGE_KEY) {
     language.setPluginData('key', LANGUAGE_KEY)
   }
-  setValues(language, payload.modes, modeIds, function (mode) { return mode.name })
+  setValues(language, payload.modes, modeIds, mode => mode.name)
 
   if (full) {
-    var wanted = new Set(payload.variables.map(function (item) { return item.key }))
+    var wanted = new Set(payload.variables.map(item => item.key))
     byKey.forEach(function (variable, key) {
       if (key !== LANGUAGE_KEY && !wanted.has(key)) stats.extra.push(variable.name)
     })
@@ -228,10 +228,17 @@ function textsParams(settings, since) {
   return { prefixes: settings.prefixes.join(','), langs: settings.langs.join(','), since: since }
 }
 
-async function fullSync(settings) {
-  var payload = await api('/api/figma/plugin/texts', textsParams(settings))
-  var stats = await exclusive(function () { return applyTexts(payload, settings, true) })
+// Тексты выборки у сервиса → переменные; без since — вся выборка, с since — только изменения с прошлого ответа.
+// now из ответа — since для следующего раза
+async function syncTexts(settings, since) {
+  var payload = await api('/api/figma/plugin/texts', textsParams(settings, since))
+  var stats = await exclusive(() => applyTexts(payload, settings, !since))
   cursor = payload.now
+  return stats
+}
+
+async function fullSync(settings) {
+  var stats = await syncTexts(settings)
   // Кнопки плагина в правой панели файла, когда ничего не выделено
   figma.root.setRelaunchData({ sync: 'Разделы: ' + settings.prefixes.join(', '), watch: '', open: '' })
   return stats
@@ -292,6 +299,12 @@ function stopLive() {
   nudged = false
 }
 
+// Живое обновление выключено (галка, токен): ни опроса, ни подписки
+function stopAll() {
+  stopLive()
+  stopRealtime()
+}
+
 function scheduleLive(delay) {
   stopLive()
   liveTimer = setTimeout(pollLive, delay)
@@ -319,13 +332,11 @@ async function pollLive() {
   polling = true
   dirty = false
   try {
-    var payload = await api('/api/figma/plugin/texts', textsParams(settings, cursor))
-    var stats = await exclusive(function () { return applyTexts(payload, settings, false) })
-    cursor = payload.now
+    var stats = await syncTexts(settings, cursor)
     liveDelay = LIVE_INTERVAL
     offlineNotified = false
     var changed = stats.created + stats.updated
-    post({ type: 'live', at: Date.now(), changed: changed, extra: stats.extra })
+    post({ type: 'live-result', at: Date.now(), changed: changed, extra: stats.extra })
     if (background && changed) figma.notify('Amaya Hub: ' + updatedText(changed), { timeout: 3000, button: WINDOW_BUTTON })
     polling = false
     scheduleLive(dirty ? NUDGE_DELAY : idleDelay())
@@ -347,7 +358,7 @@ async function pollLive() {
 }
 
 function inSelection(key, prefixes) {
-  return prefixes.some(function (prefix) { return key === prefix || key.indexOf(prefix + '.') === 0 })
+  return prefixes.some(prefix => key === prefix || key.indexOf(prefix + '.') === 0)
 }
 
 // Окно: эти ключи изменились в сервисе. Чужие разделы не трогаем, пачку собираем в один запрос
@@ -355,7 +366,7 @@ function onChanged(keys) {
   var settings = readSettings()
   // Подписку остановили (галка, неверный токен) — запоздалые события окна не в счёт
   if (realtime === 'off' || !liveOn(settings)) return
-  if (!keys.some(function (key) { return inSelection(key, settings.prefixes) })) return
+  if (!keys.some(key => inSelection(key, settings.prefixes))) return
   if (polling) {
     dirty = true
     return
@@ -386,8 +397,7 @@ function onRealtime(state) {
 
 function report(error) {
   if (error.auth) {
-    stopLive()
-    stopRealtime()
+    stopAll()
     // Токен вводят в окне — прятать его дальше нельзя
     if (background) showWindow()
     post({ type: 'auth', message: error.message })
@@ -423,14 +433,23 @@ async function loadSections() {
   }
 }
 
+// Разделы для окна и, если выборка в файле уже есть, её тексты
+async function loadAll(settings) {
+  if ((await loadSections()) && settings) await runFull(settings)
+}
+
+// Выборка файла, если плагин в нём настроен и токен есть; иначе null — команда открывает окно
+async function configuredSettings() {
+  var settings = readSettings()
+  return settings && (await getToken()) ? settings : null
+}
+
 async function onMessage(message) {
   if (message.type === 'token') {
     await figma.clientStorage.setAsync('token', String(message.token || '').trim())
-    var settings = readSettings()
-    if ((await loadSections()) && settings) await runFull(settings)
+    await loadAll(readSettings())
   } else if (message.type === 'forget-token') {
-    stopLive()
-    stopRealtime()
+    stopAll()
     await figma.clientStorage.setAsync('token', '')
     post({ type: 'auth', message: '' })
   } else if (message.type === 'load') {
@@ -440,7 +459,7 @@ async function onMessage(message) {
     if (next.live === undefined) next.live = true
     saveSettings(next)
     await runFull(next)
-  } else if (message.type === 'live') {
+  } else if (message.type === 'live-toggle') {
     var current = readSettings()
     if (!current) return
     current.live = !!message.on
@@ -449,8 +468,7 @@ async function onMessage(message) {
       startRealtime()
       scheduleLive(0)
     } else {
-      stopLive()
-      stopRealtime()
+      stopAll()
     }
   } else if (message.type === 'changed') {
     onChanged(message.keys || [])
@@ -466,25 +484,24 @@ async function onMessage(message) {
 async function setupWindow(visible) {
   figma.showUI(__html__, { width: 340, height: 560, themeColors: true, title: 'Amaya Hub — локализация', visible: visible })
   figma.on('close', stopLive)
-  figma.ui.onmessage = function (message) {
+  figma.ui.onmessage = (message) => {
     onMessage(message).catch(report)
   }
   var settings = readSettings()
   var token = await getToken()
-  post({ type: 'init', hub: HUB, hasToken: !!token, settings: settings })
+  post({ type: 'init', hub: HUB, hasToken: !!token, settings: settings, liveInterval: LIVE_INTERVAL })
   return { settings: settings, token: token }
 }
 
 async function openWindow() {
   var opened = await setupWindow(true)
-  if (!opened.token) return
-  if ((await loadSections()) && opened.settings) await runFull(opened.settings)
+  if (opened.token) await loadAll(opened.settings)
 }
 
 // «Следить в фоне»: без окна, если плагин уже настроен в этом файле; иначе — окно
 async function watchCommand() {
-  var settings = readSettings()
-  if (!settings || !(await getToken())) return openWindow()
+  var settings = await configuredSettings()
+  if (!settings) return openWindow()
   // Слежение в фоне и есть живое обновление — включаем его, даже если в окне сняли галку
   if (settings.live === false) {
     settings.live = true
@@ -500,8 +517,8 @@ async function watchCommand() {
 
 // «Обновить тексты»: без окна, если плагин уже настроен в этом файле; иначе — окно
 async function syncCommand() {
-  var settings = readSettings()
-  if (!settings || !(await getToken())) return openWindow()
+  var settings = await configuredSettings()
+  if (!settings) return openWindow()
   try {
     figma.closePlugin(summary(await fullSync(settings)))
   } catch (error) {
@@ -512,6 +529,6 @@ async function syncCommand() {
 
 var COMMANDS = { sync: syncCommand, watch: watchCommand }
 
-;(COMMANDS[figma.command] || openWindow)().catch(function (error) {
+;(COMMANDS[figma.command] || openWindow)().catch((error) => {
   figma.closePlugin('Amaya Hub: ' + error.message)
 })

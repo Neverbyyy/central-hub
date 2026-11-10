@@ -82,7 +82,7 @@ export default defineNuxtConfig({
 
   supabase: {
     redirect: false,
-    // Типы схемы пока не генерируются
-    types: false
+    // Типы схемы — из локальной базы: pnpm db:types после каждой миграции
+    types: '~/types/database.types.ts'
   }
 })

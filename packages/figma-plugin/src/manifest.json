@@ -7,7 +7,7 @@
   "editorType": ["figma"],
   "documentAccess": "dynamic-page",
   "networkAccess": {
-    "allowedDomains": ["__HUB_ORIGIN__", "__REALTIME_ORIGIN__"],
+    "allowedDomains": [],
     "reasoning": "Плагин загружает тексты и переводы из сервиса локализации Amaya Hub и узнаёт о правках через Supabase Realtime"
   },
   "menu": [

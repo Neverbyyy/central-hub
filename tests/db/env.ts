@@ -1,4 +1,9 @@
 import { execSync } from 'node:child_process'
+import { createClient } from '@supabase/supabase-js'
+
+/** Клиент тестов: без сессии и её обновления — ключи передаются явно. */
+export const makeClient = (url: string, key: string) =>
+  createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } })
 
 export interface SupabaseEnv {
   NUXT_PUBLIC_SUPABASE_URL: string

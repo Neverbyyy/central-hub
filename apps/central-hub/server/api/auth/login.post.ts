@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
   if (!secretsEqual(password, hubPassword)) {
     // Пауза замедляет перебор
     await new Promise(resolve => setTimeout(resolve, 500))
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized', message: 'Неверный пароль' })
+    throw unauthorized('Неверный пароль')
   }
 
   const session = await useHubSession(event)

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { descriptionError, figmaUrlError, isPrefixConflict, keyError, newKeyError, type KeyContext } from '../src'
+import { descriptionError, figmaUrlError, keyError, newKeyError, type KeyContext } from '../src'
 
 const ctx: KeyContext = {
   registry: {
@@ -105,17 +105,5 @@ describe('figmaUrlError', () => {
   it('чужой адрес или http — ошибка', () => {
     expect(figmaUrlError('https://example.com/figma.com/x')).toContain('figma.com')
     expect(figmaUrlError('http://www.figma.com/design/abc')).toContain('figma.com')
-  })
-})
-
-describe('isPrefixConflict', () => {
-  it('ключ не может быть началом другого', () => {
-    expect(isPrefixConflict('common.button.continue', 'common.button.continue.trial')).toBe(true)
-    expect(isPrefixConflict('common.button.continue.trial', 'common.button.continue')).toBe(true)
-  })
-
-  it('совпадение начала строки без точки — не конфликт', () => {
-    expect(isPrefixConflict('common.button.continue', 'common.button.continue_trial')).toBe(false)
-    expect(isPrefixConflict('common.button.continue', 'common.button.continue')).toBe(false)
   })
 })

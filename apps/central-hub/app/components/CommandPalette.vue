@@ -4,7 +4,7 @@ import { escapeLike } from '@amaya/l10n-core'
 
 // Палитра команд по Ctrl+K / ⌘K: найти ключ, открыть очередь перевода, применить частый фильтр.
 // Состояние общее: её открывает и кнопка «Найти ключ» на главной
-const open = useState('command-palette-open', () => false)
+const open = useCommandPaletteOpen()
 const searchTerm = ref('')
 const searching = ref(false)
 
@@ -76,7 +76,7 @@ const groups = computed<CommandPaletteGroup<CommandPaletteItem>[]>(() => {
     label: row.technical_key,
     suffix: row.translations?.en ?? '',
     icon: 'i-lucide-key-round',
-    onSelect: () => go({ path: '/localizations', query: { q: row.technical_key, key: row.technical_key } })
+    onSelect: () => go(keyRoute(row.technical_key))
   }))
 
   const actions: CommandPaletteItem[] = [
