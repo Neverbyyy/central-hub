@@ -30,6 +30,15 @@ export const HUB_SERVICES: HubService[] = [
     group: 'texts'
   },
   {
+    id: 'mcp',
+    title: 'MCP для нейросетей',
+    description: 'Токен и инструкция: Claude Code ищет строки, заводит ключи и пишет черновые переводы.',
+    icon: 'ri:robot-2-line',
+    to: '/ai',
+    external: false,
+    group: 'texts'
+  },
+  {
     id: 'storybook',
     title: 'Storybook',
     description: 'Компоненты, токены и темы, целые экраны пейволлов и лендингов.',

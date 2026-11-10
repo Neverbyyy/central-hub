@@ -78,7 +78,22 @@ const logout = async () => {
     </section>
 
     <footer>
-      <!-- Настройки — внизу, над именем: нужны редко и не мешают разделам -->
+      <!-- MCP и Настройки — внизу, над именем: нужны редко и не мешают разделам. MCP — подключение нейросетей
+           (адрес, общий токен, инструкция), страница /ai: на /mcp сам MCP-сервер -->
+      <ULink
+        raw
+        to="/ai"
+        class="flex mx-2 mb-1 px-4 py-2 rounded-lg text-sm text-highlighted hover:bg-mist-100 dark:hover:bg-gray-800"
+        active-class="bg-mist-100 dark:bg-gray-800 font-bold"
+        inactive-class=""
+      >
+        <UIcon
+          name="ri:robot-2-line"
+          class="size-5 mr-2"
+        />
+        MCP
+      </ULink>
+
       <ULink
         raw
         to="/settings"

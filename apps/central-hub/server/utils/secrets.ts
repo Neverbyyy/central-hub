@@ -7,7 +7,7 @@ const digest = (value: string) => createHash('sha256').update(value).digest()
 export const secretsEqual = (a: string, b: string) => timingSafeEqual(digest(a), digest(b))
 
 // У CLI, нейросети и плагина Figma свои токены: утечка одного не открывает другой
-const TOKENS = {
+export const TOKENS = {
   cli: { config: 'cliToken', env: 'NUXT_CLI_TOKEN', label: 'CLI' },
   mcp: { config: 'mcpToken', env: 'NUXT_MCP_TOKEN', label: 'MCP' },
   figma: { config: 'figmaToken', env: 'NUXT_FIGMA_TOKEN', label: 'Figma' }

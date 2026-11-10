@@ -166,7 +166,10 @@ const onKeydown = (event: KeyboardEvent) => {
             <li>В приложении Figma для компьютера: Plugins → Development → Import plugin from manifest → <code>manifest.json</code>.</li>
             <li>Запустите плагин и вставьте токен:</li>
           </ol>
-          <LocalizationsFigmaPluginToken class="mt-2 pl-4" />
+          <SharedToken
+            kind="figma"
+            class="mt-2 pl-4"
+          />
         </section>
 
         <p class="text-xs text-muted">

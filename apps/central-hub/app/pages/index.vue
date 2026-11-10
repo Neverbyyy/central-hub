@@ -71,7 +71,7 @@ const TILE: Record<HubServiceGroup, string> = {
           :target="service.external ? '_blank' : undefined"
           variant="outline"
           class="transition-transform hover:ring-accented active:scale-[0.99]"
-          :class="group.id === 'texts' && 'sm:col-span-2 lg:col-span-3'"
+          :class="service.id === 'localizations' && 'lg:col-span-2'"
           :ui="{ leading: 'mb-3', description: 'text-sm text-muted', footer: 'pt-3' }"
         >
           <template #leading>

@@ -99,6 +99,7 @@ const groups = computed<CommandPaletteGroup<CommandPaletteItem>[]>(() => {
     { label: 'Главная', icon: 'i-lucide-house', onSelect: () => go('/') },
     { label: 'Локализации', icon: 'i-lucide-languages', onSelect: () => go('/localizations') },
     { label: 'Настройки', icon: 'i-lucide-settings', onSelect: () => go('/settings') },
+    { label: 'MCP для нейросетей', suffix: 'токен и инструкция', icon: 'ri:robot-2-line', onSelect: () => go('/ai') },
     // Внешние сервисы — из того же списка, что карточки на главной (utils/services.ts), в новой вкладке
     ...HUB_SERVICES.filter(service => service.external).map(service => ({
       label: service.title,
