@@ -1,10 +1,10 @@
 <script setup lang="ts">
 // Человек в сервисе: кружок с инициалами, имя, устройство, где он, сколько уже здесь и что правит.
 // Одна и та же карточка — в подсказке над аватаром и в списке «Сейчас в сервисе»
-import type { PresenceGroup } from '~/utils/presence'
+import type { PresencePerson } from '~/utils/presence'
 
 const props = defineProps<{
-  person: PresenceGroup
+  person: PresencePerson
   now: number
   // «вы» рядом с именем — своя карточка в списке
   self?: boolean
@@ -45,8 +45,6 @@ const editingTo = computed(() => props.person.editing
       <p class="truncate text-muted">
         {{ person.page || 'В сервисе' }}<template v-if="duration">
           · в сервисе {{ duration }}
-        </template><template v-if="person.tabs > 1">
-          · {{ person.tabs }} {{ plural(person.tabs, ['вкладка', 'вкладки', 'вкладок']) }}
         </template>
       </p>
       <p

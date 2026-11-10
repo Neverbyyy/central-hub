@@ -44,13 +44,12 @@ describe('присутствие: состояние канала', () => {
     ], SELF)
     expect(others.map(p => p.name)).toEqual(['Антон', 'Кирилл'])
     // У Антона две вкладки — показана та, где он что-то правит, «в сервисе с» — от самой ранней
-    expect(others[0]).toMatchObject({ page: 'Очередь перевода', editing: { key: 'common.a', lang: 'de' }, since: 2000, tabs: 2 })
-    expect(others[1]!.tabs).toBe(1)
+    expect(others[0]).toMatchObject({ page: 'Очередь перевода', editing: { key: 'common.a', lang: 'de' }, since: 2000 })
   })
 
   it('сам человек — его вкладки одной записью; сколько в сервисе — по именам, вместе с собой', () => {
     const people = [person('my-tab', 'Артём', { since: 4000 }), person('my-other-tab', 'Артём', { since: 1000 }), person('t1', 'Кирилл'), person('t2', 'Кирилл')]
-    expect(presenceSelf(people, SELF)).toMatchObject({ name: 'Артём', since: 1000, tabs: 2 })
+    expect(presenceSelf(people, SELF)).toMatchObject({ name: 'Артём', since: 1000 })
     expect(presenceOnline(people, SELF)).toBe(2)
     // Своя вкладка ещё не подключилась — себя всё равно считаем
     expect(presenceOnline([person('t1', 'Кирилл')], SELF)).toBe(2)

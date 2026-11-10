@@ -23,11 +23,6 @@ export interface PresencePerson extends PresenceMeta {
   tab: string
 }
 
-// Человек в шапке: его вкладки сложены в одну запись
-export interface PresenceGroup extends PresencePerson {
-  tabs: number
-}
-
 const DEVICES: PresenceDevice[] = ['desktop', 'tablet', 'phone']
 
 // Насыщенные цвета, на которых читается белый текст, — и в светлой, и в тёмной теме. Чем их больше,
@@ -72,28 +67,28 @@ export function presencePeople(state: Record<string, unknown[]>): PresencePerson
  * Люди по именам: вкладки одного человека — одна запись. Показана вкладка, где он что-то правит (иначе — последняя
  * открытая), «в сервисе с» — от самой ранней вкладки. Порядок — по алфавиту.
  */
-function groupByName(people: PresencePerson[]): PresenceGroup[] {
-  const byName = new Map<string, PresenceGroup>()
+function groupByName(people: PresencePerson[]): PresencePerson[] {
+  const byName = new Map<string, PresencePerson>()
   for (const person of people) {
     const seen = byName.get(person.name)
     if (!seen) {
-      byName.set(person.name, { ...person, tabs: 1 })
+      byName.set(person.name, person)
       continue
     }
     const shown = (!seen.editing && person.editing) || (!seen.editing === !person.editing && person.since > seen.since) ? person : seen
     const earliest = [seen.since, person.since].filter(Boolean)
-    byName.set(person.name, { ...shown, since: earliest.length ? Math.min(...earliest) : 0, tabs: seen.tabs + 1 })
+    byName.set(person.name, { ...shown, since: earliest.length ? Math.min(...earliest) : 0 })
   }
   return [...byName.values()].sort((a, b) => a.name.localeCompare(b.name, 'ru'))
 }
 
 /** Другие люди — без своих вкладок и тёзок: одно имя — один человек. */
-export function presenceOthers(people: PresencePerson[], self: { tab: string, name: string | null }): PresenceGroup[] {
+export function presenceOthers(people: PresencePerson[], self: { tab: string, name: string | null }): PresencePerson[] {
   return groupByName(people.filter(person => person.tab !== self.tab && person.name !== self.name))
 }
 
 /** Сам человек — все его вкладки одной записью; ещё не подключился — null. */
-export function presenceSelf(people: PresencePerson[], self: { tab: string, name: string | null }): PresenceGroup | null {
+export function presenceSelf(people: PresencePerson[], self: { tab: string, name: string | null }): PresencePerson | null {
   return groupByName(people.filter(person => person.tab === self.tab || (!!self.name && person.name === self.name)))[0] ?? null
 }
 
