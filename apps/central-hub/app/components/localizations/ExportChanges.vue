@@ -83,7 +83,7 @@ useEventListener('keydown', (event: KeyboardEvent) => {
           {{ change.added + change.changed + change.removed }} изменений — все будут в PR.
         </p>
 
-        <ul class="divide-y divide-gray-100 dark:divide-gray-800">
+        <ul class="divide-y divide-default">
           <li
             v-for="group in visible"
             :key="group.key"

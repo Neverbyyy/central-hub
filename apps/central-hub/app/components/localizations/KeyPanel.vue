@@ -367,7 +367,7 @@ const toggleAction = (id: number) => {
             Утвердить всё ({{ toApprove.length }})
           </UButton>
         </div>
-        <ul class="divide-y divide-gray-100 dark:divide-gray-800">
+        <ul class="divide-y divide-default">
           <li
             v-for="item in languageRows"
             :key="item.lang"

@@ -28,20 +28,31 @@
   --ui-warning: var(--ui-color-warning-400);
 }
 
-/* Клавиши в полосах подсказок грида и очереди. Только внутри .hotkeys — <kbd> у компонентов Nuxt UI свои */
+/* Светлая тема — мягко серая, а не белая: белый фон на весь экран слепил (просьба пользователей).
+   Основной фон (грид, шапка, окна, поля) — светло-серый, подложки и боковая панель — на тон темнее, рамки —
+   ещё темнее. Приглушённый текст темнее gray-500: на сером фоне тот давал 4,1:1, ниже WCAG AA (4,5:1).
+   Вне слоёв и только без .dark — сильнее @layer theme из Nuxt UI и не задевает тёмную тему */
+:root:not(.dark) {
+  --ui-bg: #f3f4f6;
+  --ui-bg-muted: #ebedf0;
+  --ui-bg-elevated: #e5e7eb;
+  --ui-bg-accented: #d8dce1;
+  --ui-border: #dadde2;
+  --ui-border-muted: #e2e5e9;
+  --ui-border-accented: #c8cdd4;
+  --ui-text-muted: #5f6673;
+  --ui-text-dimmed: #959ba6;
+}
+
+/* Клавиши в полосах подсказок грида и очереди. Только внутри .hotkeys — <kbd> у компонентов Nuxt UI свои.
+   На токенах — одно правило на обе темы (в тёмной это прежние neutral-700 / 800 / 400) */
 .hotkeys kbd {
   font-family: inherit;
   padding: 0 4px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--ui-border-accented);
   border-radius: 4px;
-  background: #f9fafb;
-  color: #6b7280;
-}
-
-.dark .hotkeys kbd {
-  border-color: var(--ui-color-neutral-700);
-  background: var(--ui-color-neutral-800);
-  color: var(--ui-color-neutral-400);
+  background: var(--ui-bg-elevated);
+  color: var(--ui-text-muted);
 }
 
 /* iOS увеличивает страницу, когда фокус попадает в поле со шрифтом меньше 16 px, и сама её обратно не уменьшает.

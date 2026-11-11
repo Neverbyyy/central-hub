@@ -64,25 +64,25 @@ const onArrow = (event: KeyboardEvent) => {
             <!-- Мини-экран в цветах своей темы — не зависит от текущей -->
             <div
               class="flex h-24 overflow-hidden rounded-lg border"
-              :class="theme.value === 'dark' ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-white'"
+              :class="theme.value === 'dark' ? 'border-gray-700 bg-gray-900' : 'border-gray-300 bg-gray-100'"
               aria-hidden="true"
             >
               <div
                 class="w-1/4 space-y-1.5 p-2"
-                :class="theme.value === 'dark' ? 'bg-gray-950' : 'bg-gray-50'"
+                :class="theme.value === 'dark' ? 'bg-gray-950' : 'bg-gray-200'"
               >
                 <div
                   v-for="i in 3"
                   :key="i"
                   class="h-1.5 rounded-full"
-                  :class="theme.value === 'dark' ? 'bg-gray-700' : 'bg-gray-200'"
+                  :class="theme.value === 'dark' ? 'bg-gray-700' : 'bg-gray-300'"
                 />
               </div>
               <div class="flex-1 space-y-2 p-2">
                 <div class="flex gap-1.5">
                   <div
                     class="h-2 flex-1 rounded-full"
-                    :class="theme.value === 'dark' ? 'bg-gray-700' : 'bg-gray-200'"
+                    :class="theme.value === 'dark' ? 'bg-gray-700' : 'bg-gray-300'"
                   />
                   <div class="h-2 w-6 rounded-full bg-green-500" />
                 </div>
@@ -90,7 +90,7 @@ const onArrow = (event: KeyboardEvent) => {
                   v-for="i in 4"
                   :key="i"
                   class="h-1.5 rounded-full"
-                  :class="theme.value === 'dark' ? 'bg-gray-800' : 'bg-gray-100'"
+                  :class="theme.value === 'dark' ? 'bg-gray-800' : 'bg-gray-200'"
                 />
               </div>
             </div>

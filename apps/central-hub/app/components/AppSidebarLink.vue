@@ -8,8 +8,8 @@ defineProps<{ to: string, icon: string, label: string }>()
   <ULink
     raw
     :to="to"
-    class="flex px-4 py-2 rounded-lg text-sm text-highlighted hover:bg-mist-100 dark:hover:bg-gray-800"
-    active-class="bg-mist-100 dark:bg-gray-800 font-bold"
+    class="flex px-4 py-2 rounded-lg text-sm text-highlighted hover:bg-accented dark:hover:bg-gray-800"
+    active-class="bg-accented dark:bg-gray-800 font-bold"
     inactive-class=""
   >
     <UIcon

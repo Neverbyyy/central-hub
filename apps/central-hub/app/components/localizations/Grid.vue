@@ -426,20 +426,20 @@ defineExpose({ reset })
 </template>
 
 <style>
-/* Цвета грида: светлые — прежние, тёмные — из нейтральной шкалы Nuxt UI */
+/* Цвета грида: светлые — от смысловых токенов (серый фон темы, assets/css/main.css), тёмные — из нейтральной шкалы */
 :root {
-  --loc-bg: #fff;
-  --loc-bg-odd: #f9fafb;
-  --loc-bg-hover: #f3f4f6;
-  --loc-bg-selected: #eff6ff;
-  --loc-header-text: #6b7280;
-  --loc-header-line: #e5e7eb;
-  --loc-line: #f3f4f6;
+  --loc-bg: var(--ui-bg);
+  --loc-bg-odd: color-mix(in oklab, var(--ui-color-neutral-200) 35%, var(--ui-bg));
+  --loc-bg-hover: var(--ui-bg-elevated);
+  --loc-bg-selected: color-mix(in oklab, #3b82f6 12%, var(--ui-bg));
+  --loc-header-text: var(--ui-text-muted);
+  --loc-header-line: var(--ui-border);
+  --loc-line: var(--ui-border-muted);
   --loc-active: #3b82f6;
   --loc-active-blur: #93c5fd;
-  --loc-scroll-track: #f9fafb;
-  --loc-scroll-thumb: #d1d5db;
-  --loc-scroll-thumb-hover: #9ca3af;
+  --loc-scroll-track: var(--ui-bg);
+  --loc-scroll-thumb: var(--ui-color-neutral-300);
+  --loc-scroll-thumb-hover: var(--ui-color-neutral-400);
 }
 
 .dark {

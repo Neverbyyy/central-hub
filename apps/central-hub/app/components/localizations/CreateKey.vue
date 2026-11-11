@@ -515,7 +515,7 @@ const onKeydown = (event: KeyboardEvent) => {
           </p>
           <ul
             v-else
-            class="divide-y divide-gray-100 dark:divide-gray-800 rounded-lg border border-default"
+            class="divide-y divide-default rounded-lg border border-default"
           >
             <li
               v-for="item in similar"

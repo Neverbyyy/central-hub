@@ -72,7 +72,7 @@ const [DefineEntry, ReuseEntry] = createReusableTemplate<{ entry: HistoryEntry }
         :key="action.id"
         class="overflow-hidden rounded-lg border border-default"
       >
-        <div class="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 bg-muted px-3 py-1.5">
+        <div class="flex items-center gap-2 border-b border-default bg-muted px-3 py-1.5">
           <template v-if="action.entries.length === 1">
             <span
               v-if="action.entries[0]!.lang"
