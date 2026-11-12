@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Человек в сервисе: кружок с инициалами, имя, устройство, где он, сколько уже здесь и что правит.
+// Человек в сервисе: кружок с инициалами, имя и рабочий адрес, устройство, сколько уже здесь и что правит.
 // Одна и та же карточка — в подсказке над аватаром и в списке «Сейчас в сервисе»
 import type { PresencePerson } from '~/utils/presence'
 
@@ -36,10 +36,15 @@ const editingTo = computed(() => (props.person.editing ? keyRoute(props.person.e
           :aria-label="device.label"
         />
       </div>
+      <p
+        v-if="person.email"
+        class="truncate text-muted"
+        :title="person.email"
+      >
+        {{ person.email }}
+      </p>
       <p class="truncate text-muted">
-        {{ person.page || 'В сервисе' }}<template v-if="duration">
-          · в сервисе {{ duration }}
-        </template>
+        {{ duration ? `В сервисе ${duration}` : 'В сервисе' }}
       </p>
       <p
         v-if="person.editing"

@@ -15,9 +15,10 @@ import {
 } from '../../apps/central-hub/app/utils/presence'
 
 // Присутствие в сервисе (apps/central-hub/app/utils/presence.ts): состояние канала от чужих вкладок → люди и метки
-const SELF = { tab: 'my-tab', name: 'Артём' }
+// Вкладки без адреса (прежняя версия сервиса) — человек узнаётся по имени; с адресом — по адресу
+const SELF = { tab: 'my-tab', name: 'Артём', email: null }
 const person = (tab: string, name: string, extra: Partial<PresencePerson> = {}): PresencePerson =>
-  ({ tab, name, page: 'Локализации', editing: null, since: 1000, device: 'desktop', ...extra })
+  ({ tab, name, email: null, editing: null, since: 1000, device: 'desktop', ...extra })
 
 describe('присутствие: состояние канала', () => {
   it('у вкладки берётся последнее состояние; без имени отсеивается, непонятные поля — по умолчанию; editing — не отсюда', () => {
@@ -29,9 +30,37 @@ describe('присутствие: состояние канала', () => {
       e: []
     })
     expect(people).toEqual([
-      { tab: 'a', name: 'Антон', page: 'Локализации', editing: null, since: 5000, device: 'phone' },
-      { tab: 'd', name: 'Кирилл', page: '', editing: null, since: 0, device: 'desktop' }
+      // Страницу прежняя версия ещё присылает — она больше не нужна и отбрасывается
+      { tab: 'a', name: 'Антон', email: null, editing: null, since: 5000, device: 'phone' },
+      { tab: 'd', name: 'Кирилл', email: null, editing: null, since: 0, device: 'desktop' }
     ])
+  })
+
+  it('рабочий адрес: строкой с @, в нижнем регистре; остальное — null', () => {
+    const people = presencePeople({
+      a: [{ name: 'Антон', email: ' Anton@AmayaSoft.uz ' }],
+      b: [{ name: 'Кирилл', email: 'не адрес' }],
+      c: [{ name: 'Саша', email: 42 }]
+    })
+    expect(people.map(p => p.email)).toEqual(['anton@amayasoft.uz', null, null])
+  })
+
+  it('с адресом: тёзки — разные люди, вкладки одного адреса — одна запись, себя узнаём по адресу', () => {
+    const self = { tab: 'my-tab', name: 'Артём', email: 'artem@amayasoft.uz' }
+    const people = [
+      person('my-tab', 'Артём', { email: 'artem@amayasoft.uz' }),
+      person('my-other-tab', 'Артём', { email: 'artem@amayasoft.uz', since: 500 }),
+      person('t1', 'Артём', { email: 'artem.k@amayasoft.uz' }),
+      person('t2', 'Кирилл', { email: 'kirill@amayasoft.uz', since: 3000 }),
+      person('t3', 'Кирилл', { email: 'kirill@amayasoft.uz', since: 2000 })
+    ]
+    expect(presenceOthers(people, self).map(p => `${p.name} ${p.email}`)).toEqual(['Артём artem.k@amayasoft.uz', 'Кирилл kirill@amayasoft.uz'])
+    expect(presenceSelf(people, self)).toMatchObject({ email: 'artem@amayasoft.uz', since: 500 })
+    expect(presenceOnline(people, self)).toBe(3)
+    // Тёзка правит ту же ячейку — он в метке, сам человек — нет
+    const editing = { key: 'common.a', lang: 'de' }
+    expect(presenceEditors([person('my-other-tab', 'Артём', { email: 'artem@amayasoft.uz', editing }), person('t1', 'Артём', { email: 'artem.k@amayasoft.uz', editing })], self))
+      .toEqual({ 'common.a': { de: ['Артём'] } })
   })
 
   it('в шапке — другие люди: без своих вкладок и тёзок, вкладки одного человека — одна запись, по алфавиту', () => {
@@ -40,11 +69,11 @@ describe('присутствие: состояние канала', () => {
       person('my-other-tab', 'Артём', { editing: { key: 'common.a', lang: 'ru' } }),
       person('t1', 'Кирилл'),
       person('t2', 'Антон', { since: 3000 }),
-      person('t3', 'Антон', { since: 2000, page: 'Очередь перевода', editing: { key: 'common.a', lang: 'de' } })
+      person('t3', 'Антон', { since: 2000, device: 'phone', editing: { key: 'common.a', lang: 'de' } })
     ], SELF)
     expect(others.map(p => p.name)).toEqual(['Антон', 'Кирилл'])
     // У Антона две вкладки — показана та, где он что-то правит, «в сервисе с» — от самой ранней
-    expect(others[0]).toMatchObject({ page: 'Очередь перевода', editing: { key: 'common.a', lang: 'de' }, since: 2000 })
+    expect(others[0]).toMatchObject({ device: 'phone', editing: { key: 'common.a', lang: 'de' }, since: 2000 })
   })
 
   it('сам человек — его вкладки одной записью; сколько в сервисе — по именам, вместе с собой', () => {

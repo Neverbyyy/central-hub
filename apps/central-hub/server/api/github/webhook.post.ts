@@ -1,6 +1,6 @@
 import { prEventForSet, verifyGithubSignature } from '../../lib/github-webhook'
 
-// Вебхук GitHub о событиях PR (Settings → Webhooks → Pull requests). Без пароля сервиса — защищён подписью.
+// Вебхук GitHub о событиях PR (Settings → Webhooks → Pull requests). Без входа в сервис — защищён подписью.
 // PR своей ветки открыт, смержен или закрыт — сообщаем открытым окнам «Выгрузка в код», они перечитывают статус
 export default defineEventHandler(async (event) => {
   const secret = useRuntimeConfig(event).githubWebhookSecret as string

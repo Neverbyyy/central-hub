@@ -1,13 +1,22 @@
 export interface HubUser {
   authed: boolean
+  // Имя и адрес — из аккаунта Google
   name: string | null
+  email: string | null
+  // Домен рабочих аккаунтов, которыми можно войти; null — вход через Google на стенде не настроен
+  domain: string | null
 }
 
-export const useHubUser = () => useState<HubUser>('hub-user', () => ({ authed: false, name: null }))
+export const useHubUser = () => useState<HubUser>('hub-user', () => signedOut(null))
+
+/** Не вошёл. domain — настройка стенда: её сообщает сервер, при выходе сохраняем. */
+export function signedOut(domain: string | null): HubUser {
+  return { authed: false, name: null, email: null, domain }
+}
 
 /**
- * Для обработки ошибок API: при 401 (сессия кончилась) и 403 «Name Required» (человек не представился)
- * отправляет на /login и возвращает true. Остальные ошибки, например 409 «ключ уже есть», — нет.
+ * Для обработки ошибок API: при 401 (сессия кончилась) отправляет на /login и возвращает true.
+ * Остальные ошибки, например 409 «ключ уже есть», — нет.
  * Вызывать в setup — роутер берётся оттуда.
  */
 export function useAuthRedirect() {
@@ -15,17 +24,16 @@ export function useAuthRedirect() {
   const router = useRouter()
 
   return async (error: unknown) => {
-    const { statusCode, statusMessage } = (error ?? {}) as { statusCode?: number, statusMessage?: string }
-    const needsName = statusCode === 403 && statusMessage === NAME_REQUIRED
-    if (statusCode !== 401 && !needsName) return false
-    if (statusCode === 401) user.value = { authed: false, name: null }
+    const { statusCode } = (error ?? {}) as { statusCode?: number }
+    if (statusCode !== 401) return false
+    user.value = signedOut(user.value.domain)
     await router.push({ path: '/login', query: { next: router.currentRoute.value.fullPath } })
     return true
   }
 }
 
 /**
- * Ошибка запроса — тостом с заголовком; кончилась сессия или человек не представился — на вход (useAuthRedirect).
+ * Ошибка запроса — тостом с заголовком; кончилась сессия — на вход (useAuthRedirect).
  * Вызывать в setup.
  */
 export function useNotifyError() {

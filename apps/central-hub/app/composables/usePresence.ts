@@ -1,12 +1,12 @@
 import type { RealtimeChannel } from '@supabase/supabase-js'
-import type { PresenceCell, PresenceMeta, PresencePerson } from '~/utils/presence'
+import type { PresenceCell, PresenceMeta, PresencePerson, PresenceSelf } from '~/utils/presence'
 
 // Кто в сервисе и что правит — Supabase Realtime, без базы. Одна подписка на вкладку (её открывает лейаут),
 // шапка, грид и очередь читают общее состояние. Вкладка — ключ: у человека с двумя вкладками две записи.
 //
 // Два способа доставки, потому что у присутствия жёсткий лимит: 5 обновлений (track / untrack) за 30 с на клиента,
 // дальше сервер закрывает канал («Client presence rate limit exceeded»):
-// - присутствие (track) — то, что меняется редко: имя, страница, устройство, время входа; не чаще раза в 7 с,
+// - присутствие (track) — то, что меняется редко: имя и рабочий адрес, устройство, время входа; не чаще раза в 7 с,
 //   уходит последнее состояние;
 // - какую ячейку человек правит — сообщением (broadcast) сразу при смене. Сообщение не хранится, поэтому пока
 //   человек правит, оно повторяется раз в 15 с, а новая вкладка просит остальных прислать своё («hello»).
@@ -31,7 +31,7 @@ export function usePresence() {
   const editing = useEditing()
   const remote = useRemoteEditing()
   const user = useHubUser()
-  const self = computed(() => ({ tab, name: user.value.name }))
+  const self = computed<PresenceSelf>(() => ({ tab, name: user.value.name, email: user.value.email }))
 
   // Люди с тем, что они правят: своя вкладка — из своего состояния, чужие — из сообщений
   const withEditing = computed(() => people.value.map(person => ({
@@ -67,7 +67,6 @@ export function usePresenceEditing(cell: () => PresenceCell | null) {
 /** Подключение — одно на вкладку, из лейаута: шлёт своё и принимает остальных, после обрыва подключается снова. */
 export function usePresenceConnection() {
   const supabase = useSupabaseClient()
-  const route = useRoute()
   const user = useHubUser()
   const people = usePeople()
   const editing = useEditing()
@@ -85,11 +84,8 @@ export function usePresenceConnection() {
   const { width, height } = useWindowSize()
   const device = computed(() => presenceDevice(coarse.value, width.value, height.value))
 
-  // Где человек — заголовок страницы, как в хлебных крошках; у главной его нет
-  const page = () => String(route.meta.title ?? (route.path === '/' ? 'Главная' : route.path))
-
   // Присутствие — не чаще раза в TRACK_GAP; за паузу изменений может быть много, уйдёт последнее.
-  // Человек не представился — его не видно, но других он видит
+  // Без имени (не вошёл) человека не видно, но других он видит
   const track = () => {
     clearTimeout(trackTimer)
     if (!channel || !subscribed) return
@@ -99,7 +95,7 @@ export function usePresenceConnection() {
       return
     }
     lastTrack = Date.now()
-    if (user.value.name) channel.track({ name: user.value.name, page: page(), since, device: device.value } satisfies PresenceMeta)
+    if (user.value.name) channel.track({ name: user.value.name, email: user.value.email, since, device: device.value } satisfies PresenceMeta)
     else channel.untrack()
   }
 
@@ -170,7 +166,7 @@ export function usePresenceConnection() {
     }, REPEAT)
   })
 
-  watch([() => user.value.name, () => route.meta.title ?? route.path, device], track)
+  watch([() => user.value.name, () => user.value.email, device], track)
   watch(editing, sendEditing)
 
   onBeforeUnmount(() => {

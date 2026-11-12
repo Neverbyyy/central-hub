@@ -1,2 +1,6 @@
-// statusMessage ответа 403, когда человек вошёл, но не представился: интерфейс по нему отправляет ввести имя
-export const NAME_REQUIRED = 'Name Required'
+/**
+ * Куда вернуть после входа: только внутренний путь — «//example.com», «/\example.com» и полные адреса не пропускаем.
+ * Одна проверка для сервера (/api/auth/google) и страницы входа.
+ */
+export const internalPath = (value: unknown): string =>
+  typeof value === 'string' && value.startsWith('/') && !value.startsWith('//') && !value.startsWith('/\\') ? value : '/'

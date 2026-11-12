@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-// Middleware пропускает часть путей без пароля сервиса (PUBLIC_PREFIXES). Каждый такой маршрут обязан сам
+// Middleware пропускает часть путей без входа в сервис (PUBLIC_PREFIXES). Каждый такой маршрут обязан сам
 // проверить токен или подпись — иначе новый файл в /api/cli/ или /api/figma/plugin/ окажется открытым всем.
 
 const SERVER = join(import.meta.dirname, '../../apps/central-hub/server')

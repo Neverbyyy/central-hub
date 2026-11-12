@@ -22,12 +22,17 @@ export default defineNuxtConfig({
     fallback: 'light'
   },
 
-  // Только сервер: NUXT_HUB_PASSWORD, NUXT_SESSION_PASSWORD, NUXT_CLI_TOKEN, NUXT_MCP_TOKEN, NUXT_FIGMA_TOKEN,
+  // Только сервер: NUXT_SESSION_PASSWORD (шифрует cookie сессии), вход через Google — NUXT_GOOGLE_CLIENT_ID,
+  // NUXT_GOOGLE_CLIENT_SECRET (пускает рабочие аккаунты домена authDomain), NUXT_CLI_TOKEN, NUXT_MCP_TOKEN, NUXT_FIGMA_TOKEN,
   // NUXT_GITHUB_TOKEN и NUXT_EXPORT_REPOS (куда кнопка «Выгрузить в код» открывает PR),
   // NUXT_GITHUB_WEBHOOK_SECRET (подпись вебхука GitHub о событиях PR)
   runtimeConfig: {
-    hubPassword: '',
     sessionPassword: '',
+    googleClientId: '',
+    googleClientSecret: '',
+    // Домен Google Workspace компании: войти может любой рабочий аккаунт с ним, другие — нет. Не секрет;
+    // для другого домена — NUXT_AUTH_DOMAIN
+    authDomain: 'amayasoft.uz',
     cliToken: '',
     mcpToken: '',
     figmaToken: '',
@@ -42,7 +47,7 @@ export default defineNuxtConfig({
     transpile: ['@amaya/l10n-core']
   },
 
-  // Ничего не пререндерим: статический HTML отдавался бы в обход пароля
+  // Ничего не пререндерим: статический HTML отдавался бы в обход входа
   routeRules: {
     // Сервис внутренний — поисковикам его не показываем
     '/**': { headers: { 'X-Robots-Tag': 'noindex, nofollow' } }

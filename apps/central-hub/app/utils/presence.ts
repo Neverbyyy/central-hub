@@ -10,8 +10,8 @@ export type PresenceDevice = 'desktop' | 'tablet' | 'phone'
 // Что вкладка сообщает о себе через присутствие (track): меняется редко
 export interface PresenceMeta {
   name: string
-  // Где человек: название страницы
-  page: string
+  // Рабочий адрес из Google — по нему узнаём человека; у вкладок прежней версии его нет (null) — тогда по имени
+  email: string | null
   // Когда открыл вкладку, мс
   since: number
   device: PresenceDevice
@@ -56,7 +56,7 @@ export function presencePeople(state: Record<string, unknown[]>): PresencePerson
     return [{
       tab,
       name: last.name.trim(),
-      page: typeof last.page === 'string' ? last.page : '',
+      email: typeof last.email === 'string' && last.email.includes('@') ? last.email.trim().toLowerCase() : null,
       // Что правит — не из присутствия, а из сообщений: usePresence подставит
       editing: null,
       since: typeof last.since === 'number' && Number.isFinite(last.since) ? last.since : 0,
@@ -65,40 +65,52 @@ export function presencePeople(state: Record<string, unknown[]>): PresencePerson
   })
 }
 
+// Эта вкладка и вошедший в ней человек
+export interface PresenceSelf {
+  tab: string
+  name: string | null
+  email: string | null
+}
+
+/** Кто это: один рабочий адрес — один человек (тёзки различаются); у вкладки без адреса — по имени. */
+const personKey = (who: { name: string | null, email: string | null }) => (who.email ? `email:${who.email}` : `name:${who.name ?? ''}`)
+const isSelf = (person: PresencePerson, self: PresenceSelf) =>
+  person.tab === self.tab || (!!(self.email || self.name) && personKey(person) === personKey(self))
+
 /**
- * Люди по именам: вкладки одного человека — одна запись. Показана вкладка, где он что-то правит (иначе — последняя
- * открытая), «в сервисе с» — от самой ранней вкладки. Порядок — по алфавиту.
+ * Вкладки одного человека — одна запись. Показана вкладка, где он что-то правит (иначе — последняя открытая),
+ * «в сервисе с» — от самой ранней вкладки. Порядок — по алфавиту.
  */
-function groupByName(people: PresencePerson[]): PresencePerson[] {
-  const byName = new Map<string, PresencePerson>()
+function groupByPerson(people: PresencePerson[]): PresencePerson[] {
+  const byPerson = new Map<string, PresencePerson>()
   for (const person of people) {
-    const seen = byName.get(person.name)
+    const key = personKey(person)
+    const seen = byPerson.get(key)
     if (!seen) {
-      byName.set(person.name, person)
+      byPerson.set(key, person)
       continue
     }
     const shown = (!seen.editing && person.editing) || (!seen.editing === !person.editing && person.since > seen.since) ? person : seen
     const earliest = [seen.since, person.since].filter(Boolean)
-    byName.set(person.name, { ...shown, since: earliest.length ? Math.min(...earliest) : 0 })
+    byPerson.set(key, { ...shown, since: earliest.length ? Math.min(...earliest) : 0 })
   }
-  return [...byName.values()].sort((a, b) => a.name.localeCompare(b.name, 'ru'))
+  return [...byPerson.values()].sort((a, b) => a.name.localeCompare(b.name, 'ru') || (a.email ?? '').localeCompare(b.email ?? ''))
 }
 
-/** Другие люди — без своих вкладок и тёзок: одно имя — один человек. */
-export function presenceOthers(people: PresencePerson[], self: { tab: string, name: string | null }): PresencePerson[] {
-  return groupByName(people.filter(person => person.tab !== self.tab && person.name !== self.name))
+/** Другие люди — без своих вкладок. */
+export function presenceOthers(people: PresencePerson[], self: PresenceSelf): PresencePerson[] {
+  return groupByPerson(people.filter(person => !isSelf(person, self)))
 }
 
 /** Сам человек — все его вкладки одной записью; ещё не подключился — null. */
-export function presenceSelf(people: PresencePerson[], self: { tab: string, name: string | null }): PresencePerson | null {
-  return groupByName(people.filter(person => person.tab === self.tab || (!!self.name && person.name === self.name)))[0] ?? null
+export function presenceSelf(people: PresencePerson[], self: PresenceSelf): PresencePerson | null {
+  return groupByPerson(people.filter(person => isSelf(person, self)))[0] ?? null
 }
 
-/** Сколько человек в сервисе, включая себя: по именам, а не по вкладкам. */
-export function presenceOnline(people: PresencePerson[], self: { name: string | null }): number {
-  const names = new Set(people.map(person => person.name))
-  if (self.name) names.add(self.name)
-  return names.size
+/** Сколько человек в сервисе, включая себя: по людям, а не по вкладкам. */
+export function presenceOnline(people: PresencePerson[], self: PresenceSelf): number {
+  const keys = new Set(people.filter(person => !isSelf(person, self)).map(personKey))
+  return keys.size + (self.email || self.name ? 1 : 0)
 }
 
 /** Буква в кружке — первая буква имени; полное имя — в подсказке при наведении и в списке. */
@@ -128,14 +140,18 @@ export function presenceDevice(coarse: boolean, width: number, height: number): 
   return Math.min(width, height) < 600 ? 'phone' : 'tablet'
 }
 
-/** Кто что правит: ключ → язык → имена (без себя). */
-export function presenceEditors(people: PresencePerson[], self: { tab: string, name: string | null }): Record<string, Record<string, string[]>> {
+/** Кто что правит: ключ → язык → имена (без себя; человек с двумя вкладками на одной ячейке — один раз). */
+export function presenceEditors(people: PresencePerson[], self: PresenceSelf): Record<string, Record<string, string[]>> {
   const map: Record<string, Record<string, string[]>> = {}
+  const counted = new Set<string>()
   for (const person of people) {
-    if (!person.editing || person.tab === self.tab || person.name === self.name) continue
+    if (!person.editing || isSelf(person, self)) continue
+    const mark = [person.editing.key, person.editing.lang, personKey(person)].join('|')
+    if (counted.has(mark)) continue
+    counted.add(mark)
     const langs = (map[person.editing.key] ??= {})
     const names = (langs[person.editing.lang] ??= [])
-    if (!names.includes(person.name)) names.push(person.name)
+    names.push(person.name)
   }
   return map
 }

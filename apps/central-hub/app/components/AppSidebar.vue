@@ -1,14 +1,10 @@
 <script setup lang="ts">
 const user = useHubUser()
-const route = useRoute()
 
-const changeName = async () => {
-  await navigateTo({ path: '/login', query: { change: 'name', next: route.fullPath } })
-}
-
+// Имя — из аккаунта Google, сменить его здесь нельзя. Выход — снова вход через Google
 const logout = async () => {
   await $fetch('/api/auth/logout', { method: 'POST' })
-  user.value = { authed: false, name: null }
+  user.value = signedOut(user.value.domain)
   await navigateTo('/login')
 }
 </script>
@@ -81,17 +77,8 @@ const logout = async () => {
         />
         <span
           class="flex-1 min-w-0 px-1 truncate text-sm text-default"
-          :title="`Правки подписаны именем «${user.name}»`"
+          :title="`Правки подписаны именем «${user.name}» · ${user.email}`"
         >{{ user.name }}</span>
-        <UButton
-          icon="i-lucide-pencil"
-          size="xs"
-          color="neutral"
-          variant="ghost"
-          aria-label="Сменить имя"
-          title="Сменить имя"
-          @click="changeName"
-        />
         <UButton
           icon="i-lucide-log-out"
           size="xs"

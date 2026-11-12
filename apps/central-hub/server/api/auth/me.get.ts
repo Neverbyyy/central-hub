@@ -1,4 +1,6 @@
+// Кто вошёл — для интерфейса. domain — домен рабочих аккаунтов, которыми можно войти; null — вход через Google
+// на стенде не настроен (страница входа это объясняет)
 export default defineEventHandler(async (event) => {
-  const { data } = await useHubSession(event)
-  return { authed: !!data.authed, name: data.name ?? null }
+  const user = await hubUser(event)
+  return { authed: !!user, name: user?.name ?? null, email: user?.email ?? null, domain: googleSettings(event)?.domain ?? null }
 })

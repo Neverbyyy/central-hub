@@ -1,5 +1,5 @@
+// Выход: сессия стирается. Ответ без тела — интерфейс сам знает, что человек вышел (signedOut)
 export default defineEventHandler(async (event) => {
-  const session = await useHubSession(event)
-  await session.clear()
-  return { authed: false, name: null }
+  await (await useHubSession(event)).clear()
+  return sendNoContent(event)
 })
