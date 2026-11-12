@@ -203,12 +203,14 @@ const onCancel = () => {
 
 const { copy, notifyCopied } = useCopy()
 
-const onCellDown = (row: number, col: number) => {
+const onCellDown = (row: number, col: number, button = 0) => {
   // Пальцем: первый тап выделяет ячейку, второй — правка, как в таблицах на телефоне. Двойного тапа
   // для этого мало: в iOS он не всегда доходит как dblclick
   const again = touch.value && active.value?.row === row && active.value?.col === col
   active.value = { row, col }
   focusGrid()
+  // Правая и средняя кнопки — только выбрать строку: правая открывает меню тегов, а не панель и правку
+  if (button !== 0) return
   const key = props.rows[row]?.technical_key
   // Панель и правку — после нажатия целиком: сразу после mousedown браузер ставит фокус на грид, и только что
   // открытая шторка (панель уже 1280 px, правка на касании) приняла бы это за уход фокуса и закрылась
@@ -548,6 +550,30 @@ defineExpose({ reset })
   text-overflow: ellipsis;
   white-space: nowrap;
   pointer-events: none;
+}
+
+/* Иконка тегов у ключа: приглушённая, при наведении на неё — подсказка с тегами */
+.loc-tags-icon {
+  display: flex;
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: 4px 0 4px 8px;
+  color: var(--ui-text-dimmed);
+}
+
+.loc-tags-icon:hover {
+  color: var(--ui-text-toned);
+}
+
+/* Метка тега в подсказке */
+.loc-tag {
+  border-radius: 4px;
+  padding: 0 6px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 18px;
+  background: var(--ui-bg-accented);
+  color: var(--ui-text-toned);
 }
 
 .loc-cell {

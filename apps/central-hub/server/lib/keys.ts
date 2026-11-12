@@ -3,6 +3,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { checkText, descriptionError, escapeLike, figmaUrlError, isRegistryCode, MAX_LENGTH_LIMIT, MAX_VALUE_LENGTH, newKeyError, REGISTRY_KINDS, type KeyContext, type RegistryKind, type TextIssue } from '@amaya/l10n-core'
+import { MAX_TAGS_PER_KEY, tagNameError } from '../../shared/utils/tags'
 import { HubError } from './errors'
 import { fetchAllPages } from './paging'
 
@@ -61,13 +62,16 @@ export async function loadKeyContext(db: SupabaseClient): Promise<KeyContext> {
   return { registry: byKind, languages }
 }
 
+// Теги ключа: только из списка «Теги» — это проверяет база (триггер localizations_check_tags)
 function normalizeTags(tags: unknown): string[] {
   if (tags === undefined || tags === null) return []
   if (!Array.isArray(tags) || !tags.every(t => typeof t === 'string')) throw new HubError('Теги — список строк')
   const clean = [...new Set(tags.map(t => t.trim()).filter(Boolean))]
-  if (clean.length > 20) throw new HubError('Не больше 20 тегов')
-  const long = clean.find(t => t.length > 40)
-  if (long) throw new HubError(`Тег «${long}» длиннее 40 символов`)
+  if (clean.length > MAX_TAGS_PER_KEY) throw new HubError(`Не больше ${MAX_TAGS_PER_KEY} тегов`)
+  for (const tag of clean) {
+    const message = tagNameError(tag)
+    if (message) throw new HubError(`${message}: «${tag}»`)
+  }
   return clean
 }
 

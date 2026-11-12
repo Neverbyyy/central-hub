@@ -20,6 +20,8 @@ export interface Localization {
   deprecated_at: string | null
   created_at: string
   updated_at: string
+  // Теги ключа — для меню правого клика (в таблице их не показываем, решение владельца)
+  tags: string[]
   // Языки, которые сейчас сохраняются (оптимистичное обновление ещё не подтверждено)
   _saving?: Record<string, boolean>
 }
@@ -36,7 +38,7 @@ export const canApproveLang = (row: Pick<Localization, 'translations' | 'status'
 
 const PAGE_SIZE = 100
 // Устаревшие переводы база считает сама (stale_langs) — версии исходного текста интерфейсу не нужны
-const SELECT = 'technical_key, translations, status, stale_langs, deprecated_at, created_at, updated_at'
+const SELECT = 'technical_key, translations, status, stale_langs, deprecated_at, created_at, updated_at, tags'
 const WEEK = 7 * 24 * 60 * 60 * 1000
 
 const asString = (value: unknown) => (typeof value === 'string' ? value : '')
@@ -110,7 +112,6 @@ export function useLocalizations() {
   // --- Выборка: поиск, теги и фильтры; всё лежит в адресе, ссылкой можно поделиться ---
   const q = ref('')
   const selectedTags = ref<string[]>([])
-  const availableTags = ref<string[]>([])
   const filters = reactive(emptyFilters())
 
   const readQuery = () => {
@@ -171,7 +172,8 @@ export function useLocalizations() {
       // search_text — ключ и переводы на всех языках, с trigram-индексом
       query = query.ilike('search_text', `%${escapeLike(term)}%`)
     }
-    if (selectedTags.value.length) query = query.contains('tags', selectedTags.value)
+    // Несколько тегов — ключи с любым из них (overlaps, &&), а не только со всеми сразу
+    if (selectedTags.value.length) query = query.overlaps('tags', selectedTags.value)
     if (filters.status === 'pending') query = query.overlaps('status_values', ['draft', 'ai'])
     else if (filters.status) query = query.contains('status_values', [filters.status])
     if (filters.stale) query = query.neq('stale_langs', '{}')
@@ -246,24 +248,26 @@ export function useLocalizations() {
     if (part !== filterPart(buildQuery())) readQuery()
   })
 
-  // Пустой список тегов значит разное: ещё грузятся, не загрузились или их действительно нет
-  const tagsState = ref<'loading' | 'ready' | 'error'>('loading')
-
-  const fetchTags = async () => {
-    const { data, error } = await supabase.rpc('get_unique_tags')
-    if (!error && data) {
-      availableTags.value = (data as { tag: unknown }[]).map(item => String(item.tag)).filter(Boolean)
-      tagsState.value = 'ready'
-    } else if (tagsState.value !== 'ready') {
-      tagsState.value = 'error'
-    }
-  }
-
   // --- Сохранение одной ячейки ---
   const undoStack: Edit[] = []
   const redoStack: Edit[] = []
 
   const findRow = (key: string) => rows.value.find(r => r.technical_key === key)
+
+  // Тег поставили или сняли из меню — строки меняются сразу, не дожидаясь события от базы.
+  // Возвращает откат: сервер отказал — теги строк как были
+  const applyTag = (keys: string[], tag: string, on: boolean) => {
+    const before = keys.flatMap((key) => {
+      const row = findRow(key)
+      if (!row || row.deprecated_at) return []
+      const tags = row.tags ?? []
+      row.tags = on ? (tags.includes(tag) ? tags : [...tags, tag]) : tags.filter(t => t !== tag)
+      return [{ row, tags }]
+    })
+    return () => {
+      for (const { row, tags } of before) row.tags = tags
+    }
+  }
 
   const setCell = (row: Localization, lang: string, value: string | null) => {
     const { [lang]: _, ...rest } = row.translations ?? {}
@@ -406,7 +410,7 @@ export function useLocalizations() {
   // проверено на всех ключах
   const collator = new Intl.Collator('en')
 
-  type Incoming = Localization & { tags?: string[] }
+  type Incoming = Localization
 
   // Подходит ли строка под текущую выборку — те же условия, что applyFilters в запросе к базе
   const matchesView = (row: Incoming) => {
@@ -414,7 +418,7 @@ export function useLocalizations() {
     const term = q.value.trim().toLowerCase()
     // search_text в базе — ключ и все переводы через пробел, в нижнем регистре
     if (term && !`${row.technical_key} ${Object.values(row.translations ?? {}).join(' ')}`.toLowerCase().includes(term)) return false
-    if (selectedTags.value.length && !selectedTags.value.every(tag => row.tags?.includes(tag))) return false
+    if (selectedTags.value.length && !selectedTags.value.some(tag => row.tags?.includes(tag))) return false
     const statuses = Object.values(row.status ?? {})
     if (filters.status === 'pending' && !statuses.some(s => s === 'draft' || s === 'ai')) return false
     if (filters.status && filters.status !== 'pending' && !statuses.includes(filters.status)) return false
@@ -481,7 +485,6 @@ export function useLocalizations() {
   onMounted(() => {
     loadLanguages()
     loadRegistry()
-    fetchTags()
     load(true)
 
     channel = supabase
@@ -508,6 +511,7 @@ export function useLocalizations() {
         row.translations = merged
         row.status = incoming.status
         row.stale_langs = incoming.stale_langs
+        row.tags = incoming.tags ?? []
         row.updated_at = incoming.updated_at
       })
       .subscribe()
@@ -530,9 +534,7 @@ export function useLocalizations() {
     hasMore,
     q,
     selectedTags,
-    availableTags,
-    tagsState,
-    fetchTags,
+    applyTag,
     filters,
     filtersKey,
     hasFilters,

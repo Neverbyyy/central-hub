@@ -31,9 +31,10 @@ describe('история ключа действиями', () => {
 
   it('total, offset и limit считают действия, а не строки', async () => {
     const all = await keyHistory(service, ANCHOR, { limit: 1000 })
-    expect(all.total).toBe(all.actions.length)
-    // Строк больше, чем действий: «Утвердить» дал две строки одним действием
-    expect(all.actions.reduce((n, a) => n + a.entries.length, 0)).toBeGreaterThan(all.total)
+    // В давно живущей локальной базе у служебного ключа может набраться больше 1000 действий — тогда пришла первая тысяча
+    expect(all.actions.length).toBe(Math.min(all.total, 1000))
+    // Строк больше, чем действий: «Утвердить» дал две строки одним действием (считаем по загруженным действиям)
+    expect(all.actions.reduce((n, a) => n + a.entries.length, 0)).toBeGreaterThan(all.actions.length)
 
     const page = await keyHistory(service, ANCHOR, { offset: 1, limit: 2 })
     expect(page.total).toBe(all.total)

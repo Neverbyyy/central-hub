@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
 import { type KeyMetaInput, queueCounts, translationQueue, updateKeyMeta } from '../../apps/central-hub/server/lib/keys'
 import { ACTOR, ANCHOR, deprecateKeys, readAnchor, restoreKeys, service, setTranslation, useLiveAnchor } from './clients'
 
@@ -122,6 +122,12 @@ describe('свойства ключа', () => {
   const LEGACY = 'legacy.pages_hub.a.gift_card.common.gift_card_code'
   const meta = (input: Omit<Partial<KeyMetaInput>, 'key'>, key = ANCHOR) =>
     updateKeyMeta(service, { key, description: DESCRIPTION, tags: [], maxLength: null, figmaUrl: null, ...input }, { actor: ACTOR })
+
+  // У ключа — только теги из списка «Теги»: заводим их, как сделал бы человек (между прогонами остаются)
+  beforeAll(async () => {
+    const { error } = await service.from('tags').upsert(['meta-test', 'panel', 'gift-card'].map(name => ({ name })), { onConflict: 'name', ignoreDuplicates: true })
+    if (error) throw error
+  })
 
   it('меняет описание, теги, лимит и ссылку и пишет историю', async () => {
     const description = `${DESCRIPTION}, правка ${Date.now()}`

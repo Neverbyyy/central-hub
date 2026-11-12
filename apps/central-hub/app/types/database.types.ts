@@ -127,6 +127,20 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"tags": {
+                  Row: {
+                    "created_at": string,"created_by": string,"name": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string,"name": string
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string,"name"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 }
           }
           Views: {
@@ -142,12 +156,23 @@ isOneToOne: false
 "create_key":
 { Args: { "p_actor": string,"p_description": string,"p_key": string,"p_max_length": number,"p_source": string,"p_status": string,"p_tags": (string)[],"p_translations": Json }; Returns: string
                            },
+"create_tag":
+{ Args: { "p_actor": string,"p_name": string }; Returns: string
+                           },
+"delete_tag":
+{ Args: { "p_actor": string,"p_name": string }; Returns: number
+                           },
 "deprecate_keys":
 { Args: { "p_actor": string,"p_keys": (string)[],"p_source": string }; Returns: number
                            },
 "find_similar":
 { Args: { "p_key": string,"p_limit"?: number,"p_text": string }; Returns: {
               "en": string,"matched": string,"score": number,"technical_key": string
+            }[]
+                           },
+"get_tags":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "keys": number,"name": string
             }[]
                            },
 "get_unique_tags":
@@ -176,6 +201,9 @@ isOneToOne: false
 "l10n_status_values":
 { Args: { "p_status": Json }; Returns: (string)[]
                            },
+"rename_tag":
+{ Args: { "p_actor": string,"p_from": string,"p_to": string }; Returns: number
+                           },
 "restore_keys":
 { Args: { "p_actor": string,"p_keys": (string)[],"p_source": string }; Returns: number
                            },
@@ -186,6 +214,9 @@ isOneToOne: false
                            },
 "set_ai_translation":
 { Args: { "p_actor": string,"p_key": string,"p_lang": string,"p_value": string }; Returns: string
+                           },
+"set_keys_tag":
+{ Args: { "p_actor": string,"p_keys": (string)[],"p_on": boolean,"p_tag": string }; Returns: number
                            },
 "set_translation":
 { Args: { "p_actor": string,"p_expected"?: string,"p_key": string,"p_lang": string,"p_source": string,"p_value": string }; Returns: string

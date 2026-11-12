@@ -17,7 +17,8 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  cellDown: [index: number, col: number]
+  // button — кнопка мыши: правая только делает ячейку активной (меню тегов), панель и правку открывает левая
+  cellDown: [index: number, col: number, button: number]
   cellDblclick: [index: number, col: number]
   toggle: [key: string, value: boolean]
   commit: [value: string, move: CommitMove]
@@ -39,9 +40,13 @@ const cellTitle = (lang: string) => {
 </script>
 
 <template>
+  <!-- data-key — по нему меню правого клика понимает, по какой строке кликнули; data-active — активная строка
+       (меню с клавиатуры открывается у неё) -->
   <div
     class="loc-row"
     :class="{ 'is-odd': index % 2 === 1, 'is-selected': selected }"
+    :data-key="row.technical_key"
+    :data-active="activeCol >= 0 ? '' : undefined"
   >
     <!-- Вся ячейка — label: пальцем в квадратик 14 px не попасть -->
     <label
@@ -60,13 +65,40 @@ const cellTitle = (lang: string) => {
     <div
       class="loc-cell loc-sticky left-[40px] border-r border-default px-3 font-mono text-[11px] font-semibold text-green-600 dark:text-green-400"
       :class="{ 'is-active': activeCol === 0 }"
-      @mousedown="emit('cellDown', index, 0)"
+      @mousedown="emit('cellDown', index, 0, $event.button)"
       @dblclick="emit('cellDblclick', index, 0)"
     >
       <span
-        class="truncate"
+        class="min-w-0 truncate"
         :title="row.technical_key"
       >{{ row.technical_key }}</span>
+      <!-- Теги — иконкой у ключа, сами теги — при наведении на неё (решение владельца): имя ключа не обрезают,
+           смотреть можно без панели. Ставятся правым кликом по строке -->
+      <UTooltip
+        v-if="row.tags?.length"
+        :delay-duration="100"
+        :content="{ side: 'right', sideOffset: 6 }"
+        :ui="{ content: 'h-auto max-w-72 px-2 py-1.5' }"
+      >
+        <span
+          class="loc-tags-icon"
+          :aria-label="`Теги: ${row.tags.join(', ')}`"
+        >
+          <UIcon
+            name="i-lucide-tag"
+            class="size-3.5"
+          />
+        </span>
+        <template #content>
+          <span class="flex flex-wrap gap-1 font-sans">
+            <span
+              v-for="tag in row.tags"
+              :key="tag"
+              class="loc-tag"
+            >{{ tag }}</span>
+          </span>
+        </template>
+      </UTooltip>
     </div>
 
     <div
@@ -75,7 +107,7 @@ const cellTitle = (lang: string) => {
       class="loc-cell px-3 text-xs"
       :class="{ 'is-active': activeCol === i + 1, 'has-presence': editors?.[lang]?.length }"
       :style="editors?.[lang]?.length ? { '--presence': presenceColor(editors[lang]![0]!) } : undefined"
-      @mousedown="emit('cellDown', index, i + 1)"
+      @mousedown="emit('cellDown', index, i + 1, $event.button)"
       @dblclick="emit('cellDblclick', index, i + 1)"
     >
       <!-- Ячейку правит коллега: рамка его цвета и подпись. Править можно и самому — сервер не даст молча

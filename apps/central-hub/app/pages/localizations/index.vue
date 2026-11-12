@@ -22,9 +22,7 @@ const {
   hasMore,
   q,
   selectedTags,
-  availableTags,
-  tagsState,
-  fetchTags,
+  applyTag,
   filters,
   filtersKey,
   hasFilters,
@@ -40,6 +38,10 @@ const {
   findRow,
   keysVersion
 } = useLocalizations()
+
+// Теги — свой список: фильтр «Все теги», меню правого клика; перечитывается при открытии фильтра и меню
+const { load: loadTags } = useTags()
+onMounted(loadTags)
 
 const route = useRoute()
 const router = useRouter()
@@ -81,10 +83,9 @@ const treeDrawer = ref(false)
 // Растёт, когда ключи появились или пропали (здесь или у коллег) — дерево перечитывает счётчики
 const treeVersion = ref(0)
 const treeShown = computed(() => screen.lg.value && treeOpen.value)
-// Коллеги добавили ключи или пометили их устаревшими — счётчики разделов и список тегов тоже свежие
+// Коллеги добавили ключи или пометили их устаревшими — счётчики разделов свежие
 watch(keysVersion, () => {
   treeVersion.value++
-  fetchTags()
 })
 
 const toggleTree = () => {
@@ -336,33 +337,13 @@ usePresenceEditing(() => (sheetOpen.value && sheet.value ? { key: sheet.value.ke
       </span>
     </DefineQueueCount>
 
+    <!-- «Все теги»: фильтр и весь список — создать, переименовать, удалить -->
     <DefineTags v-slot="{ inFilters }">
-      <USelectMenu
+      <LocalizationsTagFilter
         v-model="selectedTags"
-        :items="availableTags"
-        multiple
-        placeholder="Все теги"
-        :search-input="{ placeholder: 'Найти тег…' }"
         :size="inFilters ? 'sm' : 'md'"
         :class="inFilters ? 'w-40 xl:hidden' : 'hidden w-48 shrink-0 xl:inline-flex'"
-      >
-        <template #empty="{ searchTerm }">
-          <p class="text-center text-sm text-muted">
-            <template v-if="searchTerm">
-              Тега «{{ searchTerm }}» нет
-            </template>
-            <template v-else-if="tagsState === 'loading'">
-              Загружаю теги…
-            </template>
-            <template v-else-if="tagsState === 'error'">
-              Теги не загрузились — обновите страницу
-            </template>
-            <template v-else>
-              Тегов нет
-            </template>
-          </p>
-        </template>
-      </USelectMenu>
+      />
     </DefineTags>
 
     <DefinePanel v-slot="{ inSheet }">
@@ -376,7 +357,7 @@ usePresenceEditing(() => (sheetOpen.value && sheet.value ? { key: sheet.value.ke
         @close="closePanel"
         @deprecate="deprecateFromPanel"
         @restored="onRestored"
-        @changed="fetchTags"
+        @changed="loadTags"
         @edit="editFromPanel"
       />
     </DefinePanel>
@@ -570,28 +551,36 @@ usePresenceEditing(() => (sheetOpen.value && sheet.value ? { key: sheet.value.ke
         />
       </div>
 
-      <LocalizationsGrid
-        ref="grid"
-        :rows="rows"
-        :languages="languageCodes"
+      <!-- Правый клик по строке — «Добавить тег» (по выделенной — всем выделенным) -->
+      <LocalizationsKeyTagMenu
         :selected-keys="selectedKeys"
-        :loading="loading"
-        :initial-loading="initialLoading"
-        :has-more="hasMore"
+        :find-row="findRow"
+        :apply-tag="applyTag"
         :readonly="filters.deprecated"
-        :editors="editors"
-        @load-more="load()"
-        @save="setTranslation"
-        @toggle="toggleRow"
-        @toggle-all="toggleAll"
-        @undo="undo"
-        @redo="redo"
-        @open="openPanel"
-        @focus-row="focusedKey = $event"
-        @escape="closePanel"
-        @edit="openSheet"
-        @editing="gridEditing = $event"
-      />
+      >
+        <LocalizationsGrid
+          ref="grid"
+          :rows="rows"
+          :languages="languageCodes"
+          :selected-keys="selectedKeys"
+          :loading="loading"
+          :initial-loading="initialLoading"
+          :has-more="hasMore"
+          :readonly="filters.deprecated"
+          :editors="editors"
+          @load-more="load()"
+          @save="setTranslation"
+          @toggle="toggleRow"
+          @toggle-all="toggleAll"
+          @undo="undo"
+          @redo="redo"
+          @open="openPanel"
+          @focus-row="focusedKey = $event"
+          @escape="closePanel"
+          @edit="openSheet"
+          @editing="gridEditing = $event"
+        />
+      </LocalizationsKeyTagMenu>
 
       <div
         v-if="panelKey && screen.xl.value"

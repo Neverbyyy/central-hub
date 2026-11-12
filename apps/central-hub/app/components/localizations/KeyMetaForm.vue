@@ -101,11 +101,9 @@ const onKeydown = (event: KeyboardEvent) => {
       label="Теги"
       size="xs"
     >
-      <UInputTags
+      <LocalizationsTagSelect
         v-model="form.tags"
         size="sm"
-        class="w-full"
-        placeholder="Enter — добавить"
       />
     </UFormField>
 

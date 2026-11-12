@@ -4,10 +4,13 @@ import { ANCHOR, anon, ensureAnchor, readAnchor, service } from './clients'
 // Всё, что разрешено ролям anon и authenticated. Любое новое право — осознанное решение:
 // сначала добавь его сюда, иначе тест упадёт.
 const ALLOWED = [
+  'function get_tags() anon EXECUTE',
   'function get_unique_tags() anon EXECUTE',
   'table languages anon SELECT',
   'table localizations anon SELECT',
-  'table registry anon SELECT'
+  'table registry anon SELECT',
+  // Список тегов: фильтр, меню правого клика и страница «Теги» читают его в браузере
+  'table tags anon SELECT'
 ]
 
 const PERMISSION_DENIED = '42501'
@@ -36,7 +39,8 @@ describe('публичный ключ ничего не может записа�
     history: { technical_key: ANCHOR, field: 'translation', actor: 'anon', source: 'anon' },
     export_sets: { name: 'selftest', project: 'inapp', format: 'flat', languages: ['en'], path_template: '{lang}.json' },
     export_templates: { set_name: 'inapp', lang: 'en', content: '{}' },
-    export_runs: { set_name: 'inapp', outcome: 'created', revision: 'selftest', actor: 'anon' }
+    export_runs: { set_name: 'inapp', outcome: 'created', revision: 'selftest', actor: 'anon' },
+    tags: { name: 'selftest_anon' }
   } as const
 
   // Фильтр обязателен: без него запрос отклонили бы по другой причине и тест прошёл бы впустую
@@ -47,7 +51,8 @@ describe('публичный ключ ничего не может записа�
     history: ['technical_key', ANCHOR],
     export_sets: ['name', 'inapp'],
     export_templates: ['set_name', 'inapp'],
-    export_runs: ['set_name', 'inapp']
+    export_runs: ['set_name', 'inapp'],
+    tags: ['name', 'selftest_anon']
   } as const
 
   it.each(Object.keys(rows) as (keyof typeof rows)[])('%s: insert, upsert, update и delete отклоняются', async (table) => {
@@ -82,7 +87,11 @@ describe('публичный ключ ничего не может записа�
     ['find_similar', { p_text: 'Continue', p_key: '', p_limit: 5 }],
     ['approve_translations', { p_key: ANCHOR, p_langs: ['en'], p_actor: 'anon' }],
     ['approve_keys', { p_keys: [ANCHOR], p_actor: 'anon' }],
-    ['update_key_meta', { p_key: ANCHOR, p_description: 'взлом описания', p_tags: [], p_max_length: null, p_figma_url: null, p_actor: 'anon' }]
+    ['update_key_meta', { p_key: ANCHOR, p_description: 'взлом описания', p_tags: [], p_max_length: null, p_figma_url: null, p_actor: 'anon' }],
+    ['create_tag', { p_name: 'selftest_anon', p_actor: 'anon' }],
+    ['rename_tag', { p_from: 'landing', p_to: 'взлом', p_actor: 'anon' }],
+    ['delete_tag', { p_name: 'landing', p_actor: 'anon' }],
+    ['set_keys_tag', { p_keys: [ANCHOR], p_tag: 'landing', p_on: true, p_actor: 'anon' }]
   ])('функцию %s вызвать нельзя', async (fn, args) => {
     const { error } = await anon.rpc(fn, args)
     expect(error?.code).toBe(PERMISSION_DENIED)

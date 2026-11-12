@@ -64,6 +64,33 @@ describe('MCP', () => {
     expect(html.text).toContain('HTML')
   })
 
+  it('теги: видны в list_registry (kind: tag), ставить можно только существующие', async () => {
+    const tag = `selftest_mcp_${Date.now().toString(36)}`
+    const { error } = await service.from('tags').insert({ name: tag })
+    expect(error).toBeNull()
+    try {
+      const onlyTags = JSON.parse((await call('list_registry', { kind: 'tag' })).text) as { kind: string, code: string }[]
+      expect(onlyTags.every(row => row.kind === 'tag')).toBe(true)
+      expect(onlyTags.map(row => row.code)).toContain(tag)
+      const all = JSON.parse((await call('list_registry', {})).text) as { kind: string, code: string }[]
+      expect(all.some(row => row.kind === 'game')).toBe(true)
+      expect(all.some(row => row.kind === 'tag' && row.code === tag)).toBe(true)
+      const games = JSON.parse((await call('list_registry', { kind: 'game' })).text) as { kind: string }[]
+      expect(games.every(row => row.kind === 'game')).toBe(true)
+
+      const unknown = await call('create_key', {
+        key: 'common.selftest.mcp_unknown_tag.default',
+        description: 'Проверка тегов из MCP',
+        en: 'Selftest MCP unknown tag zqxw',
+        tags: ['нет_такого_тега_mcp']
+      })
+      expect(unknown.isError).toBe(true)
+      expect(unknown.text).toContain('Тега «нет_такого_тега_mcp» нет — создайте его в «Все теги» над таблицей или правым кликом по ключу')
+    } finally {
+      await service.rpc('delete_tag', { p_name: tag, p_actor: 'Автотест MCP' })
+    }
+  })
+
   it('создаёт ключ «от ИИ» с описанием; второй раз — «уже есть»', async () => {
     const args = { key: KEY, description: 'Служебный ключ автотестов MCP', en: 'Selftest MCP zqxv phrase' }
     const first = await call('create_key', args)

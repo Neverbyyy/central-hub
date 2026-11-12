@@ -32,12 +32,6 @@ const missingItems = computed(() => [
   ...props.languages.filter(l => l !== 'en').map(l => ({ label: `Нет перевода: ${l.toUpperCase()}`, value: l }))
 ])
 
-// Выбранный фильтр выглядит как активная кнопка рядом (UButton soft): одного текста в поле не видно
-const ACTIVE_SELECT = {
-  base: 'bg-primary/10 text-primary ring-transparent hover:bg-primary/15',
-  trailingIcon: 'text-primary'
-}
-
 const statusModel = computed({
   get: () => status.value || ALL,
   set: (value: string) => {
@@ -74,14 +68,14 @@ const copyLink = () => copy(window.location.href, 'Ссылка на выбор�
     <USelect
       v-model="statusModel"
       :items="statusItems"
-      :ui="status ? ACTIVE_SELECT : undefined"
+      :ui="status ? ACTIVE_SELECT_UI : undefined"
       size="sm"
       class="w-40"
     />
     <USelect
       v-model="missingModel"
       :items="missingItems"
-      :ui="missing ? ACTIVE_SELECT : undefined"
+      :ui="missing ? ACTIVE_SELECT_UI : undefined"
       size="sm"
       class="w-48"
     />

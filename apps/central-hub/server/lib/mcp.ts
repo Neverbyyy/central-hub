@@ -20,6 +20,7 @@ import {
   searchStrings,
   writeAiTranslation
 } from './keys'
+import { listTags } from './tags'
 
 export const MCP_TOOLS = [
   'search_strings',
@@ -41,6 +42,7 @@ const INSTRUCTIONS = `Сервис локализации Amaya: все текс
 - Ключ по схеме: common. | app.<игра>. | web.<сайт>. | brand.<бренд>. | ds.<компонент>. | test.<тест>.<обычный ключ>.
   Части через точку, внутри snake_case; коды игр, сайтов, брендов и тестов — из list_registry. Языка и вёрстки в ключе нет.
 - У нового ключа обязательно описание: где показывается и какие ограничения.
+- Теги ключа — только существующие (list_registry, kind: tag); создавать теги нельзя, это делают люди.
 - Тексты: подстановки по имени ({price}), множественное число через |, без HTML, обычный регистр, @ экранируется как {'@'}.
 - Ваши тексты сохраняются со статусом «от ИИ». Утверждать, удалять, переименовывать и перезаписывать тексты людей нельзя.`
 
@@ -112,10 +114,16 @@ export function createMcpServer(db: SupabaseClient, { actor = 'Нейросет�
 
   server.registerTool('list_registry', {
     title: 'Справочник',
-    description: 'Коды игр, сайтов, брендов, тестов и проектов — из них составляются ключи.',
-    inputSchema: { kind: z.enum(REGISTRY_KINDS).optional() },
+    description: 'Коды игр, сайтов, брендов, тестов и проектов — из них составляются ключи; kind: tag — теги, '
+      + 'которые можно ставить ключам (новые теги создают люди в сервисе).',
+    inputSchema: { kind: z.enum([...REGISTRY_KINDS, 'tag']).optional() },
     annotations: readOnly
-  }, args => run(() => listRegistry(db, args.kind)))
+  }, args => run(async () => {
+    const tags = () => listTags(db).then(names => names.map(code => ({ kind: 'tag', code, title: 'Тег ключа' })))
+    if (args.kind === 'tag') return await tags()
+    const registry = await listRegistry(db, args.kind)
+    return args.kind ? registry : [...registry, ...(await tags())]
+  }))
 
   server.registerTool('create_key', {
     title: 'Создать ключ',
@@ -125,7 +133,7 @@ export function createMcpServer(db: SupabaseClient, { actor = 'Нейросет�
       key,
       description: z.string().min(MIN_DESCRIPTION_LENGTH).describe('Где показывается строка и какие у неё ограничения'),
       en: z.string().min(1).describe('Текст на английском'),
-      tags: z.array(z.string()).optional(),
+      tags: z.array(z.string()).optional().describe('Только существующие теги: list_registry, kind: tag'),
       max_length: z.number().int().min(1).max(MAX_LENGTH_LIMIT).optional(),
       not_duplicate_reason: z.string().optional().describe('Почему нельзя взять похожую существующую строку')
     },
