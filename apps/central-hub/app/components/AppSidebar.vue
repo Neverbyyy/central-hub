@@ -1,12 +1,15 @@
 <script setup lang="ts">
 const user = useHubUser()
 
-// Имя — из аккаунта Google, сменить его здесь нельзя. Выход — снова вход через Google
+// Имя — из аккаунта Google или введённое при входе по паролю; сменить его — выйти и войти снова
 const logout = async () => {
   await $fetch('/api/auth/logout', { method: 'POST' })
-  user.value = signedOut(user.value.domain)
+  user.value = signedOut(user.value)
   await navigateTo('/login')
 }
+
+// Подсказка у имени: чем подписаны правки и как вошёл
+const userTitle = computed(() => `Правки подписаны именем «${user.value.name}» · ${user.value.email ?? 'вход по общему паролю'}`)
 </script>
 
 <template>
@@ -77,7 +80,7 @@ const logout = async () => {
         />
         <span
           class="flex-1 min-w-0 px-1 truncate text-sm text-default"
-          :title="`Правки подписаны именем «${user.name}» · ${user.email}`"
+          :title="userTitle"
         >{{ user.name }}</span>
         <UButton
           icon="i-lucide-log-out"

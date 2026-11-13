@@ -23,7 +23,8 @@ export default defineNuxtConfig({
   },
 
   // Только сервер: NUXT_SESSION_PASSWORD (шифрует cookie сессии), вход через Google — NUXT_GOOGLE_CLIENT_ID,
-  // NUXT_GOOGLE_CLIENT_SECRET (пускает рабочие аккаунты домена authDomain), NUXT_CLI_TOKEN, NUXT_MCP_TOKEN, NUXT_FIGMA_TOKEN,
+  // NUXT_GOOGLE_CLIENT_SECRET (пускает рабочие аккаунты домена authDomain), вход по общему паролю — NUXT_HUB_PASSWORD,
+  // NUXT_CLI_TOKEN, NUXT_MCP_TOKEN, NUXT_FIGMA_TOKEN,
   // NUXT_GITHUB_TOKEN и NUXT_EXPORT_REPOS (куда кнопка «Выгрузить в код» открывает PR),
   // NUXT_GITHUB_WEBHOOK_SECRET (подпись вебхука GitHub о событиях PR)
   runtimeConfig: {
@@ -33,6 +34,8 @@ export default defineNuxtConfig({
     // Домен Google Workspace компании: войти может любой рабочий аккаунт с ним, другие — нет. Не секрет;
     // для другого домена — NUXT_AUTH_DOMAIN
     authDomain: 'amayasoft.uz',
+    // Общий пароль — второй вход рядом с Google; пусто — только Google
+    hubPassword: '',
     cliToken: '',
     mcpToken: '',
     figmaToken: '',

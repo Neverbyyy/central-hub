@@ -1,4 +1,4 @@
-// Весь сервис — только после входа через Google. Без входа открыто только то, без чего не нарисовать страницу
+// Весь сервис — только после входа (через Google или по общему паролю). Без входа открыто только то, без чего не нарисовать страницу
 // входа и не пройти сам вход (/api/auth/), маршруты CLI, MCP и плагина Figma — там обработчик требует токен —
 // и вебхук GitHub (подпись).
 const PUBLIC_PREFIXES = [
@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
   const { pathname, search } = getRequestURL(event)
   if (pathname === '/login' || PUBLIC_PREFIXES.some(prefix => pathname.startsWith(prefix))) return
 
-  // Вошёл — адрес и имя из Google; cookie прежнего входа паролем без адреса не в счёт
+  // Вошёл — правило одно для всех (hubUser): cookie прежнего входа паролем, до входа через Google, не в счёт
   if (await hubUser(event)) return
 
   if (pathname.startsWith('/api/')) {

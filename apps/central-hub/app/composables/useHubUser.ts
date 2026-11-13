@@ -1,18 +1,23 @@
 export interface HubUser {
   authed: boolean
-  // Имя и адрес — из аккаунта Google; firstName — имя без фамилии, для приветствия
+  // Общий пароль верный, имени ещё нет — страница входа спрашивает «Как вас зовут?»
+  nameRequired: boolean
+  // Имя — из аккаунта Google или введённое при входе по паролю; firstName — имя без фамилии, для приветствия
   name: string | null
   firstName: string | null
+  // Только у входа через Google
   email: string | null
-  // Домен рабочих аккаунтов, которыми можно войти; null — вход через Google на стенде не настроен
+  // Как можно войти на стенде: домен рабочих аккаунтов Google (null — вход через Google не настроен)
+  // и общий пароль
   domain: string | null
+  passwordLogin: boolean
 }
 
-export const useHubUser = () => useState<HubUser>('hub-user', () => signedOut(null))
+export const useHubUser = () => useState<HubUser>('hub-user', () => signedOut({ domain: null, passwordLogin: false }))
 
-/** Не вошёл. domain — настройка стенда: её сообщает сервер, при выходе сохраняем. */
-export function signedOut(domain: string | null): HubUser {
-  return { authed: false, name: null, firstName: null, email: null, domain }
+/** Не вошёл. Как можно войти — настройка стенда: её сообщает сервер, при выходе сохраняем. */
+export function signedOut({ domain, passwordLogin }: Pick<HubUser, 'domain' | 'passwordLogin'>): HubUser {
+  return { authed: false, nameRequired: false, name: null, firstName: null, email: null, domain, passwordLogin }
 }
 
 /**
@@ -27,7 +32,7 @@ export function useAuthRedirect() {
   return async (error: unknown) => {
     const { statusCode } = (error ?? {}) as { statusCode?: number }
     if (statusCode !== 401) return false
-    user.value = signedOut(user.value.domain)
+    user.value = signedOut(user.value)
     await router.push({ path: '/login', query: { next: router.currentRoute.value.fullPath } })
     return true
   }

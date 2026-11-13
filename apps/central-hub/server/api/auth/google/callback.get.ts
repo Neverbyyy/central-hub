@@ -31,6 +31,6 @@ export default defineEventHandler(async (event) => {
 
   if (!isAllowed(claims, google.domain)) return fail('not-allowed', { email: claims.email })
 
-  await startHubSession(event, { email: claims.email.toLowerCase(), name: googleName(claims), firstName: googleFirstName(claims) })
+  await startHubSession(event, { email: claims.email.toLowerCase(), name: googleName(claims), firstName: googleFirstName(claims), via: 'google' })
   return sendRedirect(event, internalPath(next), 302)
 })
