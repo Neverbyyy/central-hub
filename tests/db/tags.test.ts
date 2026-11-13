@@ -97,6 +97,20 @@ describe('теги ключей', () => {
     await restoreKeys([GAMMA])
   })
 
+  it('ответ несёт время записи — по нему интерфейс отличает старые события Realtime от событий с этой правкой', async () => {
+    const name = await make(tag('time'))
+    const { updatedAt } = await setKeysTag(service, { keys: [ALPHA, BETA], tag: name, on: true }, by)
+    const { data } = await service.from('localizations').select('technical_key, updated_at').in('technical_key', [ALPHA, BETA])
+    // Оба ключа поменялись одной записью — у обоих это время
+    expect(data!.map(row => Date.parse(row.updated_at))).toEqual([Date.parse(updatedAt!), Date.parse(updatedAt!)])
+    // Следующая правка — позже; без изменений время остаётся временем последней записи
+    const next = await setKeysTag(service, { keys: [ALPHA], tag: name, on: false }, by)
+    expect(Date.parse(next.updatedAt!)).toBeGreaterThan(Date.parse(updatedAt!))
+    const same = await setKeysTag(service, { keys: [BETA], tag: name, on: true }, by)
+    expect(same.count).toBe(0)
+    expect(Date.parse(same.updatedAt!)).toBe(Date.parse(updatedAt!))
+  })
+
   it('тега нет в списке — не ставится ни формой, ни нейросетью, ни мимо сервера', async () => {
     const missing = tag('missing')
     await expect(setKeysTag(service, { keys: [ALPHA], tag: missing, on: true }, by)).rejects.toThrow('нет')

@@ -3,6 +3,11 @@
 // (useNotifyError): у каждого места свой заголовок
 const byName = (a: string, b: string) => a.toLowerCase().localeCompare(b.toLowerCase())
 
+// Галочки ставят быстрее, чем отвечает сервер: запросы уходят по одному, в порядке кликов. Иначе «поставить» и «снять»
+// один тег могли бы дойти до базы в обратном порядке, и в базе остался бы не последний клик. Только в браузере
+// (на сервере теги не ставятся), в цепочке нет данных пользователя
+let tagQueue: Promise<unknown> = Promise.resolve()
+
 export function useTags() {
   const supabase = useSupabaseClient()
   const tags = useState<string[]>('tags', () => [])
@@ -50,9 +55,16 @@ export function useTags() {
     return result
   }
 
-  /** Поставить (on) или снять тег у ключей; count — у скольких что-то поменялось. */
-  const setForKeys = (keys: string[], tag: string, on: boolean) =>
-    $fetch<{ count: number }>('/api/keys/tag', { method: 'POST', body: { keys, tag, on } })
+  /**
+   * Поставить (on) или снять тег у ключей — после предыдущих таких же запросов; count — у скольких что-то поменялось,
+   * updatedAt — время записи в базе (события Realtime раньше него о правке не знают).
+   */
+  const setForKeys = (keys: string[], tag: string, on: boolean) => {
+    const request = tagQueue.then(() => $fetch<{ count: number, updatedAt: string | null }>('/api/keys/tag', { method: 'POST', body: { keys, tag, on } }))
+    // Отказ одного запроса не останавливает следующие — его ловит вызывающий
+    tagQueue = request.catch(() => {})
+    return request
+  }
 
   return { tags, counts, state, load, create, rename, remove, setForKeys }
 }

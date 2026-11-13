@@ -20,10 +20,16 @@ export interface Localization {
   deprecated_at: string | null
   created_at: string
   updated_at: string
-  // Теги ключа — для меню правого клика (в таблице их не показываем, решение владельца)
+  // Теги ключа — для меню правого клика и иконки с подсказкой у ключа
   tags: string[]
   // Языки, которые сейчас сохраняются (оптимистичное обновление ещё не подтверждено)
   _saving?: Record<string, boolean>
+}
+
+// Тег из меню уже виден в строках; сервер принял (confirm, updatedAt — время записи из ответа) или отказал (revert)
+export interface TagChange {
+  confirm: (updatedAt: string | null) => void
+  revert: () => void
 }
 
 // Куда сдвинуть курсор после сохранения ячейки; 'blur' — фокус ушёл наружу
@@ -215,6 +221,8 @@ export function useLocalizations() {
       hasMore.value = false
     } else {
       const page = (data ?? []) as Localization[]
+      // Запрос мог уйти раньше, чем дошли последние галочки тегов
+      for (const row of page) row.tags = serverTags(row.technical_key, row.tags ?? [], row.updated_at)
       // Коллега добавил ключ в уже загруженную часть, пока шёл запрос: страница сдвинулась на строку, и её первая
       // строка у нас уже есть — второй раз не добавляем
       const present = new Set(reset ? [] : rows.value.map(r => r.technical_key))
@@ -254,18 +262,71 @@ export function useLocalizations() {
 
   const findRow = (key: string) => rows.value.find(r => r.technical_key === key)
 
+  // --- Теги из меню правого клика: галочка видна сразу и не мигает ---
+  // Галочки ставят быстрее, чем доходят события Realtime: событие о первой несёт теги без второй, которая ещё в пути, —
+  // и вторая пропадала бы на мгновение. Поэтому правки из меню лежат здесь и накладываются поверх тегов из событий и
+  // загрузки, пока не придёт событие, которое уже знает о правке: его updated_at не раньше времени записи из ответа
+  // сервера (after). Совпадение тегов не годится: старое событие могло совпасть случайно. Если события не будет (у
+  // ключа ничего не поменялось) или время записи неизвестно — правка уходит через TAG_OP_TTL после ответа
+  interface TagOp { on: boolean, seq: number, after?: number }
+  const tagOps = new Map<string, Map<string, TagOp>>() // ключ → тег → последняя правка
+  let tagSeq = 0
+  const TAG_OP_TTL = 5000
+
+  const dropTagOp = (key: string, tag: string, seq: number) => {
+    const ops = tagOps.get(key)
+    if (ops?.get(tag)?.seq !== seq) return
+    ops.delete(tag)
+    if (!ops.size) tagOps.delete(key)
+  }
+
+  // Теги ключа с сервера (событие или загрузка) → что показать: правки, о которых эти данные уже знают, уходят,
+  // остальные — поверх
+  const serverTags = (key: string, tags: string[], updatedAt: string) => {
+    const ops = tagOps.get(key)
+    if (!ops) return tags
+    const at = dbTime(updatedAt)
+    for (const [tag, op] of ops) {
+      if (op.after !== undefined && at >= op.after) dropTagOp(key, tag, op.seq)
+    }
+    return overlayTags(tags, ops)
+  }
+
   // Тег поставили или сняли из меню — строки меняются сразу, не дожидаясь события от базы.
-  // Возвращает откат: сервер отказал — теги строк как были
-  const applyTag = (keys: string[], tag: string, on: boolean) => {
-    const before = keys.flatMap((key) => {
+  // confirm — сервер принял (updatedAt — время записи из ответа); revert — отказал: тег у этих ключей как был (если его
+  // не успели переключить ещё раз)
+  const applyTag = (keys: string[], tag: string, on: boolean): TagChange => {
+    const seq = ++tagSeq
+    const touched = keys.flatMap((key) => {
       const row = findRow(key)
       if (!row || row.deprecated_at) return []
-      const tags = row.tags ?? []
-      row.tags = on ? (tags.includes(tag) ? tags : [...tags, tag]) : tags.filter(t => t !== tag)
-      return [{ row, tags }]
+      const had = row.tags?.includes(tag) ?? false
+      let ops = tagOps.get(key)
+      if (!ops) tagOps.set(key, (ops = new Map()))
+      ops.set(tag, { on, seq })
+      row.tags = withTag(row.tags ?? [], tag, on)
+      return [{ key, had }]
     })
-    return () => {
-      for (const { row, tags } of before) row.tags = tags
+    return {
+      confirm: (updatedAt) => {
+        // Время неизвестно — события правку не снимают, только TAG_OP_TTL
+        const after = dbTime(updatedAt)
+        for (const { key } of touched) {
+          const op = tagOps.get(key)?.get(tag)
+          if (op?.seq === seq) op.after = Number.isNaN(after) ? Number.POSITIVE_INFINITY : after
+        }
+        setTimeout(() => {
+          for (const { key } of touched) dropTagOp(key, tag, seq)
+        }, TAG_OP_TTL)
+      },
+      revert: () => {
+        for (const { key, had } of touched) {
+          if (tagOps.get(key)?.get(tag)?.seq !== seq) continue
+          dropTagOp(key, tag, seq)
+          const row = findRow(key)
+          if (row) row.tags = withTag(row.tags ?? [], tag, had)
+        }
+      }
     }
   }
 
@@ -511,7 +572,7 @@ export function useLocalizations() {
         row.translations = merged
         row.status = incoming.status
         row.stale_langs = incoming.stale_langs
-        row.tags = incoming.tags ?? []
+        row.tags = serverTags(incoming.technical_key, incoming.tags ?? [], incoming.updated_at)
         row.updated_at = incoming.updated_at
       })
       .subscribe()

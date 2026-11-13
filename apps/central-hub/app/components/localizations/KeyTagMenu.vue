@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ContextMenuItem } from '@nuxt/ui'
-import type { Localization } from '~/composables/useLocalizations'
+import type { Localization, TagChange } from '~/composables/useLocalizations'
 
 // Правый клик по строке таблицы: «Добавить тег» — все теги галочками, поле «найти или создать» сверху и кнопка
 // «Создать тег» внизу (с набранным именем — создаёт и сразу ставит, с пустым полем — окно «Новый тег»).
@@ -9,8 +9,8 @@ import type { Localization } from '~/composables/useLocalizations'
 const props = defineProps<{
   selectedKeys: Set<string>
   findRow: (key: string) => Localization | undefined
-  // Поставить или снять тег в загруженных строках сразу; возвращает откат на случай отказа сервера
-  applyTag: (keys: string[], tag: string, on: boolean) => () => void
+  // Поставить или снять тег в загруженных строках сразу; ответ сервера — confirm или revert
+  applyTag: (keys: string[], tag: string, on: boolean) => TagChange
   // Выборка устаревших ключей: их не правят, пока не вернут
   readonly?: boolean
 }>()
@@ -72,9 +72,10 @@ const exact = computed(() => findTag(tags.value, query.value))
 
 // keys — по умолчанию ключи открытого меню; окну «Новый тег» — те, для которых его открыли
 const toggle = async (tag: string, on: boolean, { quiet = false, keys = [...targets.value] } = {}) => {
-  const undo = props.applyTag(keys, tag, on)
+  const change = props.applyTag(keys, tag, on)
   try {
-    const { count } = await setForKeys(keys, tag, on)
+    const { count, updatedAt } = await setForKeys(keys, tag, on)
+    change.confirm(updatedAt)
     if (!quiet && keys.length > 1 && count) {
       toast.add({
         title: on
@@ -85,7 +86,7 @@ const toggle = async (tag: string, on: boolean, { quiet = false, keys = [...targ
     }
     return true
   } catch (error) {
-    undo()
+    change.revert()
     await notifyError(on ? 'Тег не добавился' : 'Тег не снялся', error)
     return false
   }

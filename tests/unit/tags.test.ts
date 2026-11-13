@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { filterTags, tagCoverage } from '../../apps/central-hub/app/utils/tags'
+import { dbTime, filterTags, overlayTags, tagCoverage, withTag } from '../../apps/central-hub/app/utils/tags'
 import { findTag, MAX_TAG_LENGTH, tagNameError } from '../../apps/central-hub/shared/utils/tags'
 
 // Теги: правило имени (shared/utils/tags.ts — то же держит база) и меню правого клика (app/utils/tags.ts)
@@ -40,5 +40,30 @@ describe('меню тегов', () => {
     expect(filterTags(tags, 'PAY')).toEqual(['Paywall'])
     expect(filterTags(tags, '  ')).toEqual(tags)
     expect(filterTags(tags, 'xyz')).toEqual([])
+  })
+
+  it('поставить и снять тег: новый — в конец, повтор ничего не меняет', () => {
+    expect(withTag(['ds', 'cta'], 'legal', true)).toEqual(['ds', 'cta', 'legal'])
+    expect(withTag(['ds', 'cta'], 'ds', true)).toEqual(['ds', 'cta'])
+    expect(withTag(['ds', 'cta'], 'ds', false)).toEqual(['cta'])
+    expect(withTag(['ds'], 'cta', false)).toEqual(['ds'])
+  })
+
+  it('событие с сервера без ещё не подтверждённых галочек — они остаются поверх, галочка не мигает', () => {
+    // Поставили a, b, c подряд; сервер успел записать только a и прислал событие
+    const pending = new Map([['b', { on: true }], ['c', { on: true }]])
+    expect(overlayTags(['ds', 'a'], pending)).toEqual(['ds', 'a', 'b', 'c'])
+    // Сняли ds, сервер ещё не ответил — событие с ds его не возвращает
+    expect(overlayTags(['ds', 'a'], new Map([['ds', { on: false }]]))).toEqual(['a'])
+    expect(overlayTags(['ds'], new Map())).toEqual(['ds'])
+  })
+
+  it('время записи из базы — в любом виде, как его присылают PostgREST и Realtime', () => {
+    const ms = Date.UTC(2026, 10, 13, 0, 12, 34, 123)
+    expect(dbTime('2026-11-13T00:12:34.123456+00:00')).toBe(ms)
+    expect(dbTime('2026-11-13 00:12:34.123456+00')).toBe(ms)
+    expect(dbTime('2026-11-13 03:12:34.123+03')).toBe(ms)
+    expect(dbTime(null)).toBeNaN()
+    expect(dbTime('не время')).toBeNaN()
   })
 })
