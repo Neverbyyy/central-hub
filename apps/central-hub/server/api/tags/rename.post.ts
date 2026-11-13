@@ -1,6 +1,6 @@
 import { renameTag } from '../../lib/tags'
 
-// Переименовать тег у всех ключей (в истории каждого ключа это видно)
+// Переименовать тег у всех ключей. В историю ключей теги не пишутся (миграция 20261113100000)
 export default defineHubHandler(async (event) => {
   const actor = await requireHubUser(event)
   const body = await readBody<{ from?: unknown, to?: unknown }>(event)

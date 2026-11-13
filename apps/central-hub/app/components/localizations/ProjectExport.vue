@@ -74,16 +74,6 @@ const loadSets = async ({ silent = false } = {}): Promise<ExportSetInfo[]> => {
   }
 }
 
-// Каждое открытие — свежее сравнение с репозиториями
-watch(open, async (value) => {
-  if (!value) return
-  sets.value = null
-  setsError.value = ''
-  previews.value = {}
-  changesOpen.value = false
-  for (const set of await loadSets()) if (set.connected) loadPreview(set.name)
-})
-
 // --- Статус без переоткрытия окна ---
 // PR смержили или закрыли на GitHub — вебхук (/api/github/webhook) сообщает в канал Realtime, окно тихо
 // перечитывает наборы и предпросмотр этого набора. Без вебхука (локально) — при возврате на вкладку
@@ -108,7 +98,7 @@ const { listen, stop } = useExportPrEvents((set) => {
   refreshChanged()
 })
 
-watch(open, value => (value ? listen() : stop()))
+watch(open, value => (value ? listen() : stop()), { immediate: true })
 
 onBeforeUnmount(stop)
 
@@ -155,6 +145,17 @@ const showChanges = (set: ExportSetInfo) => {
   changesFor.value = set
   changesOpen.value = true
 }
+
+// Каждое открытие — свежее сравнение с репозиториями. immediate: страница монтирует окно при первом открытии — уже
+// открытым, поэтому наблюдатель стоит после всего, к чему обращается (иначе — обращение до объявления)
+watch(open, async (value) => {
+  if (!value) return
+  sets.value = null
+  setsError.value = ''
+  previews.value = {}
+  changesOpen.value = false
+  for (const set of await loadSets()) if (set.connected) loadPreview(set.name)
+}, { immediate: true })
 
 const OUTCOME_TITLE: Record<string, (pr: number) => string> = {
   created: pr => `PR #${pr} создан`,

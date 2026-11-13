@@ -32,7 +32,8 @@ const chosenLanguages = ref<string[]>([])
 
 const current = computed(() => sectionPath(props.prefix))
 
-// Каждое открытие — от раздела, выбранного в дереве, плюс общие строки; путь к нему раскрыт
+// Каждое открытие — от раздела, выбранного в дереве, плюс общие строки; путь к нему раскрыт. immediate: страница
+// монтирует окно при первом открытии — уже открытым
 watch(open, (value) => {
   if (!value) return
   // Дерево обычно уже загружено для панели слева; панель скрыта — грузим сейчас
@@ -40,7 +41,7 @@ watch(open, (value) => {
   selected.value = new Set(['common', ...(current.value ? [current.value] : [])])
   expanded.value = new Set(current.value ? sectionAncestors(current.value) : [])
   chosenLanguages.value = [...props.languages]
-})
+}, { immediate: true })
 
 // Видимые строки: у раскрытого раздела видны подразделы
 const rows = computed<Row[]>(() => {

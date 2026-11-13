@@ -136,12 +136,23 @@ const tags = computed(() => {
   return (fromRow ? row.tags : own.tags) ?? []
 })
 
-// Ключ поменяли (здесь, у коллеги или через MCP) — перечитываем статусы и историю. После своего действия это
-// второе чтение: событие Realtime приходит раньше, чем панель успевает перечитать себя, — так проще и надёжнее,
-// чем угадывать, какое событие наше
+// Ключ поменяли (здесь, у коллеги или через MCP) — перечитываем статусы и историю. События склеиваются: пачка
+// правок подряд (быстрые галочки тегов, утверждение нескольких языков) — одно чтение через REFRESH_DELAY после
+// последнего события, а не два запроса на каждое. Если панель тем временем перечиталась своим действием (утвердить,
+// вернуть, сохранить свойства) и её данные не старше события — второго чтения нет
+const REFRESH_DELAY = 250
+let refreshTimer: ReturnType<typeof setTimeout> | undefined
 watch(() => props.row?.updated_at, (value, old) => {
-  if (value && old && value !== old) load()
+  if (!value || !old || value === old) return
+  clearTimeout(refreshTimer)
+  refreshTimer = setTimeout(() => {
+    if (dbTime(details.value?.updated_at) >= dbTime(props.row?.updated_at)) return
+    load()
+  }, REFRESH_DELAY)
 })
+// Перешли к другому ключу или закрыли панель — отложенное чтение прежнего ключа не нужно
+watch(() => props.technicalKey, () => clearTimeout(refreshTimer))
+onBeforeUnmount(() => clearTimeout(refreshTimer))
 
 // --- Копирование ---
 // Код legacy-проекта зовёт строку по её старому пути: t('basic.task_1'), а не по ключу сервиса

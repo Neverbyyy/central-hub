@@ -274,27 +274,25 @@ export interface TreeNode {
   children: TreeNode[]
 }
 
-/** Разделы ключей для дерева в интерфейсе: только узлы, у которых есть строки внутри, до maxDepth уровней. */
+/**
+ * Разделы ключей для дерева в интерфейсе: только узлы, у которых есть строки внутри, до maxDepth уровней. Сколько
+ * ключей в каждом разделе, считает база (key_sections) — одним запросом, а не чтением всех ключей страницами.
+ */
 export async function keyTreeNested(db: SupabaseClient, { maxDepth = 4 } = {}): Promise<TreeNode[]> {
-  const keys = await allKeys<{ technical_key: string }>(db, 'technical_key')
+  const { data, error } = await db.rpc('key_sections', { p_max_depth: maxDepth })
+  if (error) throw error
+  const sections = (data as { path: string, keys: number }[])
+    // Родитель — раньше детей: путь родителя — начало пути ребёнка
+    .sort((a, b) => a.path.split('.').length - b.path.split('.').length)
+
   const root: TreeNode = { path: '', label: '', keys: 0, children: [] }
   const nodes = new Map<string, TreeNode>()
-
-  for (const { technical_key: key } of keys) {
-    const segments = key.split('.')
-    let parent = root
-    // Последний сегмент — сама строка; в дерево идут только разделы
-    for (let i = 0; i < Math.min(segments.length - 1, maxDepth); i++) {
-      const path = segments.slice(0, i + 1).join('.')
-      let node = nodes.get(path)
-      if (!node) {
-        node = { path, label: segments[i]!, keys: 0, children: [] }
-        nodes.set(path, node)
-        parent.children.push(node)
-      }
-      node.keys++
-      parent = node
-    }
+  for (const { path, keys } of sections) {
+    const cut = path.lastIndexOf('.')
+    const node: TreeNode = { path, label: path.slice(cut + 1), keys: Number(keys), children: [] }
+    nodes.set(path, node)
+    const parent = cut < 0 ? root : nodes.get(path.slice(0, cut))
+    parent?.children.push(node)
   }
 
   const sort = (list: TreeNode[]) => {
@@ -338,19 +336,17 @@ const QUEUE_COLUMNS = 'technical_key, translations, stale_langs, description, ma
 
 /**
  * Строки очереди языка — фильтром в базе, без чтения всех ключей: действующий ключ раздела, английский не пустой,
- * а перевода нет (пустая строка — тоже нет) или он устарел после правки английского. reason — только одна причина;
- * head — только число. lang попадает в текст фильтра, поэтому сюда приходит лишь код из таблицы языков.
+ * а перевода нет (пустая строка — тоже нет) или он устарел после правки английского. Те же условия — у счётчиков
+ * (queue_counts в базе). lang попадает в текст фильтра, поэтому сюда приходит лишь код из таблицы языков.
  */
-function queueRequest(db: SupabaseClient, lang: string, { prefix, reason, head = false }: { prefix?: string, reason?: QueueItem['reason'], head?: boolean }) {
+function queueRequest(db: SupabaseClient, lang: string, { prefix }: { prefix?: string }) {
   const text = `translations->>${lang}`
   let request = db.from('localizations')
-    .select(head ? 'technical_key' : QUEUE_COLUMNS, { count: 'exact', head })
+    .select(QUEUE_COLUMNS, { count: 'exact' })
     .is('deprecated_at', null)
     // NULL <> '' — не истина: без английского строка в очередь не попадает
     .neq('translations->>en', '')
   if (prefix?.trim()) request = request.like('technical_key', `${escapeLike(prefix.trim())}%`)
-  if (reason === 'missing') return request.or(`${text}.is.null,${text}.eq.""`)
-  if (reason === 'stale') return request.neq(text, '').contains('stale_langs', [lang])
   return request.or(`${text}.is.null,${text}.eq."",stale_langs.cs.{${lang}}`)
 }
 
@@ -378,18 +374,16 @@ export async function translationQueue(
   return { total: count ?? 0, items }
 }
 
-/** Размер очереди по каждому языку перевода для меню «Очередь перевода»: только подсчёты, параллельно. */
+/**
+ * Размер очереди по каждому языку перевода для меню «Очередь перевода»: один запрос (queue_counts — языки, как
+ * в loadLanguages, без английского) с теми же условиями, что у самой очереди (queueRequest). Было по два запроса на
+ * язык и ещё один за списком языков.
+ */
 export async function queueCounts(db: SupabaseClient, { prefix }: { prefix?: string } = {}) {
-  const langs = (await loadLanguages(db)).filter(lang => lang !== 'en')
-  const count = async (lang: string, reason: QueueItem['reason']) => {
-    const { count, error } = await queueRequest(db, lang, { prefix, reason, head: true })
-    if (error) throw error
-    return count ?? 0
-  }
-  return Promise.all(langs.map(async (lang) => {
-    const [missing, stale] = await Promise.all([count(lang, 'missing'), count(lang, 'stale')])
-    return { lang, missing, stale }
-  }))
+  const { data, error } = await db.rpc('queue_counts', { p_prefix: prefix?.trim() || null })
+  if (error) throw error
+  return (data as { lang: string, missing: number, stale: number }[])
+    .map(row => ({ lang: row.lang, missing: Number(row.missing), stale: Number(row.stale) }))
 }
 
 /** Ключи без перевода на язык или с переводом, устаревшим после правки английского. */

@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest'
-import { type KeyMetaInput, queueCounts, translationQueue, updateKeyMeta } from '../../apps/central-hub/server/lib/keys'
+import { allKeys, type KeyMetaInput, keyTreeNested, queueCounts, translationQueue, type TreeNode, updateKeyMeta } from '../../apps/central-hub/server/lib/keys'
 import { ACTOR, ANCHOR, deprecateKeys, readAnchor, restoreKeys, service, setTranslation, useLiveAnchor } from './clients'
 
 const set = (lang: string, value: string, expected?: string) =>
@@ -171,5 +171,35 @@ describe('свойства ключа', () => {
     await deprecateKeys([ANCHOR])
     await expect(meta({ maxLength: 10 })).rejects.toMatchObject({ message: expect.stringContaining('помечен устаревшим') })
     await restoreKeys([ANCHOR])
+  })
+})
+
+describe('дерево разделов', () => {
+  // Разделы считает база (key_sections) — дерево то же, что прежний подсчёт по всем ключам (allKeys)
+  it('совпадает с подсчётом по всем действующим ключам: разделы, счётчики, порядок', async () => {
+    const keys = await allKeys<{ technical_key: string }>(service, 'technical_key')
+    const counted = new Map<string, number>()
+    for (const { technical_key: key } of keys) {
+      const parts = key.split('.')
+      for (let depth = 1; depth <= Math.min(parts.length - 1, 4); depth++) {
+        const path = parts.slice(0, depth).join('.')
+        counted.set(path, (counted.get(path) ?? 0) + 1)
+      }
+    }
+
+    const flat: { path: string, label: string, keys: number }[] = []
+    const walk = (nodes: TreeNode[], parent: string) => {
+      const labels = nodes.map(node => node.label)
+      expect(labels).toEqual([...labels].sort((a, b) => a.localeCompare(b)))
+      for (const node of nodes) {
+        expect(node.path).toBe(parent ? `${parent}.${node.label}` : node.label)
+        flat.push({ path: node.path, label: node.label, keys: node.keys })
+        walk(node.children, node.path)
+      }
+    }
+    walk(await keyTreeNested(service), '')
+
+    expect(new Map(flat.map(node => [node.path, node.keys]))).toEqual(counted)
+    expect(flat.length).toBe(counted.size)
   })
 })

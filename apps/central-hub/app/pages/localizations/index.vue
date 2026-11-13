@@ -269,6 +269,19 @@ const [DefineQueueCount, ReuseQueueCount] = createReusableTemplate<{ item: unkno
 const figmaOpen = ref(false)
 const exporting = ref(false)
 
+// Окна «Тексты в Figma», «Выгрузка в код» и «Новый ключ» монтируются при первом открытии (Lazy… + v-if) и дальше
+// остаются: их код не грузится вместе со страницей, а анимация закрытия не теряется
+const openedOnce = (open: Ref<boolean>) => {
+  const opened = ref(open.value)
+  watch(open, (value) => {
+    if (value) opened.value = true
+  })
+  return opened
+}
+const figmaMounted = openedOnce(figmaOpen)
+const projectsMounted = openedOnce(projectsOpen)
+const creatingMounted = openedOnce(creating)
+
 const exportZip = async () => {
   exporting.value = true
   try {
@@ -483,19 +496,22 @@ usePresenceEditing(() => (sheetOpen.value && sheet.value ? { key: sheet.value.ke
       </div>
     </div>
 
-    <LocalizationsFigmaExport
+    <LazyLocalizationsFigmaExport
+      v-if="figmaMounted"
       v-model:open="figmaOpen"
       :prefix="filters.prefix"
       :languages="languageCodes"
     />
 
-    <LocalizationsProjectExport
+    <LazyLocalizationsProjectExport
+      v-if="projectsMounted"
       v-model:open="projectsOpen"
       @show-pending="showPending"
       @find-key="findKey"
     />
 
-    <LocalizationsCreateKey
+    <LazyLocalizationsCreateKey
+      v-if="creatingMounted"
       v-model:open="creating"
       :registry="registry"
       :languages="languageCodes"

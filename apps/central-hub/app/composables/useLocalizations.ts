@@ -268,7 +268,11 @@ export function useLocalizations() {
   const undoStack: Edit[] = []
   const redoStack: Edit[] = []
 
-  const findRow = (key: string) => rows.value.find(r => r.technical_key === key)
+  // Строка по ключу — без перебора: findRow зовут на каждое событие Realtime и для каждого выделенного ключа в меню
+  // тегов (после «выделить всё» перебор был бы тысячи × тысячи). Список строк меняется только целиком (загрузка,
+  // пачка Realtime), тогда и пересобирается индекс; правки внутри строк его не трогают
+  const rowIndex = computed(() => new Map(rows.value.map(row => [row.technical_key, row])))
+  const findRow = (key: string) => rowIndex.value.get(key)
 
   // --- Теги из меню правого клика: галочка видна сразу и не мигает ---
   // Галочки ставят быстрее, чем доходят события Realtime: событие о первой несёт теги без второй, которая ещё в пути, —

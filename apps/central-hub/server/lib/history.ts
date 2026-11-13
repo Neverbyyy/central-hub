@@ -2,7 +2,6 @@
 // Без Nuxt-глобалов: используется маршрутом /api/keys/history и тестами базы.
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { fetchAllPages } from './paging'
 
 export interface HistoryEntry {
   lang: string | null
@@ -20,38 +19,18 @@ export interface HistoryAction {
   entries: HistoryEntry[]
 }
 
-interface HistoryRow extends HistoryEntry {
-  id: number
-  created_at: string
-  actor: string
-  source: string
-}
-
 /**
- * Действия ключа от новых к старым, срез [offset, offset + limit).
- * Одна правка — одна транзакция, а now() в ней один: строки с одинаковыми временем, автором и источником —
- * одно действие. У ключа строк десятки или сотни, поэтому читаем все и режем по действиям, а не по строкам.
+ * Действия ключа от новых к старым, срез [offset, offset + limit). Одна правка — одна транзакция, а now() в ней один:
+ * строки с одинаковыми временем, автором и источником — одно действие. Группирует и режет база (key_history) — сервер
+ * получает только нужную страницу, а не все строки истории ключа. Записей о тегах в выдаче нет.
  */
 export async function keyHistory(
   db: SupabaseClient,
   key: string,
   { offset = 0, limit = 10 }: { offset?: number, limit?: number } = {}
 ): Promise<{ total: number, actions: HistoryAction[] }> {
-  const rows = await fetchAllPages<HistoryRow>((from, to) => db
-    .from('history')
-    .select('id, lang, field, old_value, new_value, actor, source, created_at')
-    .eq('technical_key', key)
-    // Теги история больше не пишет (миграция 20261113100000), прежние записи о них не показываем
-    .neq('field', 'tags')
-    .order('created_at', { ascending: false })
-    .order('id', { ascending: true })
-    .range(from, to))
-
-  const actions: HistoryAction[] = []
-  for (const { id, created_at, actor, source, ...entry } of rows) {
-    const last = actions.at(-1)
-    if (last && last.created_at === created_at && last.actor === actor && last.source === source) last.entries.push(entry)
-    else actions.push({ id, created_at, actor, source, entries: [entry] })
-  }
-  return { total: actions.length, actions: actions.slice(offset, offset + limit) }
+  const { data, error } = await db.rpc('key_history', { p_key: key, p_offset: offset, p_limit: limit })
+  if (error) throw error
+  const page = data as { total: number, actions: HistoryAction[] }
+  return { total: Number(page.total), actions: page.actions }
 }

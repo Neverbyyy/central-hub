@@ -189,6 +189,14 @@ isOneToOne: false
 "import_legacy":
 { Args: { "p_actor": string,"p_rows": Json,"p_set": string,"p_source": string,"p_source_ref": string,"p_templates": Json }; Returns: Json
                            },
+"key_history":
+{ Args: { "p_key": string,"p_limit"?: number,"p_offset"?: number }; Returns: Json
+                           },
+"key_sections":
+{ Args: { "p_max_depth"?: number }; Returns: {
+              "keys": number,"path": string
+            }[]
+                           },
 "l10n_key_error":
 { Args: { "p_key": string }; Returns: string
                            },
@@ -200,6 +208,11 @@ isOneToOne: false
                            },
 "l10n_status_values":
 { Args: { "p_status": Json }; Returns: (string)[]
+                           },
+"queue_counts":
+{ Args: { "p_langs": (string)[],"p_prefix"?: string }; Returns: {
+              "lang": string,"missing": number,"stale": number
+            }[]
                            },
 "rename_tag":
 { Args: { "p_actor": string,"p_from": string,"p_to": string }; Returns: number

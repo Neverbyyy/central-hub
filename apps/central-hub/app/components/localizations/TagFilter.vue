@@ -225,7 +225,7 @@ const confirmDelete = async () => {
   <UModal
     v-model:open="deleteOpen"
     :title="deleting ? `Удалить тег «${deleting}»?` : ''"
-    :description="deletingKeys ? `Тег снимется с ${deletingKeys} ${keysWord(deletingKeys)}. В истории ключей это останется.` : 'У тега нет ключей.'"
+    :description="deletingKeys ? `Тег снимется с ${deletingKeys} ${keysWord(deletingKeys)}.` : 'У тега нет ключей.'"
   >
     <template #footer>
       <div class="flex w-full justify-end gap-2">
