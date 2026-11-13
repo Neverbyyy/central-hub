@@ -26,6 +26,14 @@ export interface Localization {
   _saving?: Record<string, boolean>
 }
 
+// Свойства ключа, сохранённые формой в панели (KeyMetaForm), — панель показывает их сразу, до перечитывания
+export interface SavedKeyMeta {
+  description: string | null
+  tags: string[]
+  maxLength: number | null
+  figmaUrl: string | null
+}
+
 // Тег из меню уже виден в строках; сервер принял (confirm, updatedAt — время записи из ответа) или отказал (revert)
 export interface TagChange {
   confirm: (updatedAt: string | null) => void

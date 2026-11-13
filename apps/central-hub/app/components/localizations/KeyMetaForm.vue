@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { descriptionError, figmaUrlError, MAX_LENGTH_LIMIT } from '@amaya/l10n-core'
+import type { SavedKeyMeta } from '~/composables/useLocalizations'
 
 // Свойства ключа прямо в панели: описание, теги, лимит длины, ссылка на Figma.
 // Ctrl+Enter — сохранить, Esc — отмена. Проверки те же, что на сервере (packages/l10n-core).
@@ -11,8 +12,9 @@ const props = defineProps<{
   figmaUrl: string | null
 }>()
 
+// saved — что сохранили: панель показывает это сразу, не дожидаясь, пока перечитает ключ
 const emit = defineEmits<{
-  saved: []
+  saved: [meta: SavedKeyMeta]
   cancel: []
 }>()
 
@@ -52,7 +54,7 @@ const save = async () => {
       body: { key: props.technicalKey, description: form.description, tags: form.tags, maxLength: limit.value, figmaUrl: form.figmaUrl }
     })
     toast.add({ title: 'Свойства ключа сохранены', color: 'success', duration: 1500 })
-    emit('saved')
+    emit('saved', { description: form.description.trim() || null, tags: [...form.tags], maxLength: limit.value, figmaUrl: form.figmaUrl.trim() || null })
   } catch (error) {
     if (!(await authRedirect(error))) serverError.value = errorMessage(error)
   } finally {

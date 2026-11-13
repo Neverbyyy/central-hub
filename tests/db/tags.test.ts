@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { keyHistory } from '../../apps/central-hub/server/lib/history'
 import { createKey, updateKeyMeta } from '../../apps/central-hub/server/lib/keys'
 import { createTag, deleteTag, renameTag, setKeysTag } from '../../apps/central-hub/server/lib/tags'
 import { ACTOR, anon, deprecateKeys, restoreKeys, service } from './clients'
@@ -78,9 +79,10 @@ describe('список тегов', () => {
 })
 
 describe('теги ключей', () => {
-  it('поставить и снять: только действующие ключи и только где что-то меняется; история пишется', async () => {
+  it('поставить и снять: только действующие ключи и только где что-то меняется; в историю не пишется', async () => {
     const name = await make(tag('set'))
     await deprecateKeys([GAMMA])
+    const { data: last } = await service.from('history').select('id').order('id', { ascending: false }).limit(1).single()
     expect((await setKeysTag(service, { keys: [ALPHA, BETA, GAMMA], tag: name, on: true }, by)).count).toBe(2)
     expect(await tagsOf(ALPHA)).toContain(name)
     expect(await tagsOf(GAMMA)).not.toContain(name)
@@ -90,11 +92,19 @@ describe('теги ключей', () => {
     expect(await tagsOf(ALPHA)).not.toContain(name)
     expect((await counts())[name]).toBe(1)
 
-    const { data: history } = await service.from('history').select('field, new_value, actor, source')
-      .eq('technical_key', BETA).eq('field', 'tags').order('id', { ascending: false }).limit(1).single()
-    expect(history).toMatchObject({ actor: ACTOR, source: 'ui' })
-    expect(history!.new_value).toContain(name)
+    // Каждая галочка давала запись «Теги» — история тонула в них (решение владельца: теги в историю не пишутся)
+    const { data: written } = await service.from('history').select('id')
+      .in('technical_key', [ALPHA, BETA]).eq('field', 'tags').gt('id', last!.id)
+    expect(written).toEqual([])
     await restoreKeys([GAMMA])
+  })
+
+  it('прежние записи о тегах в истории ключа не показываются', async () => {
+    // Записи до миграции 20261113100000 остаются в таблице: история только дополняется
+    const { error } = await service.from('history').insert({ technical_key: ALPHA, field: 'tags', old_value: '', new_value: tag('old'), actor: ACTOR, source: 'ui' })
+    expect(error).toBeNull()
+    const { actions } = await keyHistory(service, ALPHA, { limit: 50 })
+    expect(actions.flatMap(action => action.entries).some(entry => entry.field === 'tags')).toBe(false)
   })
 
   it('ответ несёт время записи — по нему интерфейс отличает старые события Realtime от событий с этой правкой', async () => {

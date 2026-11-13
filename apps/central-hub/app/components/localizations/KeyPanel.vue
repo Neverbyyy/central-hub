@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Localization, TranslationStatus } from '~/composables/useLocalizations'
+import type { Localization, SavedKeyMeta, TranslationStatus } from '~/composables/useLocalizations'
 import type { HistoryAction, HistoryPage } from '~/utils/history'
 
 // Панель ключа справа. Не модальная: грид остаётся под клавиатурой, панель следует за активной строкой.
@@ -99,16 +99,43 @@ const loadMoreHistory = async () => {
 
 // --- Правка свойств: описание, теги, лимит, ссылка на Figma ---
 const editingMeta = ref(false)
+// Когда сохранили форму (updated_at ключа после неё): до события с ним строка таблицы ещё со старыми тегами.
+// Бесконечность — сохранили, но ещё не перечитали
+const savedAt = ref(Number.NaN)
 // Панель перешла к другому ключу — незаконченная правка прошлого не переезжает за ней
 watch(() => props.technicalKey, () => {
   editingMeta.value = false
+  savedAt.value = Number.NaN
 })
 
-const onMetaSaved = async () => {
+const onMetaSaved = async (saved: SavedKeyMeta) => {
+  const key = props.technicalKey
+  // Сохранённое — сразу: форма закрывается раньше, чем панель перечитает ключ, и иначе на мгновение мелькнули бы
+  // прежние теги и описание. Перечитывание затем приносит то, что сохранил сервер
+  if (details.value?.technical_key === key) {
+    details.value = { ...details.value, description: saved.description, tags: saved.tags, max_length: saved.maxLength, figma_url: saved.figmaUrl }
+    savedAt.value = Number.POSITIVE_INFINITY
+  }
   editingMeta.value = false
   await load()
-  emit('changed', props.technicalKey)
+  if (props.technicalKey !== key) return
+  savedAt.value = dbTime(details.value?.updated_at)
+  emit('changed', key)
 }
+
+// Теги — из строки таблицы, если ключ в ней есть: галочки из меню правого клика видны там сразу (и не мигают —
+// useLocalizations), а своё чтение панель делает только после события Realtime, это заметная задержка. Из своей
+// загрузки — когда ключа нет в таблице (панель открыта по ссылке), панель ещё показывает прежний ключ или только что
+// сохранили форму «Изменить» (savedAt). «Что новее, то и показывать» не годится: при быстрых галочках своя загрузка
+// бывает новее строки, но без галочек, которые ещё в пути, — и они мигнули бы здесь
+const tags = computed(() => {
+  const row = props.row
+  const own = details.value
+  if (!own) return []
+  const fromRow = row && row.technical_key === own.technical_key && !(dbTime(row.updated_at) < savedAt.value)
+  return (fromRow ? row.tags : own.tags) ?? []
+})
+
 // Ключ поменяли (здесь, у коллеги или через MCP) — перечитываем статусы и историю. После своего действия это
 // второе чтение: событие Realtime приходит раньше, чем панель успевает перечитать себя, — так проще и надёжнее,
 // чем угадывать, какое событие наше
@@ -266,7 +293,7 @@ const toggleAction = (id: number) => {
         v-if="editingMeta"
         :technical-key="technicalKey"
         :description="details.description"
-        :tags="details.tags"
+        :tags="tags"
         :max-length="details.max_length"
         :figma-url="details.figma_url"
         @saved="onMetaSaved"
@@ -303,7 +330,7 @@ const toggleAction = (id: number) => {
         </div>
         <div class="flex flex-wrap items-center gap-1 text-muted">
           <UBadge
-            v-for="tag in details.tags"
+            v-for="tag in tags"
             :key="tag"
             color="neutral"
             variant="subtle"

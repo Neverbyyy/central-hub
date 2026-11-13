@@ -129,16 +129,17 @@ describe('свойства ключа', () => {
     if (error) throw error
   })
 
-  it('меняет описание, теги, лимит и ссылку и пишет историю', async () => {
+  it('меняет описание, теги, лимит и ссылку; историю пишет всем, кроме тегов', async () => {
     const description = `${DESCRIPTION}, правка ${Date.now()}`
+    const { data: last } = await service.from('history').select('id').order('id', { ascending: false }).limit(1).single()
     await meta({ description, tags: [' meta-test ', 'meta-test', 'panel'], maxLength: 40, figmaUrl: 'https://www.figma.com/design/abc/Selftest?node-id=1-2' })
     const row = await readAnchor()
     expect(row).toMatchObject({ description, tags: ['meta-test', 'panel'], max_length: 40, figma_url: 'https://www.figma.com/design/abc/Selftest?node-id=1-2' })
 
+    // Теги в историю не пишутся (миграция 20261113100000): каждая галочка давала отдельную запись
     const { data } = await service.from('history').select('field, actor, source')
-      .eq('technical_key', ANCHOR).in('field', ['description', 'tags', 'max_length', 'figma_url'])
-      .order('id', { ascending: false }).limit(4)
-    expect(new Set(data!.map(h => h.field))).toEqual(new Set(['description', 'tags', 'max_length', 'figma_url']))
+      .eq('technical_key', ANCHOR).gt('id', last!.id)
+    expect(new Set(data!.map(h => h.field))).toEqual(new Set(['description', 'max_length', 'figma_url']))
     expect(data!.every(h => h.actor === ACTOR && h.source === 'ui')).toBe(true)
 
     // Обратно — служебный ключ не должен приносить теги в фильтр грида

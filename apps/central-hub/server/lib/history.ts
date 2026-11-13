@@ -41,6 +41,8 @@ export async function keyHistory(
     .from('history')
     .select('id, lang, field, old_value, new_value, actor, source, created_at')
     .eq('technical_key', key)
+    // Теги история больше не пишет (миграция 20261113100000), прежние записи о них не показываем
+    .neq('field', 'tags')
     .order('created_at', { ascending: false })
     .order('id', { ascending: true })
     .range(from, to))
