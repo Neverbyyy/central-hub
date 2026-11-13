@@ -1,7 +1,8 @@
 export interface HubUser {
   authed: boolean
-  // Имя и адрес — из аккаунта Google
+  // Имя и адрес — из аккаунта Google; firstName — имя без фамилии, для приветствия
   name: string | null
+  firstName: string | null
   email: string | null
   // Домен рабочих аккаунтов, которыми можно войти; null — вход через Google на стенде не настроен
   domain: string | null
@@ -11,7 +12,7 @@ export const useHubUser = () => useState<HubUser>('hub-user', () => signedOut(nu
 
 /** Не вошёл. domain — настройка стенда: её сообщает сервер, при выходе сохраняем. */
 export function signedOut(domain: string | null): HubUser {
-  return { authed: false, name: null, email: null, domain }
+  return { authed: false, name: null, firstName: null, email: null, domain }
 }
 
 /**

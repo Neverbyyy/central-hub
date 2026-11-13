@@ -122,3 +122,14 @@ export function googleName(claims: GoogleClaims): string {
   const name = claims.name ?? ([claims.givenName, claims.familyName].filter(Boolean).join(' ') || claims.email.slice(0, claims.email.indexOf('@')))
   return name.replace(/\s+/g, ' ').slice(0, 40)
 }
+
+/** Первое слово полного имени — когда отдельного имени нет (Google его не прислал, сессия старше этого поля). */
+export const firstWord = (name: string) => name.trim().split(/\s+/)[0] ?? ''
+
+/**
+ * Имя без фамилии — для приветствия на главной: given_name из Google, а не первое слово полного имени — порядок
+ * «Фамилия Имя» в профиле его не путает. Без given_name — первое слово googleName. Не длиннее 40 символов.
+ */
+export function googleFirstName(claims: GoogleClaims): string {
+  return (claims.givenName ?? firstWord(googleName(claims))).replace(/\s+/g, ' ').slice(0, 40)
+}

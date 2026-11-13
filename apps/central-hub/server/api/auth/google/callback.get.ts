@@ -1,4 +1,4 @@
-import { exchangeCode, googleName, isAllowed, readIdToken, type GoogleClaims } from '../../../lib/google-auth'
+import { exchangeCode, googleFirstName, googleName, isAllowed, readIdToken, type GoogleClaims } from '../../../lib/google-auth'
 
 // Возврат от Google: проверяем, что это тот самый вход (state), меняем код на id_token, проверяем его и домен.
 // Удалось — сессия с адресом и именем из Google; нет — на /login с понятной причиной (?error=)
@@ -31,6 +31,6 @@ export default defineEventHandler(async (event) => {
 
   if (!isAllowed(claims, google.domain)) return fail('not-allowed', { email: claims.email })
 
-  await startHubSession(event, { email: claims.email.toLowerCase(), name: googleName(claims) })
+  await startHubSession(event, { email: claims.email.toLowerCase(), name: googleName(claims), firstName: googleFirstName(claims) })
   return sendRedirect(event, internalPath(next), 302)
 })

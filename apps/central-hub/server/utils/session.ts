@@ -1,4 +1,5 @@
 import type { H3Event, SessionData } from 'h3'
+import { firstWord } from '../lib/google-auth'
 
 // Вошёл — значит, есть адрес: сессию заполняет только вход через Google (/api/auth/google/callback).
 // Cookie прежнего входа паролем ({ authed, name } без адреса) входом больше не считаются
@@ -6,6 +7,14 @@ interface HubSession {
   email?: string
   // Имя из профиля Google — подписывает правки в истории, его видят коллеги
   name?: string
+  // Имя без фамилии (given_name) — приветствие на главной. У сессий до этого поля — первое слово name
+  firstName?: string
+}
+
+export interface SignedInUser {
+  email: string
+  name: string
+  firstName: string
 }
 
 // Вход через Google в пути: проверяется в callback и сразу стирается
@@ -40,9 +49,10 @@ export const useHubSession = (event: H3Event) => sealedSession<HubSession>(event
 export const useOAuthSession = (event: H3Event) => sealedSession<OAuthSession>(event, 'hub-oauth', TEN_MINUTES)
 
 /** Кто вошёл: адрес и имя из Google; не вошёл (или cookie прежнего входа паролем) — null. Одно правило для всех. */
-export async function hubUser(event: H3Event): Promise<{ email: string, name: string } | null> {
+export async function hubUser(event: H3Event): Promise<SignedInUser | null> {
   const { data } = await useHubSession(event)
-  return data.email && data.name ? { email: data.email, name: data.name } : null
+  if (!data.email || !data.name) return null
+  return { email: data.email, name: data.name, firstName: data.firstName || firstWord(data.name) }
 }
 
 /** Имя автора правки; без входа — 401. */
@@ -53,14 +63,14 @@ export async function requireHubUser(event: H3Event): Promise<string> {
 }
 
 /**
- * Начать сессию после входа через Google: в ней только адрес и имя. clear() в h3 здесь не помог бы — update()
- * перечитывает прежнюю cookie из запроса и дописывает в неё, поэтому прежние поля (другого аккаунта, старого входа
- * паролем) стираем сами.
+ * Начать сессию после входа через Google: в ней только адрес и имя (полное и без фамилии). clear() в h3 здесь не
+ * помог бы — update() перечитывает прежнюю cookie из запроса и дописывает в неё, поэтому прежние поля (другого
+ * аккаунта, старого входа паролем) стираем сами.
  */
-export async function startHubSession(event: H3Event, user: { email: string, name: string }) {
+export async function startHubSession(event: H3Event, user: SignedInUser) {
   const session = await useHubSession(event)
   await session.update((data) => {
     for (const key of Object.keys(data)) Reflect.deleteProperty(data, key)
-    return { email: user.email, name: user.name }
+    return { email: user.email, name: user.name, firstName: user.firstName }
   })
 }

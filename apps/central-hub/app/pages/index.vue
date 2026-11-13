@@ -22,7 +22,7 @@ const TILE: Record<HubServiceGroup, string> = {
     <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div class="min-w-0">
         <h1 class="text-2xl font-bold text-highlighted">
-          {{ user.name ? `Привет, ${user.name}` : 'Amaya Central Hub' }}
+          {{ user.firstName ? `Привет, ${user.firstName}` : 'Amaya Central Hub' }}
         </h1>
         <p class="mt-1 text-muted">
           Тексты всех продуктов, дизайн-система и стенды — в одном месте.

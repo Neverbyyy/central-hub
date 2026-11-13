@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 import {
   companyDomain,
   exchangeCode,
+  firstWord,
   googleAuthUrl,
+  googleFirstName,
   googleName,
   isAllowed,
   pkceChallenge,
@@ -156,5 +158,14 @@ describe('имя из профиля', () => {
     expect(googleName(claims({ name: null }))).toBe('Антон Петров')
     expect(googleName(claims({ name: null, givenName: null, familyName: null }))).toBe('anton')
     expect(googleName(claims({ name: `  ${'Очень '.repeat(10)}длинное  ` }))).toHaveLength(40)
+  })
+
+  it('имя без фамилии для приветствия: given_name, порядок в полном имени не важен; без него — первое слово', () => {
+    expect(googleFirstName(claims())).toBe('Антон')
+    expect(googleFirstName(claims({ name: 'Петров Антон' }))).toBe('Антон')
+    expect(googleFirstName(claims({ givenName: 'Анна Мария', name: 'Анна Мария Петрова' }))).toBe('Анна Мария')
+    expect(googleFirstName(claims({ givenName: null }))).toBe('Антон')
+    expect(googleFirstName(claims({ name: null, givenName: null, familyName: null }))).toBe('anton')
+    expect(firstWord('  Артем   Заикин ')).toBe('Артем')
   })
 })
