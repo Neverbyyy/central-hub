@@ -13,6 +13,20 @@ export default defineNuxtConfig({
     enabled: true
   },
 
+  // Общее для всех страниц — и для страницы ошибки (app/error.vue), которая заменяет app.vue целиком.
+  // Внутренний сервис: поисковикам не показываем (плюс X-Robots-Tag и robots.txt)
+  app: {
+    head: {
+      title: 'Amaya Central Hub',
+      htmlAttrs: { lang: 'ru' },
+      meta: [
+        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        { name: 'robots', content: 'noindex, nofollow' }
+      ],
+      link: [{ rel: 'icon', href: '/favicon.ico' }]
+    }
+  },
+
   css: ['~/assets/css/main.css'],
 
   // Тема — в «Настройках»: светлая или тёмная, без выбора — светлая. Выбор хранится в браузере,

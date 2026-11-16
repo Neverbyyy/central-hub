@@ -50,3 +50,13 @@ export function useNotifyError() {
     if (!(await authRedirect(error))) toast.add({ title, description: errorMessage(error), color: 'error' })
   }
 }
+
+/**
+ * Ошибка запроса — текстом на экране, рядом с «Повторить» (LoadError): «<title>: <причина>».
+ * Кончилась сессия — на вход и null: повтор там всё равно получил бы 401. Вызывать в setup.
+ */
+export function useErrorText() {
+  const authRedirect = useAuthRedirect()
+
+  return async (title: string, error: unknown) => (await authRedirect(error)) ? null : `${title}: ${errorMessage(error)}`
+}

@@ -37,6 +37,7 @@ interface KeyDetails extends Localization {
 const supabase = useSupabaseClient()
 const toast = useToast()
 const notifyError = useNotifyError()
+const errorText = useErrorText()
 
 const details = ref<KeyDetails | null>(null)
 const history = ref<HistoryAction[]>([])
@@ -51,6 +52,10 @@ let generation = 0
 const fetchHistory = (key: string, offset: number, limit: number) =>
   $fetch<HistoryPage>('/api/keys/history', { query: { key, offset, limit } })
 
+// Не загрузилось — так и говорим, с «Повторить»: «Ключ не найден» и «Пока пусто» — только когда их правда нет
+const loadError = ref('')
+const historyError = ref('')
+
 // reset — другой ключ: история снова с последних 10. Иначе перечитываем столько, сколько уже показано
 const load = async (reset = false) => {
   const key = props.technicalKey
@@ -63,17 +68,32 @@ const load = async (reset = false) => {
       .select('technical_key, translations, status, stale_langs, deprecated_at, created_at, updated_at, description, tags, max_length, figma_url, legacy_path, approved, created_by')
       .eq('technical_key', key)
       .maybeSingle(),
-    fetchHistory(key, 0, limit).catch(() => ({ total: 0, actions: [] }) as HistoryPage)
+    fetchHistory(key, 0, limit).then(page => ({ page }), (error: unknown) => ({ error }))
   ])
   if (gen !== generation) return
   loading.value = false
   if (row.error) {
-    toast.add({ title: 'Ключ не загрузился', description: row.error.message, color: 'error' })
+    loadError.value = `Ключ не загрузился: ${row.error.message}`
+    // Панель ещё показывает прежний ключ — не выдаём его за этот
+    if (details.value?.technical_key !== key) details.value = null
     return
   }
+  loadError.value = ''
   details.value = row.data as KeyDetails | null
-  history.value = log.actions
-  historyTotal.value = log.total
+  if ('page' in log) {
+    historyError.value = ''
+    history.value = log.page.actions
+    historyTotal.value = log.page.total
+  } else {
+    const text = await errorText('История не загрузилась', log.error)
+    if (gen !== generation) return
+    historyError.value = text ?? ''
+    // Другой ключ — прежняя история ему не принадлежит
+    if (reset) {
+      history.value = []
+      historyTotal.value = 0
+    }
+  }
   if (reset) openActions.value = new Set()
 }
 
@@ -287,6 +307,12 @@ const toggleAction = (id: number) => {
     >
       Загрузка…
     </div>
+    <LoadError
+      v-else-if="!details && loadError"
+      :message="loadError"
+      class="p-4 text-xs"
+      @retry="load(true)"
+    />
     <div
       v-else-if="!details"
       class="p-4 text-xs text-muted"
@@ -300,6 +326,13 @@ const toggleAction = (id: number) => {
       class="flex-1 space-y-5 overflow-y-auto px-4 py-3 text-xs transition-opacity"
       :class="{ 'opacity-40': details.technical_key !== technicalKey }"
     >
+      <!-- Перечитать не вышло, а прежние данные на экране — предупреждаем, что они могли устареть -->
+      <LoadError
+        v-if="loadError"
+        :message="`${loadError}. Показано то, что было загружено раньше.`"
+        tone="error"
+        @retry="load()"
+      />
       <LocalizationsKeyMetaForm
         v-if="editingMeta"
         :technical-key="technicalKey"
@@ -495,8 +528,10 @@ const toggleAction = (id: number) => {
         :total="historyTotal"
         :open="openActions"
         :loading-more="loadingMore"
+        :error="historyError"
         @toggle="toggleAction"
         @more="loadMoreHistory"
+        @retry="load()"
       />
     </div>
 

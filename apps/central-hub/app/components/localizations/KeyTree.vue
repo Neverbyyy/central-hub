@@ -110,19 +110,12 @@ const onSelect = (item: Item | undefined) => {
       Все ключи
     </button>
     <div class="flex-1 overflow-auto px-1 pb-3">
-      <div
+      <LoadError
         v-if="status === 'error' && !data"
-        class="px-2 py-1 text-xs text-muted"
-      >
-        Разделы не загрузились.
-        <button
-          type="button"
-          class="font-medium text-default underline underline-offset-2"
-          @click="refresh()"
-        >
-          Повторить
-        </button>
-      </div>
+        message="Разделы не загрузились."
+        class="px-2 py-1 text-xs"
+        @retry="refresh()"
+      />
       <!-- Скелетон по форме настоящего дерева, пока разделы грузятся -->
       <div
         v-else-if="!data"

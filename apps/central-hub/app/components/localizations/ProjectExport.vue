@@ -146,15 +146,19 @@ const showChanges = (set: ExportSetInfo) => {
   changesOpen.value = true
 }
 
-// Каждое открытие — свежее сравнение с репозиториями. immediate: страница монтирует окно при первом открытии — уже
-// открытым, поэтому наблюдатель стоит после всего, к чему обращается (иначе — обращение до объявления)
-watch(open, async (value) => {
-  if (!value) return
+// Каждое открытие — свежее сравнение с репозиториями; оно же — «Повторить», если наборы не загрузились
+const reopen = async () => {
   sets.value = null
   setsError.value = ''
   previews.value = {}
   changesOpen.value = false
   for (const set of await loadSets()) if (set.connected) loadPreview(set.name)
+}
+
+// immediate: страница монтирует окно при первом открытии — уже открытым, поэтому наблюдатель стоит после всего, к чему
+// обращается (иначе — обращение до объявления)
+watch(open, (value) => {
+  if (value) reopen()
 }, { immediate: true })
 
 const OUTCOME_TITLE: Record<string, (pr: number) => string> = {
@@ -259,12 +263,12 @@ const findKey = (key: string) => {
   >
     <template #body>
       <div class="space-y-3 text-sm">
-        <p
+        <LoadError
           v-if="setsError"
-          class="text-red-600 dark:text-red-400"
-        >
-          {{ setsError }}
-        </p>
+          :message="setsError"
+          tone="error"
+          @retry="reopen"
+        />
 
         <!-- Скелетон по форме карточек, пока грузятся наборы -->
         <template v-else-if="!sets">
@@ -279,6 +283,13 @@ const findKey = (key: string) => {
             <USkeleton class="h-3 w-40 rounded bg-elevated" />
           </div>
         </template>
+
+        <p
+          v-else-if="!sets.length"
+          class="text-muted"
+        >
+          Наборов выгрузки пока нет.
+        </p>
 
         <template v-else>
           <section
@@ -354,19 +365,12 @@ const findKey = (key: string) => {
                 <USkeleton class="h-3 w-44 rounded bg-elevated" />
                 <USkeleton class="h-3 w-64 rounded bg-elevated" />
               </div>
-              <p
+              <LoadError
                 v-else-if="'error' in previews[set.name]!"
-                class="text-red-600 dark:text-red-400"
-              >
-                {{ (previews[set.name] as { error: string }).error }}
-                <button
-                  type="button"
-                  class="ml-1 font-medium text-default underline underline-offset-2"
-                  @click="loadPreview(set.name)"
-                >
-                  Повторить
-                </button>
-              </p>
+                :message="(previews[set.name] as { error: string }).error"
+                tone="error"
+                @retry="loadPreview(set.name)"
+              />
               <!-- Сами изменения — в отдельном окне: их бывают тысячи -->
               <button
                 v-else-if="previewOf(set.name)?.outcome === 'ready'"

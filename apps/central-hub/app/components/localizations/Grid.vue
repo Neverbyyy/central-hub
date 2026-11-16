@@ -8,6 +8,8 @@ const props = defineProps<{
   loading: boolean
   initialLoading: boolean
   hasMore: boolean
+  // Таблица или следующая страница не загрузилась — вместо «Ничего не найдено» / обрыва списка, с «Повторить»
+  error?: string
   // Ключи, помеченные устаревшими: смотреть можно, править — только после «Вернуть»
   readonly?: boolean
   // Кто из коллег что правит: ключ → язык → имена (метки на ячейках)
@@ -16,6 +18,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   loadMore: []
+  // «Повторить» после ошибки загрузки
+  retry: []
   // expected — что было в ячейке до правки: сервер сверит, не изменил ли её кто-то ещё
   save: [key: string, lang: string, value: string, expected: string]
   toggle: [key: string, value: boolean]
@@ -43,6 +47,8 @@ const OVERSCAN = 10
 const scrollEl = ref<HTMLElement>()
 const scrollTop = ref(0)
 const { width: viewportW, height: viewportH } = useElementSize(scrollEl)
+// Служебные строки (пусто, ошибка, загрузка) — во всю видимую ширину и не уезжают при прокрутке вбок
+const stickyStyle = computed(() => ({ width: `${viewportW.value}px` }))
 
 // Высота строки и ширины колонок — из CSS-переменных грида (стили внизу): на телефоне колонки уже, на касании
 // строки выше. CSS видит ширину и касание сразу, ещё до скриптов, а виртуализация берёт числа оттуда же
@@ -382,10 +388,17 @@ defineExpose({ reset })
       </div>
     </template>
 
+    <LoadError
+      v-else-if="!rows.length && error"
+      :message="`Таблица не загрузилась: ${error}`"
+      class="sticky left-0 py-20 text-center text-sm"
+      :style="stickyStyle"
+      @retry="emit('retry')"
+    />
     <div
       v-else-if="!rows.length"
       class="sticky left-0 py-20 text-center text-sm text-muted"
-      :style="{ width: `${viewportW}px` }"
+      :style="stickyStyle"
     >
       {{ loading ? 'Загрузка…' : 'Ничего не найдено' }}
     </div>
@@ -413,10 +426,18 @@ defineExpose({ reset })
 
       <div :style="{ height: `${(rows.length - windowRange.last) * sizes.rowH}px` }" />
 
+      <!-- Сорвалась дозагрузка — список не обрывается молча -->
+      <LoadError
+        v-if="error"
+        :message="`Следующие строки не загрузились: ${error}`"
+        class="sticky left-0 flex h-10 items-center justify-center text-sm"
+        :style="stickyStyle"
+        @retry="emit('retry')"
+      />
       <div
-        v-if="loading"
+        v-else-if="loading"
         class="sticky left-0 flex h-10 items-center justify-center"
-        :style="{ width: `${viewportW}px` }"
+        :style="stickyStyle"
       >
         <UIcon
           name="i-lucide-loader-circle"

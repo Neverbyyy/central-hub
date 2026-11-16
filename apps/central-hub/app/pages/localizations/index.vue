@@ -20,6 +20,10 @@ const {
   loading,
   initialLoading,
   hasMore,
+  loadError,
+  retryLoad,
+  offline,
+  tooManyChanges,
   q,
   selectedTags,
   applyTag,
@@ -416,6 +420,17 @@ usePresenceEditing(() => (sheetOpen.value && sheet.value ? { key: sheet.value.ke
       </div>
 
       <div class="flex shrink-0 items-center gap-2 whitespace-nowrap md:gap-3">
+        <!-- Связь Realtime оборвалась дольше чем на 3 с: правки коллег сейчас не приходят. Вернётся — грид догонит
+             пропущенное сам (useLocalizations catchUp). На узком экране — только значок -->
+        <UBadge
+          v-if="offline"
+          color="warning"
+          variant="subtle"
+          icon="i-lucide-wifi-off"
+          title="Нет связи с сервером — переподключаюсь. Правки коллег появятся, когда связь вернётся"
+        >
+          <span class="max-sm:sr-only">Нет связи — переподключаюсь…</span>
+        </UBadge>
         <!-- Уже 1280 px — в строке фильтров, вместе с тегами -->
         <span class="hidden whitespace-nowrap text-xs text-muted xl:inline">
           {{ keysTotal }}
@@ -540,6 +555,27 @@ usePresenceEditing(() => (sheetOpen.value && sheet.value ? { key: sheet.value.ke
       </template>
     </LocalizationsFilters>
 
+    <!-- Пока не было связи, изменилось больше строк, чем грид догоняет по одной (массовый импорт) -->
+    <div
+      v-if="tooManyChanges"
+      role="status"
+      class="flex shrink-0 items-center gap-3 border-b border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200"
+    >
+      <UIcon
+        name="i-lucide-refresh-cw"
+        class="size-4 shrink-0"
+      />
+      <span class="flex-1">Пока не было связи, изменилось много строк — таблица может быть неполной.</span>
+      <UButton
+        size="xs"
+        color="warning"
+        variant="soft"
+        @click="reload()"
+      >
+        Обновить таблицу
+      </UButton>
+    </div>
+
     <div class="relative flex min-h-0 flex-1">
       <LocalizationsSelectionBar
         v-if="selectedKeys.size"
@@ -582,9 +618,11 @@ usePresenceEditing(() => (sheetOpen.value && sheet.value ? { key: sheet.value.ke
           :loading="loading"
           :initial-loading="initialLoading"
           :has-more="hasMore"
+          :error="loadError"
           :readonly="filters.deprecated"
           :editors="editors"
           @load-more="load()"
+          @retry="retryLoad"
           @save="setTranslation"
           @toggle="toggleRow"
           @toggle-all="toggleAll"

@@ -23,7 +23,8 @@ const toast = useToast()
 const notifyError = useNotifyError()
 
 // Языки перевода — общие с гридом и палитрой Ctrl+K (useLanguages)
-const { targets: languages, load: loadLanguages } = useLanguages()
+const { targets: languages, error: languagesError, load: loadLanguages } = useLanguages()
+const errorText = useErrorText()
 const lang = computed(() => typeof route.query.lang === 'string' ? route.query.lang : '')
 const prefix = computed(() => typeof route.query.prefix === 'string' ? route.query.prefix : '')
 
@@ -53,6 +54,8 @@ const startItem = () => {
 }
 
 let generation = 0
+// Очередь не загрузилась — показываем это с «Повторить», а не 🎉 «Всё переведено»: человек решил бы, что работы нет
+const loadError = ref('')
 
 const fetchQueue = async (reset: boolean) => {
   if (!lang.value) return
@@ -63,13 +66,16 @@ const fetchQueue = async (reset: boolean) => {
       query: { lang: lang.value, prefix: prefix.value || undefined, limit: PAGE + skipped.size }
     })
     if (gen !== generation) return
+    loadError.value = ''
     const seen = new Set(reset ? [] : items.value.map(i => i.key))
     const fresh = data.items.filter(i => !skipped.has(i.key) && !seen.has(i.key))
     items.value = reset ? fresh : items.value.concat(fresh)
     total.value = data.total
     if (reset || items.value.length === fresh.length) startItem()
   } catch (error) {
-    await notifyError('Очередь не загрузилась', error)
+    if (gen !== generation) return
+    const text = await errorText('Очередь не загрузилась', error)
+    if (text) loadError.value = text
   } finally {
     if (gen === generation) loading.value = false
   }
@@ -223,42 +229,63 @@ const length = computed(() => [...value.value].length)
 
     <div class="flex-1 overflow-y-auto">
       <div class="mx-auto max-w-2xl px-4 py-6 sm:px-6 sm:py-8">
-        <div
-          v-if="!item && loading"
-          class="text-sm text-muted"
-        >
-          Загрузка…
-        </div>
-
-        <div
-          v-else-if="!item"
-          class="py-16 text-center"
-        >
-          <UIcon
-            name="i-lucide-party-popper"
-            class="size-10 text-gray-300 dark:text-gray-600"
-          />
-          <p class="mt-3 text-sm font-medium">
-            {{ skipped.size ? 'Остались только пропущенные строки' : `Всё переведено на ${lang.toUpperCase()}` }}
-          </p>
-          <div class="mt-4 flex justify-center gap-2">
-            <UButton
-              v-if="skipped.size"
-              color="neutral"
-              variant="outline"
-              size="sm"
-              @click="restart"
-            >
-              Вернуться к пропущенным
-            </UButton>
-            <UButton
-              size="sm"
-              @click="back"
-            >
-              К таблице
-            </UButton>
+        <!-- Строки нет: грузится, не загрузилось или правда всё переведено. Празднуем только последнее -->
+        <template v-if="!item">
+          <div
+            v-if="loading"
+            class="text-sm text-muted"
+          >
+            Загрузка…
           </div>
-        </div>
+          <LoadError
+            v-else-if="loadError"
+            :message="loadError"
+            class="py-16 text-center text-sm"
+            @retry="fetchQueue(true)"
+          />
+          <!-- Язык не выбран в адресе — ждём языки, чтобы открыть первый -->
+          <LoadError
+            v-else-if="!lang && languagesError"
+            :message="`Языки не загрузились: ${errorMessage(languagesError)}`"
+            class="py-16 text-center text-sm"
+            @retry="loadLanguages()"
+          />
+          <div
+            v-else-if="!lang"
+            class="text-sm text-muted"
+          >
+            Загрузка…
+          </div>
+          <div
+            v-else
+            class="py-16 text-center"
+          >
+            <UIcon
+              name="i-lucide-party-popper"
+              class="size-10 text-gray-300 dark:text-gray-600"
+            />
+            <p class="mt-3 text-sm font-medium">
+              {{ skipped.size ? 'Остались только пропущенные строки' : `Всё переведено на ${lang.toUpperCase()}` }}
+            </p>
+            <div class="mt-4 flex justify-center gap-2">
+              <UButton
+                v-if="skipped.size"
+                color="neutral"
+                variant="outline"
+                size="sm"
+                @click="restart"
+              >
+                Вернуться к пропущенным
+              </UButton>
+              <UButton
+                size="sm"
+                @click="back"
+              >
+                К таблице
+              </UButton>
+            </div>
+          </div>
+        </template>
 
         <div
           v-else

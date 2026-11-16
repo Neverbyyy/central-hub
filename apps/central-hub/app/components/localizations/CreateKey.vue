@@ -24,6 +24,7 @@ const open = defineModel<boolean>('open', { required: true })
 const toast = useToast()
 const authRedirect = useAuthRedirect()
 const notifyError = useNotifyError()
+const errorText = useErrorText()
 
 // Тексты и лимит длины в форме не спрашиваем: текст вписывают потом в гриде или через MCP, лимит — в панели ключа
 const emptyForm = () => ({ key: '', description: '', tags: [] as string[] })
@@ -257,18 +258,27 @@ const addCode = async () => {
 
 // --- Похожие строки: по ключу ---
 const similar = ref<{ technical_key: string, en: string | null, score: number }[]>([])
+// Поиск не удался — так и говорим, а не «Похожих нет»: человек решил бы, что дублей нет
+const similarError = ref('')
 
-watchDebounced(key, async (value) => {
+const loadSimilar = async (value: string) => {
+  similarError.value = ''
   if (!value) {
     similar.value = []
     return
   }
   try {
-    similar.value = await $fetch('/api/keys/similar', { query: { key: value } })
-  } catch {
+    const found = await $fetch<typeof similar.value>('/api/keys/similar', { query: { key: value } })
+    // Ответ про прежнее имя не нужен — человек уже печатает дальше
+    if (value === key.value) similar.value = found
+  } catch (error) {
+    if (value !== key.value) return
     similar.value = []
+    similarError.value = await errorText('Похожие строки не загрузились', error) ?? ''
   }
-}, { debounce: 300 })
+}
+
+watchDebounced(key, loadSimilar, { debounce: 300 })
 
 const { copy } = useCopy()
 
@@ -503,8 +513,14 @@ const onKeydown = (event: KeyboardEvent) => {
           <h3 class="mb-1 text-xs font-semibold text-muted">
             Похожие строки
           </h3>
+          <LoadError
+            v-if="similarError"
+            :message="similarError"
+            class="text-xs"
+            @retry="loadSimilar(key)"
+          />
           <p
-            v-if="!similar.length"
+            v-else-if="!similar.length"
             class="text-xs text-muted"
           >
             {{ form.key ? 'Похожих нет' : 'Появятся, когда начнёте вводить ключ' }}

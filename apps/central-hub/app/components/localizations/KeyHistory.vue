@@ -11,9 +11,11 @@ defineProps<{
   // Раскрытые действия
   open: Set<number>
   loadingMore: boolean
+  // История не загрузилась — текст ошибки вместо «Пока пусто»
+  error?: string
 }>()
 
-defineEmits<{ toggle: [id: number], more: [] }>()
+defineEmits<{ toggle: [id: number], more: [], retry: [] }>()
 
 const [DefineEntry, ReuseEntry] = createReusableTemplate<{ entry: HistoryEntry }>()
 </script>
@@ -27,8 +29,15 @@ const [DefineEntry, ReuseEntry] = createReusableTemplate<{ entry: HistoryEntry }
         class="ml-1 font-normal normal-case tracking-normal text-muted"
       >{{ total }}</span>
     </h3>
+    <!-- И над уже показанной историей: перечитать не вышло — она могла устареть -->
+    <LoadError
+      v-if="error"
+      :message="error"
+      class="mb-2"
+      @retry="$emit('retry')"
+    />
     <p
-      v-if="!actions.length"
+      v-else-if="!actions.length"
       class="text-muted"
     >
       Пока пусто

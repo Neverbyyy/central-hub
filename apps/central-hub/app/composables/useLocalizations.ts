@@ -1,4 +1,3 @@
-import type { RealtimeChannel } from '@supabase/supabase-js'
 import { escapeLike } from '@amaya/l10n-core'
 import type { RegistryCode } from '~/utils/keySuggestions'
 
@@ -122,6 +121,29 @@ export function useLocalizations() {
   const loading = ref(false)
   const initialLoading = ref(true)
   const hasMore = ref(true)
+  // Таблица (или следующая страница) не загрузилась — текст для грида рядом с «Повторить»
+  const loadError = ref('')
+
+  // --- Свежие данные после обрыва связи ---
+  // Пока нет связи (сон ноутбука, смена сети), события Realtime теряются. Потом грид догоняет (catchUp): читает строки,
+  // изменённые с последней известной ему правки, и проводит их тем же путём, что и события. Отметка — время базы
+  // (updated_at), а не часов ноутбука: те могут врать на минуты
+  let syncedAt = 0
+  const noteSynced = (at: number) => {
+    if (at > syncedAt) syncedAt = at
+  }
+  // Начальная отметка — последняя правка в базе. Нужна один раз: дальше её двигают события и догонялка
+  const noteLatestChange = async () => {
+    const { data } = await supabase.from('localizations').select('updated_at').order('updated_at', { ascending: false }).limit(1)
+    noteSynced(dbTime(data?.[0]?.updated_at))
+  }
+  // Связи Realtime нет дольше OFFLINE_DELAY — метка в шапке (короткие обрывы её не мигают)
+  const offline = ref(false)
+  const OFFLINE_DELAY = 3000
+  let offlineTimer: ReturnType<typeof setTimeout> | undefined
+  // Пока не было связи, изменилось больше строк, чем догонялка читает за раз (массовый импорт): таблицу лучше
+  // перечитать целиком — но по кнопке, а не сами: прокрутка и курсор при этом сбрасываются
+  const tooManyChanges = ref(false)
 
   // --- Выборка: поиск, теги и фильтры; всё лежит в адресе, ссылкой можно поделиться ---
   const q = ref('')
@@ -212,6 +234,9 @@ export function useLocalizations() {
     const gen = reset ? ++generation : generation
     const from = reset ? 0 : rows.value.length
     loading.value = true
+    loadError.value = ''
+    // С какой правки догонять после обрыва связи. Параллельно и без ожидания: строки показываем, не дожидаясь его
+    if (!syncedAt) noteLatestChange()
 
     const { data, error, count } = await applyFilters(
       supabase
@@ -224,7 +249,8 @@ export function useLocalizations() {
     if (gen !== generation) return
 
     if (error) {
-      toast.add({ title: 'Ошибка загрузки', description: error.message, color: 'error' })
+      // Не «Ничего не найдено»: грид показывает, что таблица не загрузилась, и даёт повторить (retryLoad)
+      loadError.value = error.message
       if (reset) rows.value = []
       hasMore.value = false
     } else {
@@ -243,7 +269,17 @@ export function useLocalizations() {
     initialLoading.value = false
   }
 
-  const reload = () => load(true)
+  const reload = () => {
+    tooManyChanges.value = false
+    return load(true)
+  }
+
+  // «Повторить» в гриде: не загрузилась первая страница — заново, сорвалась дозагрузка — следующая страница
+  const retryLoad = () => {
+    if (!rows.value.length) return reload()
+    hasMore.value = true
+    return load()
+  }
 
   // Ключ выборки без поиска: меняется — адрес и данные обновляются сразу, поиск — с паузой
   const filtersKey = computed(() => JSON.stringify([selectedTags.value, filters]))
@@ -516,8 +552,9 @@ export function useLocalizations() {
     let changed = false
     let structure = false
     for (const { row, inserted } of pending.values()) {
-      const index = list.findIndex(r => r.technical_key === row.technical_key)
-      if (index >= 0) {
+      // Есть ли строка в таблице — по индексу, без прохода по списку: в пачке (догонялка — до тысячи строк) почти все
+      // строки не из таблицы. Ключ в пачке один раз, поэтому прежние шаги цикла ответ не меняют
+      if (findRow(row.technical_key)) {
         // Ключ пометили устаревшим или вернули — из этой выборки (действующие / устаревшие) он уходит.
         // Остальные правки уже на месте; строка, переставшая подходить под фильтр после правки, остаётся до
         // перезагрузки — иначе она пропадала бы из-под курсора у того, кто её правит
@@ -553,46 +590,115 @@ export function useLocalizations() {
   }
 
   // --- Live-обновления от коллег ---
-  let channel: RealtimeChannel | null = null
+
+  // Правка из базы — событие Realtime или строка догонялки. inserted — ключ новый (прибавляет к счётчику)
+  const applyIncoming = (incoming: Incoming, inserted: boolean) => {
+    const at = dbTime(incoming.updated_at)
+    noteSynced(at)
+    const row = findRow(incoming.technical_key)
+    // Строки нет в таблице (новый ключ, ключ вернули, пометили устаревшим при просмотре устаревших, он стал
+    // подходить под фильтр) или она уходит из выборки — решает пачка изменений
+    if (!row || !!incoming.deprecated_at !== filters.deprecated) {
+      queueRow(incoming, inserted)
+      return
+    }
+    // Догонялка могла принести то, что старее строки
+    if (at < dbTime(row.updated_at)) return
+
+    // Языки, которые мы сами сейчас сохраняем, не трогаем — придёт наше же событие
+    const merged = { ...incoming.translations }
+    for (const lang of Object.keys(row._saving ?? {})) {
+      if (row._saving?.[lang]) merged[lang] = row.translations?.[lang] ?? ''
+    }
+    row.translations = merged
+    row.status = incoming.status
+    row.stale_langs = incoming.stale_langs
+    row.tags = serverTags(incoming.technical_key, incoming.tags ?? [], incoming.updated_at)
+    row.updated_at = incoming.updated_at
+  }
+
+  // Догнать правки, пропущенные без связи: строки, изменённые с последней известной правки (с запасом в минуту —
+  // события приходят не строго по порядку), тем же путём, что и события: прокрутка, курсор и открытая правка остаются
+  const CATCH_UP_MARGIN = 60_000
+  const CATCH_UP_LIMIT = 1000
+  let catchingUp = false
+  const catchUp = async () => {
+    if (catchingUp || !syncedAt) return
+    catchingUp = true
+    try {
+      // Новые — ключи, созданные позже последней известной правки; созданные в запасную минуту грид уже видел
+      const seen = syncedAt
+      const since = seen - CATCH_UP_MARGIN
+      const { data, error } = await supabase
+        .from('localizations')
+        .select(SELECT)
+        .gte('updated_at', new Date(since).toISOString())
+        .order('updated_at', { ascending: true })
+        .limit(CATCH_UP_LIMIT)
+      // Не вышло — догонит следующий повод (переподключение, возврат во вкладку)
+      if (error) return
+      if (data.length >= CATCH_UP_LIMIT) {
+        tooManyChanges.value = true
+        return
+      }
+      for (const row of data as Incoming[]) {
+        // Запас в минуту приносит и то, что грид уже видел: такие строки не трогаем, чтобы не перерисовывать
+        const known = findRow(row.technical_key)
+        if (known && dbTime(known.updated_at) >= dbTime(row.updated_at)) continue
+        applyIncoming(row, dbTime(row.created_at) > seen)
+      }
+    } finally {
+      catchingUp = false
+    }
+  }
+
+  // Канал — на каждую попытку подключения: после обрыва subscribeWithRetry подключается снова
+  const buildChannel = () => supabase
+    .channel('localizations-grid')
+    // Новый ключ — из сервиса, нейросетью, CLI или импортом: появляется, если подходит под выборку
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'localizations' }, (payload) => {
+      applyIncoming(payload.new as Incoming, true)
+    })
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'localizations' }, (payload) => {
+      applyIncoming(payload.new as Incoming, false)
+    })
+  let stopChannel: (() => void) | undefined
+
+  // Вкладка вернулась из фона, где была дольше минуты (сон ноутбука): сокет мог ещё не заметить обрыв — догоняем сразу
+  const AWAY = 60_000
+  const visibility = useDocumentVisibility()
+  let hiddenAt = 0
+  watch(visibility, (value) => {
+    if (value === 'hidden') {
+      hiddenAt = Date.now()
+      return
+    }
+    if (hiddenAt && Date.now() - hiddenAt > AWAY) catchUp()
+    hiddenAt = 0
+  })
 
   onMounted(() => {
     loadLanguages()
     loadRegistry()
     load(true)
-
-    channel = supabase
-      .channel('localizations-grid')
-      // Новый ключ — из сервиса, нейросетью, CLI или импортом: появляется, если подходит под выборку
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'localizations' }, (payload) => {
-        queueRow(payload.new as Incoming, true)
-      })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'localizations' }, (payload) => {
-        const incoming = payload.new as Incoming
-        const row = findRow(incoming.technical_key)
-        // Строки нет в таблице (ключ вернули, пометили устаревшим при просмотре устаревших, он стал подходить
-        // под фильтр) или она уходит из выборки — решает пачка изменений
-        if (!row || !!incoming.deprecated_at !== filters.deprecated) {
-          queueRow(incoming, false)
-          return
-        }
-
-        // Языки, которые мы сами сейчас сохраняем, не трогаем — придёт наше же событие
-        const merged = { ...incoming.translations }
-        for (const lang of Object.keys(row._saving ?? {})) {
-          if (row._saving?.[lang]) merged[lang] = row.translations?.[lang] ?? ''
-        }
-        row.translations = merged
-        row.status = incoming.status
-        row.stale_langs = incoming.stale_langs
-        row.tags = serverTags(incoming.technical_key, incoming.tags ?? [], incoming.updated_at)
-        row.updated_at = incoming.updated_at
-      })
-      .subscribe()
+    stopChannel = subscribeWithRetry(supabase, buildChannel, {
+      onUp: () => {
+        clearTimeout(offlineTimer)
+        offline.value = false
+        // Снова на связи (или впервые — между загрузкой и подпиской тоже могли быть правки) — догнать
+        catchUp()
+      },
+      onDown: () => {
+        clearTimeout(offlineTimer)
+        offlineTimer = setTimeout(() => (offline.value = true), OFFLINE_DELAY)
+      }
+    })
   })
 
   onBeforeUnmount(() => {
-    if (channel) supabase.removeChannel(channel)
+    stopChannel?.()
     clearTimeout(flushTimer)
+    clearTimeout(offlineTimer)
   })
 
   return {
@@ -605,6 +711,10 @@ export function useLocalizations() {
     loading,
     initialLoading,
     hasMore,
+    loadError,
+    retryLoad,
+    offline,
+    tooManyChanges,
     q,
     selectedTags,
     applyTag,

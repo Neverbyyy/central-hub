@@ -24,7 +24,7 @@ const toast = useToast()
 const notifyError = useNotifyError()
 
 // Те же данные, что у дерева слева (useKeyTree); nodes — все разделы по пути, и свёрнутые тоже
-const { tree, index: nodes, refresh: refreshTree } = useKeyTree({ immediate: false })
+const { tree, index: nodes, status: treeStatus, refresh: refreshTree } = useKeyTree({ immediate: false })
 
 const selected = ref(new Set<string>())
 const expanded = ref(new Set<string>())
@@ -176,8 +176,14 @@ const onKeydown = (event: KeyboardEvent) => {
           <h3 class="mb-1.5 text-xs font-semibold text-muted">
             Разделы
           </h3>
+          <LoadError
+            v-if="!tree && treeStatus === 'error'"
+            message="Разделы не загрузились."
+            class="text-xs"
+            @retry="refreshTree()"
+          />
           <div
-            v-if="!tree"
+            v-else-if="!tree"
             class="text-xs text-muted"
           >
             Загрузка разделов…

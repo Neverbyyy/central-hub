@@ -14,7 +14,6 @@ import type { PresenceCell, PresenceMeta, PresencePerson, PresenceSelf } from '~
 const TRACK_GAP = 7_000
 const REPEAT = 15_000
 const STALE = 40_000
-const RETRY = [5_000, 15_000, 30_000]
 
 let tab = ''
 // Когда вкладку открыли: «в сервисе 12 мин»
@@ -72,12 +71,10 @@ export function usePresenceConnection() {
   const editing = useEditing()
   const remote = useRemoteEditing()
   let subscribed = false
-  let stopped = false
   let lastTrack = 0
-  let attempts = 0
   let trackTimer: ReturnType<typeof setTimeout> | undefined
-  let retryTimer: ReturnType<typeof setTimeout> | undefined
   let repeatTimer: ReturnType<typeof setInterval> | undefined
+  let stopChannel: (() => void) | undefined
 
   // Телефон, планшет или компьютер — по экрану; поворот и смена окна пересчитывают
   const coarse = useMediaQuery('(pointer: coarse)')
@@ -111,10 +108,11 @@ export function usePresenceConnection() {
     remote.value = rest
   }
 
-  const connect = () => {
+  // Канал — на каждую попытку подключения (subscribeWithRetry): после обрыва подключаемся снова
+  const build = () => {
     const current = supabase.channel('hub-presence', { config: { presence: { key: tab } } })
     channel = current
-    current
+    return current
       .on('presence', { event: 'sync' }, () => {
         people.value = presencePeople(current.presenceState() as Record<string, unknown[]>)
         // Ушедшие вкладки — без меток. Свежую метку не трогаем: сообщение могло опередить присутствие новой вкладки
@@ -133,31 +131,24 @@ export function usePresenceConnection() {
       .on('broadcast', { event: 'hello' }, () => {
         if (editing.value) sendEditing()
       })
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          subscribed = true
-          attempts = 0
-          lastTrack = 0
-          track()
-          current.send({ type: 'broadcast', event: 'hello', payload: { tab } })
-          if (editing.value) sendEditing()
-          return
-        }
-        // Канал закрыли (обрыв, лимит сервера) — подключаемся снова, с паузой; иначе вкладка застыла бы
-        if ((status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') && !stopped && channel === current) {
-          subscribed = false
-          channel = null
-          supabase.removeChannel(current)
-          clearTimeout(retryTimer)
-          retryTimer = setTimeout(connect, RETRY[Math.min(attempts++, RETRY.length - 1)])
-        }
-      })
   }
 
   onMounted(() => {
     tab ||= globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)
     since ||= Date.now()
-    connect()
+    stopChannel = subscribeWithRetry(supabase, build, {
+      onUp: (current) => {
+        subscribed = true
+        lastTrack = 0
+        track()
+        current.send({ type: 'broadcast', event: 'hello', payload: { tab } })
+        if (editing.value) sendEditing()
+      },
+      onDown: () => {
+        subscribed = false
+        channel = null
+      }
+    })
     // Пока правлю — повторяю (сообщение могло потеряться); чужие метки без повторов — устарели
     repeatTimer = setInterval(() => {
       if (editing.value) sendEditing()
@@ -170,11 +161,9 @@ export function usePresenceConnection() {
   watch(editing, sendEditing)
 
   onBeforeUnmount(() => {
-    stopped = true
+    stopChannel?.()
     clearTimeout(trackTimer)
-    clearTimeout(retryTimer)
     clearInterval(repeatTimer)
-    if (channel) supabase.removeChannel(channel)
     channel = null
     subscribed = false
     people.value = []

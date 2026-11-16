@@ -1,23 +1,7 @@
 <script setup>
 import { ru } from '@nuxt/ui/locale'
 
-useHead({
-  meta: [
-    { name: 'viewport', content: 'width=device-width, initial-scale=1' }
-  ],
-  link: [
-    { rel: 'icon', href: '/favicon.ico' }
-  ],
-  htmlAttrs: {
-    lang: 'ru'
-  }
-})
-
-// Внутренний сервис: поисковикам не показываем (плюс X-Robots-Tag и robots.txt)
-useSeoMeta({
-  title: 'Amaya Central Hub',
-  robots: 'noindex, nofollow'
-})
+// Язык, заголовок, иконка и запрет индексации — в nuxt.config (app.head): общие и для страницы ошибки
 </script>
 
 <template>
