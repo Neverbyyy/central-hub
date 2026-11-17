@@ -31,3 +31,8 @@ export const changeFileName = (path: string) => path.slice(path.lastIndexOf('/')
 
 export const totalChanges = (changes: FileChange[]) =>
   changes.reduce((n, c) => n + c.added + c.changed + c.removed, 0)
+
+/** Кнопка PR: обычная — зелёная; заблокированная (сначала дизайн-система) — серая с замком, сразу видно, что закрыта. */
+export const prButton = (locked: boolean) => locked
+  ? { icon: 'i-lucide-lock', color: 'neutral', variant: 'soft' } as const
+  : { icon: 'i-lucide-git-pull-request', color: 'primary', variant: 'solid' } as const

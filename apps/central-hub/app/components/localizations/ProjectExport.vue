@@ -44,7 +44,8 @@ const notifyError = useNotifyError()
 
 const sets = ref<ExportSetInfo[] | null>(null)
 const setsError = ref('')
-const previews = ref<Record<string, Preview>>({})
+// shallowRef: предпросмотр заменяется только целиком, а строк в нём тысячи — глубокие прокси для каждой не нужны
+const previews = shallowRef<Record<string, Preview>>({})
 // Наборы, которые сейчас выгружаются: при «Выгрузить во все» — несколько сразу
 const pushing = ref(new Set<string>())
 const pushingAll = ref(false)
@@ -120,60 +121,59 @@ const previewOf = (name: string): SyncResult | null => {
 
 // --- Сначала дизайн-система ---
 // Рабочий проект ждёт, пока общие с дизайн-системой ключи не окажутся в её основной ветке: предпросмотр дизайн-системы
-// уже загружен в этом же окне, правило то же, что на сервере (reviewGate). Её PR смержили — событие перечитывает её
-// предпросмотр, и блок снимается сам
-type Gate
-  = | { kind: 'checking' }
-    | { kind: 'unknown', reason: string }
-    | { kind: 'blocked', text: string, pr: { number: number, url: string } | null }
-
-const gateOf = (set: ExportSetInfo): Gate | null => {
-  if (!set.reviewSet) return null
-  const review = sets.value?.find(s => s.name === set.reviewSet)
-  if (!review?.connected) return { kind: 'unknown', reason: 'не подключена к GitHub' }
-  const preview = previews.value[review.name]
-  if (preview === undefined) return { kind: 'checking' }
-  if ('error' in preview) return { kind: 'unknown', reason: 'не удалось сравнить с репозиторием' }
-  const block = reviewGate(set.prefixes, preview)
-  return block ? { kind: 'blocked', text: reviewBlockText(block), pr: openPrOf(review) } : null
+// уже загружен в этом же окне, правило и текст те же, что на сервере (reviewGate, reviewGateMessage). Её PR смержили —
+// событие перечитывает её предпросмотр, и блок снимается сам
+interface Gate {
+  // checking — дизайн-система ещё сравнивается; unavailable — не подключена или не сравнилась; blocked — держат ключи
+  kind: 'checking' | 'unavailable' | 'blocked'
+  // Причина одной фразой: подсказка кнопки, строка в карточке и в окне изменений
+  text: string
+  // Открытый PR дизайн-системы: «Проверьте PR #10 в Storybook и смержите»
+  pr: { number: number, url: string } | null
 }
+
+const gateFor = (set: ExportSetInfo, review: ExportSetInfo | undefined): Gate | null => {
+  if (!set.reviewSet) return null
+  if (!review?.connected) return { kind: 'unavailable', text: reviewGateMessage(set.reviewSet, 'not-connected'), pr: null }
+  const preview = previews.value[review.name]
+  if (preview === undefined) return { kind: 'checking', text: `Проверяю «${exportProjectName(review.name)}»…`, pr: null }
+  if ('error' in preview) return { kind: 'unavailable', text: reviewGateMessage(set.reviewSet, 'failed'), pr: null }
+  const block = reviewGate(set.prefixes, preview)
+  return block ? { kind: 'blocked', text: reviewGateMessage(set.reviewSet, block), pr: openPrOf(review) } : null
+}
+
+// Один раз на смену наборов и предпросмотров, а не на каждую отрисовку: правило проходит все строки предпросмотра
+const gates = computed(() => {
+  const list = sets.value ?? []
+  const byName = new Map(list.map(set => [set.name, set]))
+  return new Map(list.map(set => [set.name, gateFor(set, set.reviewSet ? byName.get(set.reviewSet) : undefined)]))
+})
+const gateOf = (set: ExportSetInfo) => gates.value.get(set.name) ?? null
 
 // Есть что выгрузить, и дизайн-система не держит
 const isReady = (set: ExportSetInfo) => previewOf(set.name)?.outcome === 'ready' && !gateOf(set)
 const canPush = (set: ExportSetInfo) => !pushing.value.size && isReady(set)
 
-// Подпись причины для окна изменений и подсказки кнопки
-const gateText = (set: ExportSetInfo) => {
-  const gate = gateOf(set)
-  if (!gate || !set.reviewSet) return undefined
-  const review = exportProjectName(set.reviewSet)
-  if (gate.kind === 'checking') return `Проверяю «${review}»…`
-  if (gate.kind === 'unknown') return `Сначала — «${review}», но она ${gate.reason}`
-  return `Сначала — «${review}»: ${gate.text} ещё не в её основной ветке`
-}
-
-// Открытый PR дизайн-системы, который держит этот набор: «Проверьте PR #10 в Storybook и смержите»
-const reviewPr = (set: ExportSetInfo) => {
-  const gate = gateOf(set)
-  return gate?.kind === 'blocked' ? gate.pr : null
-}
-
-// Наборы, которые ждут этот (дизайн-систему): «После мержа откроется выгрузка в InApp и Pages Hub»
-const waitingFor = (set: ExportSetInfo) => (sets.value ?? [])
-  .filter(s => s.reviewSet === set.name && previewOf(s.name)?.outcome === 'ready' && gateOf(s)?.kind === 'blocked')
-  .map(s => exportProjectName(s.name))
-const projectList = new Intl.ListFormat('ru', { type: 'conjunction' })
+// Набор проверки → кто его ждёт из-за общих ключей: «После мержа откроется выгрузка в InApp и Pages Hub»
+const waitingFor = computed(() => {
+  const waiting = new Map<string, string[]>()
+  for (const set of sets.value ?? []) {
+    if (set.reviewSet && previewOf(set.name)?.outcome === 'ready' && gateOf(set)?.kind === 'blocked') {
+      waiting.set(set.reviewSet, [...(waiting.get(set.reviewSet) ?? []), set.name])
+    }
+  }
+  return new Map([...waiting].map(([review, names]) => [review, exportProjectList(names)]))
+})
 
 // «Выгрузить без проверки» — срочная правка: подтверждение прямо в карточке, без нового окна. Esc его отменяет
 const confirmForce = ref<string | null>(null)
 
-// Шаги над карточками — когда есть и проверка, и рабочие проекты; порядок задаёт сервер
+// Шаги над карточками — когда есть и проверка, и рабочие проекты; порядок (сначала проверка) задаёт сервер
+const firstWorking = computed(() => sets.value?.findIndex(set => set.reviewSet) ?? -1)
 const stepTitle = (index: number) => {
-  const list = sets.value ?? []
-  if (!list.some(s => s.reviewSet)) return null
-  const set = list[index]!
-  if (index === 0) return set.reviewSet ? null : 'Шаг 1 · Проверка в Storybook'
-  return set.reviewSet && !list[index - 1]!.reviewSet ? 'Шаг 2 · Рабочие проекты' : null
+  if (firstWorking.value <= 0) return null
+  if (index === 0) return 'Шаг 1 · Проверка в Storybook'
+  return index === firstWorking.value ? 'Шаг 2 · Рабочие проекты' : null
 }
 
 // Проекты, где есть что выгрузить, — для «Выгрузить во все»; рабочие проекты, которые ждут дизайн-систему, — нет
@@ -238,7 +238,7 @@ const runTitle = (run: NonNullable<ExportSetInfo['lastRun']>) =>
 // Строку статуса обновит loadSets после выгрузки, коллегам — событие сервера в канале export-pr.
 // force — без проверки в дизайн-системе: сервер пропустит, а в PR и журнале останется отметка
 const pushSet = async (set: ExportSetInfo, { force = false } = {}) => {
-  const result = await $fetch<SyncResult>(`/api/export/${set.name}/push`, { method: 'POST', body: force ? { force: true } : undefined })
+  const result = await $fetch<SyncResult>(`/api/export/${set.name}/push`, { method: 'POST', body: { force } })
   // Изменения теперь в PR: кнопка дальше обновляет его
   previews.value = { ...previews.value, [set.name]: { ...result, outcome: result.outcome === 'closed' ? 'unchanged' : 'ready' } }
   return result
@@ -412,14 +412,12 @@ const findKey = (key: string) => {
                 </div>
                 <UButton
                   v-if="set.connected"
-                  :icon="gateOf(set) ? 'i-lucide-lock' : 'i-lucide-git-pull-request'"
-                  :color="gateOf(set) ? 'neutral' : 'primary'"
-                  :variant="gateOf(set) ? 'soft' : 'solid'"
+                  v-bind="prButton(!!gateOf(set))"
                   size="sm"
                   class="shrink-0"
                   :loading="pushing.has(set.name)"
                   :disabled="!canPush(set)"
-                  :title="gateText(set)"
+                  :title="gateOf(set)?.text"
                   @click="push(set)"
                 >
                   {{ prLabel(set) }}
@@ -476,23 +474,23 @@ const findKey = (key: string) => {
 
               <!-- Шаг 1: что даст мерж — рабочие проекты ждут его -->
               <p
-                v-if="waitingFor(set).length"
+                v-if="waitingFor.get(set.name)"
                 class="mt-2 flex items-center gap-1.5 text-xs text-muted"
               >
                 <UIcon
                   name="i-lucide-arrow-down"
                   class="size-3.5 shrink-0"
                 />
-                После мержа откроется выгрузка в {{ projectList.format(waitingFor(set)) }}
+                После мержа откроется выгрузка в {{ waitingFor.get(set.name) }}
               </p>
 
               <!-- Шаг 2 ждёт шаг 1. Только когда здесь есть что выгружать: «всё актуально» ждать нечего -->
-              <template v-if="set.connected && previewOf(set.name)?.outcome === 'ready' && gateOf(set)">
+              <template v-if="previewOf(set.name)?.outcome === 'ready' && gateOf(set)">
                 <p
                   v-if="gateOf(set)!.kind === 'checking'"
                   class="mt-2 text-xs text-muted"
                 >
-                  {{ gateText(set) }}
+                  {{ gateOf(set)!.text }}
                 </p>
                 <div
                   v-else
@@ -504,11 +502,11 @@ const findKey = (key: string) => {
                       class="mt-px size-3.5 shrink-0"
                     />
                     <span>
-                      {{ gateText(set) }}.
-                      <template v-if="reviewPr(set)">
-                        Проверьте PR #{{ reviewPr(set)!.number }} в Storybook и смержите —
+                      {{ gateOf(set)!.text }}.
+                      <template v-if="gateOf(set)!.pr">
+                        Проверьте PR #{{ gateOf(set)!.pr!.number }} в Storybook и смержите —
                         <a
-                          :href="reviewPr(set)!.url"
+                          :href="gateOf(set)!.pr!.url"
                           target="_blank"
                           rel="noopener"
                           class="font-medium underline underline-offset-2"
@@ -627,7 +625,7 @@ const findKey = (key: string) => {
           :changes="previewOf(changesFor.name)?.changes ?? []"
           :pr-label="prLabel(changesFor)"
           :can-push="canPush(changesFor)"
-          :blocked="gateText(changesFor)"
+          :blocked="gateOf(changesFor)?.text"
           :pushing="pushing.has(changesFor.name)"
           @push="push(changesFor!)"
           @find-key="findKey"

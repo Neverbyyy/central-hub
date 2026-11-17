@@ -10,9 +10,10 @@ export default defineHubHandler(async (event) => {
 
   // Наборы целиком — одним запросом: подсчёт неутверждённого не перечитывает каждый.
   // Порядок — как идёт выгрузка: сначала наборы проверки (дизайн-система), потом рабочие проекты
-  const { data, error } = await db.from('export_sets').select('*').order('name')
+  const { data: sets, error } = await db.from('export_sets').select('*')
+    .order('review_set', { nullsFirst: true })
+    .order('name')
   if (error) throwDbError(error)
-  const sets = (data as ExportSet[]).sort((a, b) => Number(!!a.review_set) - Number(!!b.review_set))
 
   // Открытый PR — одним запросом к GitHub, чтобы кнопка сразу была «Обновить PR #N».
   // GitHub не ответил — не беда: предпросмотр всё равно уточнит
@@ -36,7 +37,7 @@ export default defineHubHandler(async (event) => {
     }
   }
 
-  return await Promise.all(sets.map(async (set) => {
+  return await Promise.all((sets as ExportSet[]).map(async (set) => {
     const [pending, last, pr] = await Promise.all([
       pendingApproval(db, set),
       db.from('export_runs')

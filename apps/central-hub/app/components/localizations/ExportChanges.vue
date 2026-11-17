@@ -164,9 +164,7 @@ useEventListener('keydown', (event: KeyboardEvent) => {
           в {{ changes.length }} {{ plural(changes.length, ['файле', 'файлах', 'файлах']) }}
         </span>
         <UButton
-          :icon="blocked ? 'i-lucide-lock' : 'i-lucide-git-pull-request'"
-          :color="blocked ? 'neutral' : 'primary'"
-          :variant="blocked ? 'soft' : 'solid'"
+          v-bind="prButton(!!blocked)"
           class="shrink-0"
           :loading="pushing"
           :disabled="!canPush || pushing"

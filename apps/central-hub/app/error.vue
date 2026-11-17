@@ -14,13 +14,16 @@ const notFound = computed(() => props.error.statusCode === 404)
 
 useSeoMeta({ title: () => `${notFound.value ? 'Страница не найдена' : 'Ошибка'} — Amaya Central Hub` })
 
+// Картинка под тему: светлая и тёмная, у каждой 1x и 2x. Размеры — настоящие, из файлов: место под картинку есть до загрузки
+const ART = [
+  { src: artLight, srcset: `${artLight} 640w, ${artLight2x} 1280w`, width: 1280, height: 854, class: 'error-art-light dark:hidden' },
+  { src: art, srcset: `${art} 640w, ${art2x} 1260w`, width: 1260, height: 720, class: 'hidden dark:block' }
+]
 // Ширина картинки на экране: телефону хватает 1x (320 / 448 px), 2x — экранам с плотностью 2
 const ART_SIZES = '(min-width: 1024px) 720px, (orientation: landscape) and (max-height: 32rem) 240px, (min-width: 640px) 448px, 320px'
 
-// clearError сбрасывает ошибку и уводит по адресу — обычный переход внутри приложения
-const goHome = () => clearError({ redirect: '/' })
-// Сломалось при показе страницы — открыть её заново целиком
-const reloadPage = () => window.location.reload()
+// Адрес, на котором случилась ошибка: «Обновить страницу» открывает его заново
+const route = useRoute()
 </script>
 
 <template>
@@ -69,23 +72,27 @@ const reloadPage = () => window.location.reload()
             {{ error.message }}
           </p>
 
+          <!-- Кнопки — ссылки: срабатывают и до того, как скрипты страницы ожили (пока идёт гидрация, обработчик клика ещё
+               не подключён и обычная кнопка молчала бы). «На главную» после гидрации — переход внутри приложения, ошибку
+               Nuxt снимает сам; «Обновить страницу» — external: страница открывается заново целиком -->
           <div class="mt-8 flex flex-wrap justify-center gap-3 lg:justify-start">
             <UButton
               v-if="!notFound"
+              :to="route.fullPath"
+              external
               size="xl"
               icon="i-lucide-rotate-cw"
               class="rounded-full px-5"
-              @click="reloadPage"
             >
               Обновить страницу
             </UButton>
             <UButton
+              to="/"
               size="xl"
               icon="i-lucide-arrow-left"
               :color="notFound ? 'primary' : 'neutral'"
               :variant="notFound ? 'solid' : 'outline'"
               class="rounded-full px-5"
-              @click="goHome"
             >
               На главную
             </UButton>
@@ -97,26 +104,18 @@ const reloadPage = () => window.location.reload()
              картинку есть до её загрузки, текст рядом не прыгает -->
         <div class="error-art w-full max-w-80 sm:max-w-md lg:max-w-[720px] lg:flex-1">
           <img
-            :src="artLight"
-            :srcset="`${artLight} 640w, ${artLight2x} 1280w`"
+            v-for="image in ART"
+            :key="image.src"
+            :src="image.src"
+            :srcset="image.srcset"
             :sizes="ART_SIZES"
-            width="1280"
-            height="854"
+            :width="image.width"
+            :height="image.height"
             alt=""
             loading="lazy"
             draggable="false"
-            class="error-float error-art-light h-auto w-full select-none dark:hidden"
-          >
-          <img
-            :src="art"
-            :srcset="`${art} 640w, ${art2x} 1260w`"
-            :sizes="ART_SIZES"
-            width="1260"
-            height="720"
-            alt=""
-            loading="lazy"
-            draggable="false"
-            class="error-float hidden h-auto w-full select-none dark:block"
+            class="error-float h-auto w-full select-none"
+            :class="image.class"
           >
         </div>
       </div>
@@ -128,23 +127,27 @@ const reloadPage = () => window.location.reload()
 /* Светлая тема — воздушный голубой с подсветкой из углов и белым светом за картинкой; тёмная — глубокий синий, как на
    макете. Цвета сцены свои: в токенах темы такого фона нет. color-scheme — полоса прокрутки в тон */
 .error-scene {
+  --scene: #f2f5fc;
+  --glow-corner: rgb(147 197 253 / 0.45);
+  --glow-bottom: rgb(196 181 253 / 0.3);
+  --glow-art: rgb(255 255 255 / 0.8);
   --dots: rgb(30 58 138 / 0.08);
   color-scheme: light;
-  background-color: #f2f5fc;
+  /* Геометрия подсветки одна на обе темы, темы меняют только цвета */
+  background-color: var(--scene);
   background-image:
-    radial-gradient(55% 50% at 100% 0%, rgb(147 197 253 / 0.45), transparent 70%),
-    radial-gradient(45% 45% at 0% 100%, rgb(196 181 253 / 0.3), transparent 70%),
-    radial-gradient(40% 45% at 72% 52%, rgb(255 255 255 / 0.8), transparent 70%);
+    radial-gradient(55% 50% at 100% 0%, var(--glow-corner), transparent 70%),
+    radial-gradient(45% 45% at 0% 100%, var(--glow-bottom), transparent 70%),
+    radial-gradient(40% 45% at 72% 52%, var(--glow-art), transparent 70%);
 }
 
 .dark .error-scene {
+  --scene: #060a1f;
+  --glow-corner: rgb(56 78 255 / 0.32);
+  --glow-bottom: rgb(79 70 229 / 0.26);
+  --glow-art: rgb(37 99 235 / 0.2);
   --dots: rgb(255 255 255 / 0.07);
   color-scheme: dark;
-  background-color: #060a1f;
-  background-image:
-    radial-gradient(55% 50% at 100% 0%, rgb(56 78 255 / 0.32), transparent 70%),
-    radial-gradient(45% 45% at 0% 100%, rgb(79 70 229 / 0.26), transparent 70%),
-    radial-gradient(40% 45% at 72% 52%, rgb(37 99 235 / 0.2), transparent 70%);
 }
 
 /* Едва заметная сетка точек, к краям тает */

@@ -156,11 +156,12 @@ export async function pendingApproval(db: SupabaseClient, setOrName: string | Ex
  * Файлы набора: шаблоны с изменившимися строками; без шаблона — собранные заново.
  * Берутся только утверждённые тексты (`approved`): правка без утверждения в проект не попадает.
  * legacyOnly — только строки самого проекта, без новых ключей (так автотест сверяет выгрузку с исходными файлами).
+ * Набор — именем или уже загруженный (маршрут выгрузки читает его раньше, для проверки порядка).
  */
-export async function exportSet(db: SupabaseClient, setName: string, { legacyOnly = false } = {}): Promise<ExportResult> {
-  const set = await loadSet(db, setName)
+export async function exportSet(db: SupabaseClient, setOrName: string | ExportSet, { legacyOnly = false } = {}): Promise<ExportResult> {
+  const set = typeof setOrName === 'string' ? await loadSet(db, setOrName) : setOrName
   const [templates, keys] = await Promise.all([
-    db.from('export_templates').select('lang, content').eq('set_name', setName),
+    db.from('export_templates').select('lang, content').eq('set_name', set.name),
     loadKeys(db, set, legacyOnly)
   ])
   if (templates.error) throw templates.error

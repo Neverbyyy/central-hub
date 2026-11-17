@@ -1,6 +1,6 @@
 // Сначала дизайн-система, потом рабочие проекты: когда рабочий набор ждёт проверку (reviewGate)
 import { describe, expect, it } from 'vitest'
-import { reviewBlockText, reviewGate, type ReviewPreview } from '../../apps/central-hub/shared/utils/exportSets'
+import { exportProjectList, reviewGate, reviewGateMessage, type ReviewPreview } from '../../apps/central-hub/shared/utils/exportSets'
 
 // Префиксы как в базе: InApp и Pages Hub (миграции export_sets)
 const inapp = {
@@ -48,11 +48,24 @@ describe('reviewGate', () => {
   })
 })
 
-describe('reviewBlockText', () => {
-  it('сколько общих ключей ждут; не все строки пришли — с плюсом; ни одного видимого — «много изменений»', () => {
-    expect(reviewBlockText({ keys: ['a'], truncated: false })).toBe('1 общий ключ')
-    expect(reviewBlockText({ keys: ['a', 'b', 'c'], truncated: false })).toBe('3 общих ключа')
-    expect(reviewBlockText({ keys: ['a', 'b', 'c', 'd', 'e'], truncated: true })).toBe('5+ общих ключей')
-    expect(reviewBlockText({ keys: [], truncated: true })).toBe('много изменений')
+describe('reviewGateMessage', () => {
+  it('одна фраза для окна и сервера: сколько общих ключей ждут; не все строки пришли — с плюсом; ни одного видимого — «много изменений»', () => {
+    expect(reviewGateMessage('ds', { keys: ['a'], truncated: false })).toBe('Сначала — «Дизайн-система»: 1 общий ключ ещё не в её основной ветке')
+    expect(reviewGateMessage('ds', { keys: ['a', 'b', 'c'], truncated: false })).toContain(': 3 общих ключа ещё')
+    expect(reviewGateMessage('ds', { keys: ['a', 'b', 'c', 'd', 'e'], truncated: true })).toContain(': 5+ общих ключей ещё')
+    expect(reviewGateMessage('ds', { keys: [], truncated: true })).toContain(': много изменений ещё')
+  })
+
+  it('проверка недоступна — так и говорим, с понятной причиной', () => {
+    expect(reviewGateMessage('ds', 'not-connected')).toBe('Сначала — «Дизайн-система», но она не подключена к GitHub')
+    expect(reviewGateMessage('ds', 'failed')).toBe('Сначала — «Дизайн-система», но сравнить её с репозиторием не получилось')
+  })
+})
+
+describe('exportProjectList', () => {
+  it('наборы по-человечески одной строкой', () => {
+    expect(exportProjectList(['inapp'])).toBe('InApp')
+    expect(exportProjectList(['inapp', 'pages_hub'])).toBe('InApp и Pages Hub')
+    expect(exportProjectList([])).toBe('')
   })
 })
