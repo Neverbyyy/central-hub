@@ -85,3 +85,21 @@ describe('выгрузка утверждённых текстов', () => {
     await restoreKeys([KEY])
   })
 })
+
+// Сначала дизайн-система, потом рабочие проекты: связь наборов — в базе, её читают окно и маршрут выгрузки
+describe('порядок выгрузки', () => {
+  it('InApp и Pages Hub проверяются в дизайн-системе, сама она — нет', async () => {
+    const { data, error } = await service.from('export_sets').select('name, review_set').in('name', ['ds', 'inapp', 'pages_hub']).order('name')
+    if (error) throw error
+    expect(data).toEqual([
+      { name: 'ds', review_set: null },
+      { name: 'inapp', review_set: 'ds' },
+      { name: 'pages_hub', review_set: 'ds' }
+    ])
+  })
+
+  it('набор не может проверять сам себя', async () => {
+    const { error } = await service.from('export_sets').update({ review_set: SET }).eq('name', SET)
+    expect(error?.message).toMatch(/export_sets_review_set_not_self/)
+  })
+})

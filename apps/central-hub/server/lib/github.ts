@@ -48,6 +48,8 @@ export interface GithubSyncOptions {
   actor: string
   // Только посмотреть, что изменится: ничего не пишет
   dryRun?: boolean
+  // Строка в начале описания PR — например, что выгружено без проверки в дизайн-системе
+  note?: string
   fetch?: typeof fetch
 }
 
@@ -124,12 +126,13 @@ function summary(changes: FileChange[]) {
   }).join(', ')
 }
 
-function prBody(changes: FileChange[], { actor, revision, base }: { actor: string, revision: string, base: string }) {
+function prBody(changes: FileChange[], { actor, revision, base, note }: { actor: string, revision: string, base: string, note?: string }) {
   const rows = changes.map(c => `| \`${c.path}\` | ${c.added} | ${c.changed} | ${c.removed} |`)
   const lines = changes.flatMap(c => c.lines.map(l => `- \`${l.key}\` (${c.lang}): ${quote(l.before)} → ${quote(l.after)}`))
     .slice(0, LINES_IN_PR)
   const hidden = changes.reduce((n, c) => n + c.added + c.changed + c.removed, 0) - lines.length
   return [
+    ...(note ? [`> ⚠️ ${note}`, ''] : []),
     `Тексты из сервиса локализации Amaya Hub — только утверждённые. Выгрузил: ${actor}, ревизия \`${revision}\`.`,
     '',
     '| Файл | Добавлено | Изменено | Удалено |',
@@ -176,7 +179,7 @@ export async function findPr(
 
 /** Сравнить файлы набора с основной веткой и открыть или обновить PR из своей ветки (без dryRun). */
 export async function syncExportToGithub(options: GithubSyncOptions): Promise<GithubSyncResult> {
-  const { token, target, set, files, actor, revision, dryRun = false } = options
+  const { token, target, set, files, actor, revision, dryRun = false, note } = options
   const repo = target.repo
   const gh = createClient(token, repo, options.fetch ?? fetch)
 
@@ -252,7 +255,7 @@ export async function syncExportToGithub(options: GithubSyncOptions): Promise<Gi
   else await gh.post('/git/refs', { ref: `refs/heads/${branch}`, sha: commit.sha })
 
   const title = `Тексты из Amaya Hub — ${set}`
-  const body = prBody(changes, { actor, revision, base })
+  const body = prBody(changes, { actor, revision, base, note })
   const pr = open
     ? await gh.patch<PullRequest>(`/pulls/${open.number}`, { title, body })
     : await gh.post<PullRequest>('/pulls', { title, head: branch, base, body })

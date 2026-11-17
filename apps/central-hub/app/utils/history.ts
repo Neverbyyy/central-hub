@@ -1,6 +1,6 @@
 // История ключа в панели: из записей «поле — было — стало» — заголовки и сводки карточек по-человечески
 
-import { plural } from './plural'
+import { plural } from '../../shared/utils/plural'
 
 export interface HistoryEntry {
   lang: string | null

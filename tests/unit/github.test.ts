@@ -151,7 +151,7 @@ const ORIGINAL = {
 const exported = (files: Record<string, string>): ExportedFile[] =>
   Object.entries(files).map(([path, content]) => ({ lang: path.slice(-7, -5), path, content, sha256: '' }))
 
-const sync = (github: ReturnType<typeof fakeGithub>, files: Record<string, string>, extra: { dryRun?: boolean, branch?: string } = {}) =>
+const sync = (github: ReturnType<typeof fakeGithub>, files: Record<string, string>, extra: { dryRun?: boolean, branch?: string, note?: string } = {}) =>
   syncExportToGithub({
     token: 't',
     target: { repo: REPO, ...(extra.branch ? { branch: extra.branch } : {}) },
@@ -160,6 +160,7 @@ const sync = (github: ReturnType<typeof fakeGithub>, files: Record<string, strin
     files: exported(files),
     actor: 'Артём',
     dryRun: extra.dryRun,
+    note: extra.note,
     fetch: github.fetch
   })
 
@@ -189,6 +190,12 @@ describe('syncExportToGithub', () => {
     expect(github.refs.get(MAIN)).toBe(github.mainAtStart)
     expect(github.pulls[0]).toMatchObject({ head: 'amaya-hub/inapp', base: MAIN, state: 'open' })
     expect(github.pulls[0]!.body).toContain('`allapps_button` (ru): «СКАЧАТЬ» → «Скачать»')
+  })
+
+  it('выгрузка без проверки в дизайн-системе — пометка первой строкой описания PR', async () => {
+    const github = fakeGithub(ORIGINAL)
+    await sync(github, { ...ORIGINAL, [RU]: '{\n  "allapps_button": "Скачать"\n}\n' }, { note: 'Выгружено без проверки' })
+    expect(github.pulls[0]!.body.startsWith('> ⚠️ Выгружено без проверки\n')).toBe(true)
   })
 
   it('повторная выгрузка обновляет тот же PR, ветка пересобирается от основной', async () => {

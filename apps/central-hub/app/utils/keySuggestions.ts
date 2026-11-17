@@ -1,7 +1,7 @@
 // Подсказки к полю «Ключ» в форме «Новый ключ»: что может идти следующей частью — из «Как называть ключи»,
 // справочника и разделов, которые уже есть. Чистые функции: форма держит только фокус, курсор и клавиатуру.
 import { registryKindOf, type NEW_KEY_ROOTS, type RegistryKind } from '@amaya/l10n-core'
-import { keysCount } from './plural'
+import { keysCount } from '../../shared/utils/plural'
 
 /** Раздел из дерева ключей (/api/keys/tree). */
 export interface KeyTreeNode {

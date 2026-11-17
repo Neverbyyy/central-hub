@@ -1,14 +1,20 @@
 <script setup lang="ts">
 import type { FileChange } from '~/utils/exportChanges'
 
+import type { ExportSetPrefixes } from '@amaya/l10n-core'
+
 // Выгрузка в код: утверждённые тексты набора уходят PR в репозиторий проекта на GitHub.
 // Кнопка пишет только в свою ветку amaya-hub/<набор> и свой PR — в основную ветку тексты попадают после мержа.
+// Порядок — два шага: сначала дизайн-система (тексты смотрят в Storybook и мержат PR), потом рабочие проекты
 interface ExportSetInfo {
   name: string
   path: string
   repo: { repo: string, branch?: string } | null
   connected: boolean
   pending: number
+  // Сначала — этот набор (дизайн-система); null — набор сам и есть проверка
+  reviewSet: string | null
+  prefixes: ExportSetPrefixes
   lastRun: { outcome: string, pr_number: number | null, pr_url: string | null, actor: string, created_at: string } | null
   // Открытый PR — приходит сразу, раньше медленного предпросмотра
   openPr: { number: number, url: string } | null
@@ -112,10 +118,66 @@ const previewOf = (name: string): SyncResult | null => {
   return preview && 'outcome' in preview ? preview : null
 }
 
-const canPush = (name: string) => !pushing.value.size && previewOf(name)?.outcome === 'ready'
+// --- Сначала дизайн-система ---
+// Рабочий проект ждёт, пока общие с дизайн-системой ключи не окажутся в её основной ветке: предпросмотр дизайн-системы
+// уже загружен в этом же окне, правило то же, что на сервере (reviewGate). Её PR смержили — событие перечитывает её
+// предпросмотр, и блок снимается сам
+type Gate
+  = | { kind: 'checking' }
+    | { kind: 'unknown', reason: string }
+    | { kind: 'blocked', text: string, pr: { number: number, url: string } | null }
 
-// Проекты, где есть что выгрузить, — для «Выгрузить во все»
-const readySets = computed(() => (sets.value ?? []).filter(set => set.connected && previewOf(set.name)?.outcome === 'ready'))
+const gateOf = (set: ExportSetInfo): Gate | null => {
+  if (!set.reviewSet) return null
+  const review = sets.value?.find(s => s.name === set.reviewSet)
+  if (!review?.connected) return { kind: 'unknown', reason: 'не подключена к GitHub' }
+  const preview = previews.value[review.name]
+  if (preview === undefined) return { kind: 'checking' }
+  if ('error' in preview) return { kind: 'unknown', reason: 'не удалось сравнить с репозиторием' }
+  const block = reviewGate(set.prefixes, preview)
+  return block ? { kind: 'blocked', text: reviewBlockText(block), pr: openPrOf(review) } : null
+}
+
+// Есть что выгрузить, и дизайн-система не держит
+const isReady = (set: ExportSetInfo) => previewOf(set.name)?.outcome === 'ready' && !gateOf(set)
+const canPush = (set: ExportSetInfo) => !pushing.value.size && isReady(set)
+
+// Подпись причины для окна изменений и подсказки кнопки
+const gateText = (set: ExportSetInfo) => {
+  const gate = gateOf(set)
+  if (!gate || !set.reviewSet) return undefined
+  const review = exportProjectName(set.reviewSet)
+  if (gate.kind === 'checking') return `Проверяю «${review}»…`
+  if (gate.kind === 'unknown') return `Сначала — «${review}», но она ${gate.reason}`
+  return `Сначала — «${review}»: ${gate.text} ещё не в её основной ветке`
+}
+
+// Открытый PR дизайн-системы, который держит этот набор: «Проверьте PR #10 в Storybook и смержите»
+const reviewPr = (set: ExportSetInfo) => {
+  const gate = gateOf(set)
+  return gate?.kind === 'blocked' ? gate.pr : null
+}
+
+// Наборы, которые ждут этот (дизайн-систему): «После мержа откроется выгрузка в InApp и Pages Hub»
+const waitingFor = (set: ExportSetInfo) => (sets.value ?? [])
+  .filter(s => s.reviewSet === set.name && previewOf(s.name)?.outcome === 'ready' && gateOf(s)?.kind === 'blocked')
+  .map(s => exportProjectName(s.name))
+const projectList = new Intl.ListFormat('ru', { type: 'conjunction' })
+
+// «Выгрузить без проверки» — срочная правка: подтверждение прямо в карточке, без нового окна. Esc его отменяет
+const confirmForce = ref<string | null>(null)
+
+// Шаги над карточками — когда есть и проверка, и рабочие проекты; порядок задаёт сервер
+const stepTitle = (index: number) => {
+  const list = sets.value ?? []
+  if (!list.some(s => s.reviewSet)) return null
+  const set = list[index]!
+  if (index === 0) return set.reviewSet ? null : 'Шаг 1 · Проверка в Storybook'
+  return set.reviewSet && !list[index - 1]!.reviewSet ? 'Шаг 2 · Рабочие проекты' : null
+}
+
+// Проекты, где есть что выгрузить, — для «Выгрузить во все»; рабочие проекты, которые ждут дизайн-систему, — нет
+const readySets = computed(() => (sets.value ?? []).filter(set => set.connected && isReady(set)))
 
 // Подпись как у кнопок карточек: PR уже открыты везде — «Обновить», нигде — «Создать»
 const pushAllLabel = computed(() => {
@@ -152,6 +214,7 @@ const reopen = async () => {
   setsError.value = ''
   previews.value = {}
   changesOpen.value = false
+  confirmForce.value = null
   for (const set of await loadSets()) if (set.connected) loadPreview(set.name)
 }
 
@@ -172,19 +235,21 @@ const runTitle = (run: NonNullable<ExportSetInfo['lastRun']>) =>
   run.pr_number ? OUTCOME_TITLE[run.outcome]?.(run.pr_number) ?? 'Выгрузка' : 'Выгрузка'
 
 // Выгрузка одного набора без уведомлений — общая для кнопки в карточке и «Выгрузить во все».
-// Строку статуса обновит loadSets после выгрузки, коллегам — событие сервера в канале export-pr
-const pushSet = async (set: ExportSetInfo) => {
-  const result = await $fetch<SyncResult>(`/api/export/${set.name}/push`, { method: 'POST' })
+// Строку статуса обновит loadSets после выгрузки, коллегам — событие сервера в канале export-pr.
+// force — без проверки в дизайн-системе: сервер пропустит, а в PR и журнале останется отметка
+const pushSet = async (set: ExportSetInfo, { force = false } = {}) => {
+  const result = await $fetch<SyncResult>(`/api/export/${set.name}/push`, { method: 'POST', body: force ? { force: true } : undefined })
   // Изменения теперь в PR: кнопка дальше обновляет его
   previews.value = { ...previews.value, [set.name]: { ...result, outcome: result.outcome === 'closed' ? 'unchanged' : 'ready' } }
   return result
 }
 
-const push = async (set: ExportSetInfo) => {
+const push = async (set: ExportSetInfo, { force = false } = {}) => {
   if (pushing.value.size) return
   setPushing([set.name], true)
   try {
-    const result = await pushSet(set)
+    const result = await pushSet(set, { force })
+    confirmForce.value = null
     changesOpen.value = false
     if (result.outcome === 'unchanged') {
       toast.add({ title: 'В репозитории всё актуально', color: 'neutral' })
@@ -213,7 +278,7 @@ const pushAll = async () => {
   const names = targets.map(set => set.name)
   setPushing(names, true)
   pushingAll.value = true
-  const settled = await Promise.allSettled(targets.map(pushSet))
+  const settled = await Promise.allSettled(targets.map(set => pushSet(set)))
   setPushing(names, false)
   pushingAll.value = false
 
@@ -256,10 +321,13 @@ const findKey = (key: string) => {
 </script>
 
 <template>
+  <!-- Пока открыто подтверждение «без проверки», Esc и клик мимо отменяют его, а не закрывают окно -->
   <UModal
     v-model:open="open"
     title="Выгрузка в код"
-    description="В код уходят только утверждённые тексты. Кнопка открывает PR — в основную ветку тексты попадут, когда его смержат."
+    description="Сначала — дизайн-система: проверьте тексты в Storybook и смержите PR. Потом — рабочие проекты. В код уходят только утверждённые тексты."
+    :dismissible="!confirmForce"
+    @close:prevent="confirmForce = null"
   >
     <template #body>
       <div class="space-y-3 text-sm">
@@ -291,165 +359,264 @@ const findKey = (key: string) => {
           Наборов выгрузки пока нет.
         </p>
 
-        <template v-else>
-          <section
-            v-for="set in sets"
+        <div
+          v-else
+          class="space-y-3"
+        >
+          <template
+            v-for="(set, index) in sets"
             :key="set.name"
-            class="rounded-lg border border-default p-3"
           >
-            <div class="flex items-start justify-between gap-3">
-              <div class="min-w-0">
-                <h3 class="font-semibold text-highlighted">
-                  {{ exportProjectName(set.name) }}
-                </h3>
-                <template v-if="set.repo">
-                  <a
-                    :href="`https://github.com/${set.repo.repo}`"
-                    target="_blank"
-                    rel="noopener"
-                    class="mt-1 flex w-fit max-w-full items-center gap-1.5 font-mono text-xs text-muted underline-offset-2 hover:underline"
+            <!-- Шаг 1 — дизайн-система, шаг 2 — рабочие проекты: флоу виден до первого нажатия -->
+            <h3
+              v-if="stepTitle(index)"
+              class="text-[11px] font-semibold uppercase tracking-wide text-muted"
+              :class="{ 'pt-2': index > 0 }"
+            >
+              {{ stepTitle(index) }}
+            </h3>
+            <section class="rounded-lg border border-default p-3">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <h3 class="font-semibold text-highlighted">
+                    {{ exportProjectName(set.name) }}
+                  </h3>
+                  <template v-if="set.repo">
+                    <a
+                      :href="`https://github.com/${set.repo.repo}`"
+                      target="_blank"
+                      rel="noopener"
+                      class="mt-1 flex w-fit max-w-full items-center gap-1.5 font-mono text-xs text-muted underline-offset-2 hover:underline"
+                    >
+                      <UIcon
+                        name="i-simple-icons-github"
+                        class="size-3.5 shrink-0"
+                      />
+                      <span class="truncate">{{ set.repo.repo }}</span>
+                    </a>
+                    <!-- Куда в репозитории кладутся файлы — своей строкой и целиком: рядом со ссылкой путь обрезался -->
+                    <p class="mt-0.5 flex items-start gap-1.5 font-mono text-xs text-muted">
+                      <UIcon
+                        name="i-lucide-file-json"
+                        class="mt-px size-3.5 shrink-0"
+                      />
+                      <span class="break-all">{{ set.path }}</span>
+                    </p>
+                  </template>
+                  <p
+                    v-else
+                    class="mt-0.5 text-xs text-muted"
                   >
-                    <UIcon
-                      name="i-simple-icons-github"
-                      class="size-3.5 shrink-0"
-                    />
-                    <span class="truncate">{{ set.repo.repo }}</span>
-                  </a>
-                  <!-- Куда в репозитории кладутся файлы — своей строкой и целиком: рядом со ссылкой путь обрезался -->
-                  <p class="mt-0.5 flex items-start gap-1.5 font-mono text-xs text-muted">
-                    <UIcon
-                      name="i-lucide-file-json"
-                      class="mt-px size-3.5 shrink-0"
-                    />
-                    <span class="break-all">{{ set.path }}</span>
+                    Не подключён: добавьте набор <span class="font-mono">{{ set.name }}</span> в NUXT_EXPORT_REPOS
                   </p>
-                </template>
+                </div>
+                <UButton
+                  v-if="set.connected"
+                  :icon="gateOf(set) ? 'i-lucide-lock' : 'i-lucide-git-pull-request'"
+                  :color="gateOf(set) ? 'neutral' : 'primary'"
+                  :variant="gateOf(set) ? 'soft' : 'solid'"
+                  size="sm"
+                  class="shrink-0"
+                  :loading="pushing.has(set.name)"
+                  :disabled="!canPush(set)"
+                  :title="gateText(set)"
+                  @click="push(set)"
+                >
+                  {{ prLabel(set) }}
+                </UButton>
+              </div>
+
+              <p
+                v-if="set.repo && !set.connected"
+                class="mt-2 text-xs text-warning"
+              >
+                NUXT_GITHUB_TOKEN не задан на сервере — выгружать нечем.
+              </p>
+
+              <!-- Что уйдёт в PR -->
+              <div
+                v-if="set.connected"
+                class="mt-2 text-xs"
+              >
+                <div
+                  v-if="previews[set.name] === undefined"
+                  class="space-y-1.5"
+                  aria-busy="true"
+                  aria-label="Сравниваю с репозиторием"
+                >
+                  <USkeleton class="h-3 w-44 rounded bg-elevated" />
+                  <USkeleton class="h-3 w-64 rounded bg-elevated" />
+                </div>
+                <LoadError
+                  v-else-if="'error' in previews[set.name]!"
+                  :message="(previews[set.name] as { error: string }).error"
+                  tone="error"
+                  @retry="loadPreview(set.name)"
+                />
+                <!-- Сами изменения — в отдельном окне: их бывают тысячи -->
+                <button
+                  v-else-if="previewOf(set.name)?.outcome === 'ready'"
+                  type="button"
+                  class="font-medium text-default underline underline-offset-2 hover:text-highlighted"
+                  @click="showChanges(set)"
+                >
+                  Показать изменения ({{ totalChanges(previewOf(set.name)!.changes) }})
+                </button>
                 <p
                   v-else
-                  class="mt-0.5 text-xs text-muted"
+                  class="flex items-center gap-1 text-muted"
                 >
-                  Не подключён: добавьте набор <span class="font-mono">{{ set.name }}</span> в NUXT_EXPORT_REPOS
+                  <UIcon
+                    name="i-lucide-check"
+                    class="size-3.5 text-green-600 dark:text-green-400"
+                  />
+                  В репозитории всё актуально
                 </p>
               </div>
-              <UButton
-                v-if="set.connected"
-                icon="i-lucide-git-pull-request"
-                size="sm"
-                class="shrink-0"
-                :loading="pushing.has(set.name)"
-                :disabled="!canPush(set.name)"
-                @click="push(set)"
-              >
-                {{ prLabel(set) }}
-              </UButton>
-            </div>
 
-            <p
-              v-if="set.repo && !set.connected"
-              class="mt-2 text-xs text-warning"
-            >
-              NUXT_GITHUB_TOKEN не задан на сервере — выгружать нечем.
-            </p>
-
-            <!-- Что уйдёт в PR -->
-            <div
-              v-if="set.connected"
-              class="mt-2 text-xs"
-            >
-              <div
-                v-if="previews[set.name] === undefined"
-                class="space-y-1.5"
-                aria-busy="true"
-                aria-label="Сравниваю с репозиторием"
-              >
-                <USkeleton class="h-3 w-44 rounded bg-elevated" />
-                <USkeleton class="h-3 w-64 rounded bg-elevated" />
-              </div>
-              <LoadError
-                v-else-if="'error' in previews[set.name]!"
-                :message="(previews[set.name] as { error: string }).error"
-                tone="error"
-                @retry="loadPreview(set.name)"
-              />
-              <!-- Сами изменения — в отдельном окне: их бывают тысячи -->
-              <button
-                v-else-if="previewOf(set.name)?.outcome === 'ready'"
-                type="button"
-                class="font-medium text-default underline underline-offset-2 hover:text-highlighted"
-                @click="showChanges(set)"
-              >
-                Показать изменения ({{ totalChanges(previewOf(set.name)!.changes) }})
-              </button>
+              <!-- Шаг 1: что даст мерж — рабочие проекты ждут его -->
               <p
-                v-else
-                class="flex items-center gap-1 text-muted"
+                v-if="waitingFor(set).length"
+                class="mt-2 flex items-center gap-1.5 text-xs text-muted"
               >
                 <UIcon
-                  name="i-lucide-check"
-                  class="size-3.5 text-green-600 dark:text-green-400"
+                  name="i-lucide-arrow-down"
+                  class="size-3.5 shrink-0"
                 />
-                В репозитории всё актуально
+                После мержа откроется выгрузка в {{ projectList.format(waitingFor(set)) }}
               </p>
-            </div>
 
-            <p
-              v-if="set.pending"
-              class="mt-2 text-xs text-warning"
-            >
-              Ждут утверждения: {{ keysCount(set.pending) }} — их правки в выгрузку не попадут.
-              <!-- Черновики и тексты от ИИ — одной выборкой «Не утверждённые» -->
-              <button
-                type="button"
-                class="font-medium underline underline-offset-2"
-                @click="showPending"
+              <!-- Шаг 2 ждёт шаг 1. Только когда здесь есть что выгружать: «всё актуально» ждать нечего -->
+              <template v-if="set.connected && previewOf(set.name)?.outcome === 'ready' && gateOf(set)">
+                <p
+                  v-if="gateOf(set)!.kind === 'checking'"
+                  class="mt-2 text-xs text-muted"
+                >
+                  {{ gateText(set) }}
+                </p>
+                <div
+                  v-else
+                  class="mt-2 rounded-md bg-warning/10 px-2.5 py-2 text-xs text-warning"
+                >
+                  <p class="flex items-start gap-1.5">
+                    <UIcon
+                      name="i-lucide-lock"
+                      class="mt-px size-3.5 shrink-0"
+                    />
+                    <span>
+                      {{ gateText(set) }}.
+                      <template v-if="reviewPr(set)">
+                        Проверьте PR #{{ reviewPr(set)!.number }} в Storybook и смержите —
+                        <a
+                          :href="reviewPr(set)!.url"
+                          target="_blank"
+                          rel="noopener"
+                          class="font-medium underline underline-offset-2"
+                        >открыть на GitHub</a>.
+                      </template>
+                      <template v-else-if="gateOf(set)!.kind === 'blocked'">Создайте её PR выше.</template>
+                    </span>
+                  </p>
+
+                  <!-- Срочная правка: обход с подтверждением на месте; в PR и журнале останется отметка -->
+                  <div
+                    v-if="confirmForce === set.name"
+                    class="mt-2 border-t border-warning/20 pt-2"
+                  >
+                    <p class="text-default">
+                      Тексты уйдут в {{ exportProjectName(set.name) }}, не пройдя проверку. В PR и журнале выгрузок останется отметка.
+                    </p>
+                    <div class="mt-2 flex flex-wrap gap-2">
+                      <UButton
+                        size="xs"
+                        color="warning"
+                        icon="i-lucide-git-pull-request"
+                        :loading="pushing.has(set.name)"
+                        :disabled="!!pushing.size"
+                        @click="push(set, { force: true })"
+                      >
+                        Выгрузить без проверки
+                      </UButton>
+                      <UButton
+                        size="xs"
+                        color="neutral"
+                        variant="ghost"
+                        @click="confirmForce = null"
+                      >
+                        Отмена
+                      </UButton>
+                    </div>
+                  </div>
+                  <button
+                    v-else
+                    type="button"
+                    class="mt-1 ml-5 font-medium underline underline-offset-2"
+                    @click="confirmForce = set.name"
+                  >
+                    Выгрузить без проверки
+                  </button>
+                </div>
+              </template>
+
+              <p
+                v-if="set.pending"
+                class="mt-2 text-xs text-warning"
               >
-                Показать
-              </button>
-            </p>
+                Ждут утверждения: {{ keysCount(set.pending) }} — их правки в выгрузку не попадут.
+                <!-- Черновики и тексты от ИИ — одной выборкой «Не утверждённые» -->
+                <button
+                  type="button"
+                  class="font-medium underline underline-offset-2"
+                  @click="showPending"
+                >
+                  Показать
+                </button>
+              </p>
 
-            <!-- Что с PR — из данных сервера, одинаково у всех, кто открыл окно. Мерж или закрытие на GitHub
+              <!-- Что с PR — из данных сервера, одинаково у всех, кто открыл окно. Мерж или закрытие на GitHub
                  важнее последней выгрузки; закрыл сам сервис («выгружать нечего») — объясняет строка выгрузки -->
-            <p
-              v-if="set.lastPr && set.lastPr.state !== 'open' && !openPrOf(set) && set.lastRun?.outcome !== 'closed'"
-              class="mt-2 flex flex-wrap items-center gap-1 text-xs"
-              :class="set.lastPr.state === 'merged' ? 'text-green-700 dark:text-green-400' : 'text-muted'"
-            >
-              <UIcon
-                :name="set.lastPr.state === 'merged' ? 'i-lucide-git-merge' : 'i-lucide-git-pull-request-closed'"
-                class="size-3.5 shrink-0"
-              />
-              {{ set.lastPr.state === 'merged' ? `PR #${set.lastPr.number} смержен` : `PR #${set.lastPr.number} закрыт без мержа` }} —
-              <a
-                :href="set.lastPr.url"
-                target="_blank"
-                rel="noopener"
-                class="font-medium underline underline-offset-2"
-              >открыть на GitHub</a>
-            </p>
-            <!-- Последняя выгрузка — кто бы ни нажимал: «PR #11 обновлён · 31.10, 19:47 · Артём» -->
-            <p
-              v-else-if="set.lastRun"
-              class="mt-2 flex flex-wrap items-center gap-x-1 text-xs"
-              :class="set.lastRun.outcome === 'closed' ? 'text-muted' : 'text-green-700 dark:text-green-400'"
-            >
-              <UIcon
-                :name="set.lastRun.outcome === 'closed' ? 'i-lucide-git-pull-request-closed' : 'i-lucide-git-pull-request'"
-                class="size-3.5 shrink-0"
-              />
-              {{ runTitle(set.lastRun) }}
-              <span class="text-muted">· {{ formatDateTime(set.lastRun.created_at, { year: false }) }} · {{ set.lastRun.actor }}</span>
-              <template v-if="set.lastRun.pr_url">
-                —
+              <p
+                v-if="set.lastPr && set.lastPr.state !== 'open' && !openPrOf(set) && set.lastRun?.outcome !== 'closed'"
+                class="mt-2 flex flex-wrap items-center gap-1 text-xs"
+                :class="set.lastPr.state === 'merged' ? 'text-green-700 dark:text-green-400' : 'text-muted'"
+              >
+                <UIcon
+                  :name="set.lastPr.state === 'merged' ? 'i-lucide-git-merge' : 'i-lucide-git-pull-request-closed'"
+                  class="size-3.5 shrink-0"
+                />
+                {{ set.lastPr.state === 'merged' ? `PR #${set.lastPr.number} смержен` : `PR #${set.lastPr.number} закрыт без мержа` }} —
                 <a
-                  :href="set.lastRun.pr_url"
+                  :href="set.lastPr.url"
                   target="_blank"
                   rel="noopener"
                   class="font-medium underline underline-offset-2"
                 >открыть на GitHub</a>
-              </template>
-            </p>
-          </section>
-        </template>
+              </p>
+              <!-- Последняя выгрузка — кто бы ни нажимал: «PR #11 обновлён · 31.10, 19:47 · Артём» -->
+              <p
+                v-else-if="set.lastRun"
+                class="mt-2 flex flex-wrap items-center gap-x-1 text-xs"
+                :class="set.lastRun.outcome === 'closed' ? 'text-muted' : 'text-green-700 dark:text-green-400'"
+              >
+                <UIcon
+                  :name="set.lastRun.outcome === 'closed' ? 'i-lucide-git-pull-request-closed' : 'i-lucide-git-pull-request'"
+                  class="size-3.5 shrink-0"
+                />
+                {{ runTitle(set.lastRun) }}
+                <span class="text-muted">· {{ formatDateTime(set.lastRun.created_at, { year: false }) }} · {{ set.lastRun.actor }}</span>
+                <template v-if="set.lastRun.pr_url">
+                  —
+                  <a
+                    :href="set.lastRun.pr_url"
+                    target="_blank"
+                    rel="noopener"
+                    class="font-medium underline underline-offset-2"
+                  >открыть на GitHub</a>
+                </template>
+              </p>
+            </section>
+          </template>
+        </div>
 
         <!-- Внутри этого окна: Esc закрывает только верхнее -->
         <LocalizationsExportChanges
@@ -459,7 +626,8 @@ const findKey = (key: string) => {
           :repo="changesFor.repo?.repo ?? null"
           :changes="previewOf(changesFor.name)?.changes ?? []"
           :pr-label="prLabel(changesFor)"
-          :can-push="canPush(changesFor.name)"
+          :can-push="canPush(changesFor)"
+          :blocked="gateText(changesFor)"
           :pushing="pushing.has(changesFor.name)"
           @push="push(changesFor!)"
           @find-key="findKey"

@@ -5,10 +5,7 @@ export interface ExportRule extends ExportSetPrefixes {
   path_template: string
 }
 
-// Наборы выгрузки по-человечески: inapp → InApp; ds — дизайн-система и экраны в этом же монорепо
-export const EXPORT_PROJECTS: Record<string, string> = { inapp: 'InApp', pages_hub: 'Pages Hub', ds: 'Дизайн-система' }
-export const exportProjectName = (name: string) => EXPORT_PROJECTS[name] ?? name
-
+// Названия наборов (exportProjectName) — в shared/utils/exportSets.ts: сервер тоже называет набор в тексте ошибки
 const projectList = new Intl.ListFormat('ru', { type: 'conjunction' })
 
 /**

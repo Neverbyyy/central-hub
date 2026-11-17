@@ -7,14 +7,14 @@ export type Database = {
           Tables: {
             "export_runs": {
                   Row: {
-                    "actor": string,"changes": NonNullable<Json>,"created_at": string,"id": number,"outcome": string,"pr_number": number | null,"pr_url": string | null,"revision": string,"set_name": string
+                    "actor": string,"changes": NonNullable<Json>,"created_at": string,"forced": boolean,"id": number,"outcome": string,"pr_number": number | null,"pr_url": string | null,"revision": string,"set_name": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "actor": string,"changes"?: NonNullable<Json>,"created_at"?: string,"id"?: never,"outcome": string,"pr_number"?: number | null,"pr_url"?: string | null,"revision": string,"set_name": string
+                    "actor": string,"changes"?: NonNullable<Json>,"created_at"?: string,"forced"?: boolean,"id"?: never,"outcome": string,"pr_number"?: number | null,"pr_url"?: string | null,"revision": string,"set_name": string
                   }
                   Update: {
-                    "actor"?: string,"changes"?: NonNullable<Json>,"created_at"?: string,"id"?: never,"outcome"?: string,"pr_number"?: number | null,"pr_url"?: string | null,"revision"?: string,"set_name"?: string
+                    "actor"?: string,"changes"?: NonNullable<Json>,"created_at"?: string,"forced"?: boolean,"id"?: never,"outcome"?: string,"pr_number"?: number | null,"pr_url"?: string | null,"revision"?: string,"set_name"?: string
                   }
                   Relationships: [
                     {
@@ -27,14 +27,14 @@ isOneToOne: false
                   ]
                 },"export_sets": {
                   Row: {
-                    "created_at": string,"exclude_prefixes": (string)[],"final_newline": boolean,"format": string,"include_prefixes": (string)[],"languages": (string)[],"legacy_prefix": string | null,"name": string,"path_template": string,"project": string,"project_kind": string
+                    "created_at": string,"exclude_prefixes": (string)[],"final_newline": boolean,"format": string,"include_prefixes": (string)[],"languages": (string)[],"legacy_prefix": string | null,"name": string,"path_template": string,"project": string,"project_kind": string,"review_set": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"exclude_prefixes"?: (string)[],"final_newline"?: boolean,"format": string,"include_prefixes"?: (string)[],"languages": (string)[],"legacy_prefix"?: string | null,"name": string,"path_template": string,"project": string,"project_kind"?: string
+                    "created_at"?: string,"exclude_prefixes"?: (string)[],"final_newline"?: boolean,"format": string,"include_prefixes"?: (string)[],"languages": (string)[],"legacy_prefix"?: string | null,"name": string,"path_template": string,"project": string,"project_kind"?: string,"review_set"?: string | null
                   }
                   Update: {
-                    "created_at"?: string,"exclude_prefixes"?: (string)[],"final_newline"?: boolean,"format"?: string,"include_prefixes"?: (string)[],"languages"?: (string)[],"legacy_prefix"?: string | null,"name"?: string,"path_template"?: string,"project"?: string,"project_kind"?: string
+                    "created_at"?: string,"exclude_prefixes"?: (string)[],"final_newline"?: boolean,"format"?: string,"include_prefixes"?: (string)[],"languages"?: (string)[],"legacy_prefix"?: string | null,"name"?: string,"path_template"?: string,"project"?: string,"project_kind"?: string,"review_set"?: string | null
                   }
                   Relationships: [
                     {
@@ -43,6 +43,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "registry"
       referencedColumns: ["kind","code"]
+    },{
+      foreignKeyName: "export_sets_review_set_fkey"
+      columns: ["review_set"]
+isOneToOne: false
+      referencedRelation: "export_sets"
+      referencedColumns: ["name"]
     }
                   ]
                 },"export_templates": {
@@ -210,7 +216,7 @@ isOneToOne: false
 { Args: { "p_status": Json }; Returns: (string)[]
                            },
 "queue_counts":
-{ Args: { "p_langs": (string)[],"p_prefix"?: string }; Returns: {
+{ Args: { "p_prefix"?: string }; Returns: {
               "lang": string,"missing": number,"stale": number
             }[]
                            },

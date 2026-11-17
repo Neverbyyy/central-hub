@@ -18,6 +18,8 @@ export interface ExportSet {
   languages: string[]
   path_template: string
   final_newline: boolean
+  // Набор, где тексты проверяют и мержат до выгрузки в этот (дизайн-система для InApp и Pages Hub); null — без проверки
+  review_set: string | null
 }
 
 export interface ImportReport {
@@ -53,7 +55,7 @@ interface ExportKeyRow {
 
 const sha256 = (text: string) => createHash('sha256').update(text).digest('hex')
 
-async function loadSet(db: SupabaseClient, name: string): Promise<ExportSet> {
+export async function loadSet(db: SupabaseClient, name: string): Promise<ExportSet> {
   const { data, error } = await db.from('export_sets').select('*').eq('name', name).maybeSingle()
   if (error) throw error
   if (!data) throw new HubError(`Нет набора выгрузки «${name}»`, 404)

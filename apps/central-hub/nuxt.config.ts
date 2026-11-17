@@ -93,6 +93,17 @@ export default defineNuxtConfig({
     }
   },
 
+  hooks: {
+    // Картинки не предзагружаем. Nuxt ставит <link rel="prefetch"> на каждую картинку, импортированную в коде, — на
+    // всех страницах: картинки страницы ошибки (две темы × 1x/2x, ~150 КБ) скачивались бы при любом открытии сервиса.
+    // Нужную и так возьмёт <img> там, где она показана
+    'build:manifest': (manifest) => {
+      for (const resource of Object.values(manifest)) {
+        if (resource.resourceType === 'image') resource.prefetch = false
+      }
+    }
+  },
+
   eslint: {
     config: {
       stylistic: {

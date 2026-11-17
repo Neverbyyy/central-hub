@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { errorMessage } from '../../apps/central-hub/app/utils/errorMessage'
 import { changeFileName, changeKind, quoteChange, totalChanges, type FileChange } from '../../apps/central-hub/app/utils/exportChanges'
 import { formatDateTime } from '../../apps/central-hub/app/utils/formatDate'
-import { keysCount, plural } from '../../apps/central-hub/app/utils/plural'
+import { keysCount, plural } from '../../apps/central-hub/shared/utils/plural'
 
 describe('plural и keysCount', () => {
   it.each([

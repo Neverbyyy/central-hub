@@ -10,6 +10,8 @@ const props = defineProps<{
   prLabel: string
   canPush: boolean
   pushing: boolean
+  // Почему выгружать пока нельзя: сначала дизайн-система — строкой рядом с кнопкой, а не немой серой кнопкой
+  blocked?: string
 }>()
 
 const open = defineModel<boolean>('open', { required: true })
@@ -144,12 +146,28 @@ useEventListener('keydown', (event: KeyboardEvent) => {
 
     <template #footer>
       <div class="flex w-full items-center justify-between gap-3">
-        <span class="text-xs text-muted">
+        <span
+          v-if="blocked"
+          class="flex min-w-0 items-center gap-1.5 text-xs text-warning"
+        >
+          <UIcon
+            name="i-lucide-lock"
+            class="size-3.5 shrink-0"
+          />
+          {{ blocked }}
+        </span>
+        <span
+          v-else
+          class="text-xs text-muted"
+        >
           {{ totalChanges(changes) }} {{ plural(totalChanges(changes), ['изменение', 'изменения', 'изменений']) }}
           в {{ changes.length }} {{ plural(changes.length, ['файле', 'файлах', 'файлах']) }}
         </span>
         <UButton
-          icon="i-lucide-git-pull-request"
+          :icon="blocked ? 'i-lucide-lock' : 'i-lucide-git-pull-request'"
+          :color="blocked ? 'neutral' : 'primary'"
+          :variant="blocked ? 'soft' : 'solid'"
+          class="shrink-0"
           :loading="pushing"
           :disabled="!canPush || pushing"
           @click="emit('push')"
