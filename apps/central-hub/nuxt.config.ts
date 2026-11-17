@@ -16,8 +16,8 @@ export default defineNuxtConfig({
   // Общее для всех страниц — и для страницы ошибки (app/error.vue), которая заменяет app.vue целиком.
   // Внутренний сервис: поисковикам не показываем (плюс X-Robots-Tag и robots.txt)
   app: {
+    // Заголовок по умолчанию — в app.vue: app.head действует только при серверном рендере, а заголовок меняется на клиенте
     head: {
-      title: 'Amaya Central Hub',
       htmlAttrs: { lang: 'ru' },
       meta: [
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
