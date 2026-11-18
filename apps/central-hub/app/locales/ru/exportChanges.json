@@ -1,0 +1,16 @@
+{
+  "kinds": {
+    "added": "Добавлено",
+    "changed": "Изменено",
+    "removed": "Удалено"
+  },
+  "title": "Изменения — {project}",
+  "descriptionRepo": "Уйдёт в PR в {repo}. В основную ветку — когда PR смержат.",
+  "descriptionNoRepo": "Что уйдёт в PR",
+  "truncated": "В {file} показаны первые {shown} из {total} изменений — все будут в PR.",
+  "findInTable": "Найти в таблице",
+  "showMore": "Показать ещё {count} из {left}",
+  "footer": "{changes} в {files}",
+  "changes": "{count} изменение | {count} изменения | {count} изменений",
+  "files": "{count} файле | {count} файлах | {count} файлах"
+}

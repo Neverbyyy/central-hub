@@ -1,0 +1,112 @@
+<script setup lang="ts">
+// Робот на плитке страницы MCP, как в макете: светлая голова, тёмный визор, голубые глаза и улыбка
+const id = useId()
+</script>
+
+<template>
+  <svg
+    viewBox="0 0 64 64"
+    aria-hidden="true"
+  >
+    <defs>
+      <linearGradient
+        :id="`${id}-head`"
+        x1="0"
+        y1="0"
+        x2="0"
+        y2="1"
+      >
+        <stop
+          offset="0"
+          stop-color="#eef2ff"
+        />
+        <stop
+          offset="1"
+          stop-color="#a5b4fc"
+        />
+      </linearGradient>
+      <radialGradient :id="`${id}-eye`">
+        <stop
+          offset="0"
+          stop-color="#e0f2fe"
+        />
+        <stop
+          offset="1"
+          stop-color="#38bdf8"
+        />
+      </radialGradient>
+    </defs>
+    <path
+      d="m22 16-4-8m24 8 4-8"
+      fill="none"
+      stroke="#c7d2fe"
+      stroke-width="2.5"
+      stroke-linecap="round"
+    />
+    <circle
+      cx="18"
+      cy="7"
+      r="3.2"
+      fill="#a5b4fc"
+    />
+    <circle
+      cx="46"
+      cy="7"
+      r="3.2"
+      fill="#a5b4fc"
+    />
+    <rect
+      x="6"
+      y="28"
+      width="7"
+      height="14"
+      rx="3.5"
+      fill="#818cf8"
+    />
+    <rect
+      x="51"
+      y="28"
+      width="7"
+      height="14"
+      rx="3.5"
+      fill="#818cf8"
+    />
+    <rect
+      x="11"
+      y="15"
+      width="42"
+      height="38"
+      rx="14"
+      :fill="`url(#${id}-head)`"
+    />
+    <rect
+      x="17"
+      y="23"
+      width="30"
+      height="20"
+      rx="9"
+      fill="#1e1b4b"
+    />
+    <ellipse
+      cx="26"
+      cy="32"
+      rx="3.6"
+      ry="4.4"
+      :fill="`url(#${id}-eye)`"
+    />
+    <ellipse
+      cx="38"
+      cy="32"
+      rx="3.6"
+      ry="4.4"
+      :fill="`url(#${id}-eye)`"
+    />
+    <path
+      d="M28.5 38.5q3.5 2.5 7 0"
+      stroke="#7dd3fc"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      fill="none"
+    />
+  </svg>
+</template>

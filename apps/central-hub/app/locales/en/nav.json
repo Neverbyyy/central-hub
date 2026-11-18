@@ -1,0 +1,14 @@
+{
+  "home": "Home",
+  "localizations": "Localizations",
+  "queue": "Translation queue",
+  "abTests": "A/B tests",
+  "abTestsSoon": "soon",
+  "abTestsLater": "A/B tests are coming later",
+  "mcp": "MCP",
+  "settings": "Settings",
+  "logout": "Log out",
+  "menu": "Menu",
+  "userTitle": "Edits are signed as “{name}” · {account}",
+  "passwordLogin": "signed in with the shared password"
+}

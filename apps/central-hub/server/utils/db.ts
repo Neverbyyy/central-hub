@@ -40,13 +40,20 @@ export function throwHubError(error: unknown): never {
   throw error
 }
 
-/** Маршрут, у которого HubError и ошибки базы уходят человеку понятным текстом (throwHubError). */
+/**
+ * Маршрут, у которого HubError и ошибки базы уходят человеку понятным текстом (throwHubError) — на языке его
+ * интерфейса (localizeError). MCP и CLI приходят без cookie языка и получают текст по-русски.
+ */
 export const defineHubHandler = <T>(handler: (event: H3Event) => Promise<T>) =>
   defineEventHandler(async (event) => {
     try {
       return await handler(event)
     } catch (error) {
-      throwHubError(error)
+      try {
+        throwHubError(error)
+      } catch (httpError) {
+        throw localizeError(event, httpError)
+      }
     }
   })
 

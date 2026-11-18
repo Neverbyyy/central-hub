@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { ruT } from './i18n'
 import {
   presenceCell,
   presenceColor,
@@ -108,8 +109,8 @@ describe('присутствие: состояние канала', () => {
 
 describe('присутствие: подписи', () => {
   it('«Антон правит DE», двое и больше — «Антон +1 правят DE»', () => {
-    expect(presenceLabel(['Антон'], 'de')).toBe('Антон правит DE')
-    expect(presenceLabel(['Антон', 'Кирилл'], 'de')).toBe('Антон +1 правят DE')
+    expect(presenceLabel(['Антон'], 'de', ruT)).toBe('Антон правит DE')
+    expect(presenceLabel(['Антон', 'Кирилл'], 'de', ruT)).toBe('Антон +1 правят DE')
   })
 
   it('в кружке — первая буква имени, заглавная', () => {
@@ -120,11 +121,11 @@ describe('присутствие: подписи', () => {
 
   it('сколько в сервисе: только что, минуты, часы', () => {
     const now = 10 * 60 * 60 * 1000
-    expect(presenceDuration(now - 20_000, now)).toBe('меньше минуты')
-    expect(presenceDuration(now - 12 * 60_000, now)).toBe('12 мин')
-    expect(presenceDuration(now - 65 * 60_000, now)).toBe('1 ч 5 мин')
-    expect(presenceDuration(now - 120 * 60_000, now)).toBe('2 ч')
-    expect(presenceDuration(0, now)).toBe('')
+    expect(presenceDuration(now - 20_000, now, ruT)).toBe('меньше минуты')
+    expect(presenceDuration(now - 12 * 60_000, now, ruT)).toBe('12 мин')
+    expect(presenceDuration(now - 65 * 60_000, now, ruT)).toBe('1 ч 5 мин')
+    expect(presenceDuration(now - 120 * 60_000, now, ruT)).toBe('2 ч')
+    expect(presenceDuration(0, now, ruT)).toBe('')
   })
 
   it('устройство: мышь — компьютер, касание — телефон или планшет по короткой стороне', () => {

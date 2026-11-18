@@ -2,7 +2,7 @@
 import { checkText } from '@amaya/l10n-core'
 import { conflictOf } from '~/composables/useLocalizations'
 
-definePageMeta({ title: 'Очередь перевода' })
+definePageMeta({ titleKey: 'nav.queue' })
 
 // Очередь: строки без перевода на язык или с переводом, устаревшим после правки английского.
 // По одной строке, всё с клавиатуры: Enter — сохранить и дальше, Alt+→ — пропустить, Esc — к таблице.
@@ -74,7 +74,7 @@ const fetchQueue = async (reset: boolean) => {
     if (reset || items.value.length === fresh.length) startItem()
   } catch (error) {
     if (gen !== generation) return
-    const text = await errorText('Очередь не загрузилась', error)
+    const text = await errorText(hubT('queue.loadFailed'), error)
     if (text) loadError.value = text
   } finally {
     if (gen === generation) loading.value = false
@@ -104,7 +104,7 @@ onMounted(() => {
 
 watch([lang, prefix], restart)
 
-const languageItems = computed(() => languages.value.map(l => ({ label: `${l.code.toUpperCase()} — ${l.name}`, value: l.code })))
+const languageItems = computed(() => languages.value.map(l => ({ label: `${l.code.toUpperCase()} — ${languageName(l.code)}`, value: l.code })))
 const languageModel = computed({
   get: () => lang.value,
   set: (code: string) => router.replace({ query: { ...route.query, lang: code } })
@@ -160,12 +160,12 @@ const save = async () => {
       // Пока переводили, строку перевёл кто-то ещё — показываем его вариант, свой текст остаётся в поле
       current.current = conflict.current
       toast.add({
-        title: conflict.actor ? `Строку уже перевёл(а) ${conflict.actor}` : 'Строку уже перевели',
-        description: `Сейчас: «${conflict.current ?? '—'}». Enter ещё раз — сохранить ваш вариант.`,
+        title: conflict.actor ? hubT('queue.conflictBy', { actor: conflict.actor }) : hubT('queue.conflict'),
+        description: hubT('queue.conflictText', { current: conflict.current ?? '—' }),
         color: 'warning'
       })
     } else {
-      await notifyError('Не сохранилось', error)
+      await notifyError(hubT('grid.notSaved'), error)
     }
   } finally {
     saving.value = false
@@ -204,7 +204,7 @@ const length = computed(() => [...value.value].length)
         size="sm"
         @click="back"
       >
-        К таблице
+        {{ $t('queue.back') }}
       </UButton>
       <USelect
         v-model="languageModel"
@@ -222,8 +222,8 @@ const length = computed(() => [...value.value].length)
         {{ prefix }}
       </UBadge>
       <span class="ml-auto text-xs text-muted">
-        <template v-if="remaining !== null">Осталось {{ remaining }}</template>
-        <template v-if="done"> · переведено за сессию {{ done }}</template>
+        <template v-if="remaining !== null">{{ $t('queue.remaining', { count: remaining }) }}</template>
+        <template v-if="done">{{ $t('queue.doneSession', { count: done }) }}</template>
       </span>
     </div>
 
@@ -235,7 +235,7 @@ const length = computed(() => [...value.value].length)
             v-if="loading"
             class="text-sm text-muted"
           >
-            Загрузка…
+            {{ $t('common.loading') }}
           </div>
           <LoadError
             v-else-if="loadError"
@@ -246,7 +246,7 @@ const length = computed(() => [...value.value].length)
           <!-- Язык не выбран в адресе — ждём языки, чтобы открыть первый -->
           <LoadError
             v-else-if="!lang && languagesError"
-            :message="`Языки не загрузились: ${errorMessage(languagesError)}`"
+            :message="$t('queue.languagesFailed', { error: errorMessage(languagesError) })"
             class="py-16 text-center text-sm"
             @retry="loadLanguages()"
           />
@@ -254,7 +254,7 @@ const length = computed(() => [...value.value].length)
             v-else-if="!lang"
             class="text-sm text-muted"
           >
-            Загрузка…
+            {{ $t('common.loading') }}
           </div>
           <div
             v-else
@@ -265,7 +265,7 @@ const length = computed(() => [...value.value].length)
               class="size-10 text-gray-300 dark:text-gray-600"
             />
             <p class="mt-3 text-sm font-medium">
-              {{ skipped.size ? 'Остались только пропущенные строки' : `Всё переведено на ${lang.toUpperCase()}` }}
+              {{ skipped.size ? $t('queue.onlySkipped') : $t('queue.allDone', { lang: lang.toUpperCase() }) }}
             </p>
             <div class="mt-4 flex justify-center gap-2">
               <UButton
@@ -275,13 +275,13 @@ const length = computed(() => [...value.value].length)
                 size="sm"
                 @click="restart"
               >
-                Вернуться к пропущенным
+                {{ $t('queue.backToSkipped') }}
               </UButton>
               <UButton
                 size="sm"
                 @click="back"
               >
-                К таблице
+                {{ $t('queue.back') }}
               </UButton>
             </div>
           </div>
@@ -299,7 +299,7 @@ const length = computed(() => [...value.value].length)
                 variant="subtle"
                 size="sm"
               >
-                {{ item.reason === 'stale' ? 'Английский изменился' : 'Нет перевода' }}
+                {{ $t(item.reason === 'stale' ? 'queue.reasonStale' : 'queue.reasonMissing') }}
               </UBadge>
             </div>
             <p
@@ -327,7 +327,7 @@ const length = computed(() => [...value.value].length)
                   v-if="busyBy.length"
                   class="rounded px-1.5 font-semibold normal-case tracking-normal text-white"
                   :style="{ backgroundColor: presenceColor(busyBy[0]!) }"
-                >{{ presenceLabel(busyBy, lang) }}</span>
+                >{{ presenceLabel(busyBy, lang, $t) }}</span>
               </span>
               <span
                 class="font-normal normal-case tracking-normal"
@@ -343,7 +343,7 @@ const length = computed(() => [...value.value].length)
               autoresize
               class="w-full"
               :ui="{ base: 'text-base' }"
-              :placeholder="`Перевод на ${lang.toUpperCase()}`"
+              :placeholder="$t('editSheet.translation', { lang: lang.toUpperCase() })"
               @keydown="onKeydown"
             />
             <LocalizationsTextIssues :issues="issues" />
@@ -355,14 +355,14 @@ const length = computed(() => [...value.value].length)
               :disabled="hasErrors"
               @click="save"
             >
-              {{ item.reason === 'stale' && value === item.current ? 'Перевод актуален' : 'Сохранить' }}
+              {{ $t(item.reason === 'stale' && value === item.current ? 'queue.upToDate' : 'common.save') }}
             </UButton>
             <UButton
               color="neutral"
               variant="ghost"
               @click="skip"
             >
-              Пропустить
+              {{ $t('queue.skip') }}
             </UButton>
           </div>
         </div>
@@ -370,11 +370,11 @@ const length = computed(() => [...value.value].length)
     </div>
 
     <AppHotkeys>
-      <span><kbd>Enter</kbd> сохранить и дальше</span>
-      <span><kbd>Shift+Enter</kbd> перенос строки</span>
-      <span><kbd>Alt+→</kbd> пропустить</span>
-      <span><kbd>Esc</kbd> к таблице</span>
-      <span>Сохранённое — черновик, утвердить можно в панели ключа</span>
+      <span><kbd>Enter</kbd> {{ $t('queue.hotkeys.saveNext') }}</span>
+      <span><kbd>Shift+Enter</kbd> {{ $t('queue.hotkeys.newline') }}</span>
+      <span><kbd>Alt+→</kbd> {{ $t('queue.hotkeys.skip') }}</span>
+      <span><kbd>Esc</kbd> {{ $t('queue.hotkeys.back') }}</span>
+      <span>{{ $t('queue.hotkeys.draftNote') }}</span>
     </AppHotkeys>
   </div>
 </template>

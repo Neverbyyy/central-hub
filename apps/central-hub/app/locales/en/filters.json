@@ -1,0 +1,20 @@
+{
+  "allStatuses": "All statuses",
+  "ai": "✦ By AI",
+  "pending": "Not approved",
+  "drafts": "Drafts",
+  "approved": "Approved",
+  "allTranslated": "Translated into all",
+  "missing": "No translation: {lang}",
+  "linkCopied": "Link to this view copied",
+  "staleTitle": "The English text changed after translation — the translation needs a check",
+  "stale": "Outdated translation",
+  "deprecatedTitle": "Keys marked as deprecated: they’re not in the table or exports and can be restored any time",
+  "deprecated": "Deprecated key",
+  "recent": "This week",
+  "section": "Section",
+  "goTo": "Go to {prefix}",
+  "removeSection": "Remove section",
+  "reset": "Reset",
+  "link": "Link to this view"
+}

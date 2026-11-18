@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { NuxtError } from '#app'
-import { ru } from '@nuxt/ui/locale'
 import art from '~/assets/error/not-found-large.webp'
 import art2x from '~/assets/error/not-found-large@2x.webp'
 import artLight from '~/assets/error/not-found-light-large.webp'
@@ -12,7 +11,10 @@ const props = defineProps<{ error: NuxtError }>()
 
 const notFound = computed(() => props.error.statusCode === 404)
 
-useSeoMeta({ title: () => `${notFound.value ? 'Страница не найдена' : 'Ошибка'} — Amaya Central Hub` })
+const { t } = useI18n()
+const { locale } = useHubLocale()
+useHead({ htmlAttrs: { lang: locale } })
+useSeoMeta({ title: () => `${t(notFound.value ? 'errorPage.tabNotFound' : 'errorPage.tabError')} — Amaya Central Hub` })
 
 // Картинка под тему: светлая и тёмная, у каждой 1x и 2x. Размеры — настоящие, из файлов: место под картинку есть до загрузки
 const ART = [
@@ -27,7 +29,7 @@ const route = useRoute()
 </script>
 
 <template>
-  <UApp :locale="ru">
+  <UApp :locale="uiLocale(locale)">
     <!-- Без сайдбара, на весь экран: из ошибки один путь — кнопка. Тема — как у человека в «Настройках» -->
     <main class="error-scene relative isolate h-dvh overflow-y-auto text-highlighted">
       <div
@@ -57,12 +59,10 @@ const route = useRoute()
           </p>
 
           <h1 class="mt-5 text-2xl font-bold lg:mt-6 lg:text-[2rem] lg:leading-tight">
-            {{ notFound ? 'Страница не найдена' : 'Что-то сломалось' }}
+            {{ $t(notFound ? 'errorPage.notFoundTitle' : 'errorPage.brokenTitle') }}
           </h1>
           <p class="mx-auto mt-3 max-w-xs text-base text-toned lg:mx-0 lg:text-lg">
-            {{ notFound
-              ? 'Возможно, она была удалена, переименована или вы перешли по неверной ссылке.'
-              : 'Попробуйте обновить страницу. Не помогает — перешлите текст ниже тому, кто поддерживает сервис.' }}
+            {{ $t(notFound ? 'errorPage.notFoundText' : 'errorPage.brokenText') }}
           </p>
           <!-- Что именно сломалось — чтобы было что переслать -->
           <p
@@ -84,7 +84,7 @@ const route = useRoute()
               icon="i-lucide-rotate-cw"
               class="rounded-full px-5"
             >
-              Обновить страницу
+              {{ $t('errorPage.reload') }}
             </UButton>
             <UButton
               to="/"
@@ -94,7 +94,7 @@ const route = useRoute()
               :variant="notFound ? 'solid' : 'outline'"
               class="rounded-full px-5"
             >
-              На главную
+              {{ $t('errorPage.home') }}
             </UButton>
           </div>
         </section>

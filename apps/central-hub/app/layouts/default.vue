@@ -1,13 +1,15 @@
 <script setup lang="ts">
 const route = useRoute()
+const { t } = useI18n()
 
 const breadcrumbs = computed(() => {
   const items = [
-    { label: 'Главная', to: '/' }
+    { label: t('nav.home'), to: '/' }
   ]
 
-  if (route.meta.title) {
-    items.push({ label: route.meta.title as string, to: route.path })
+  // titleKey страницы — ключ словаря: подпись на языке интерфейса
+  if (route.meta.titleKey) {
+    items.push({ label: t(route.meta.titleKey as string), to: route.path })
   }
 
   return items
@@ -34,7 +36,7 @@ watch(() => route.fullPath, () => {
     <USlideover
       v-model:open="menuOpen"
       side="left"
-      title="Меню"
+      :title="$t('nav.menu')"
       :ui="{ content: 'max-w-72' }"
     >
       <template #content>
@@ -49,7 +51,7 @@ watch(() => route.fullPath, () => {
           color="neutral"
           variant="ghost"
           class="lg:hidden"
-          aria-label="Меню"
+          :aria-label="$t('nav.menu')"
           @click="menuOpen = true"
         />
 

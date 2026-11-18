@@ -19,17 +19,17 @@ const deprecated = defineModel<boolean>('deprecated', { required: true })
 // У пунктов выбора не бывает пустого значения — «все» обозначаем отдельно
 const ALL = 'all'
 
-const statusItems = [
-  { label: 'Все статусы', value: ALL },
-  { label: '✦ От ИИ', value: 'ai' },
-  { label: 'Не утверждённые', value: 'pending' },
-  { label: 'Черновики', value: 'draft' },
-  { label: 'Утверждённые', value: 'approved' }
-]
+const statusItems = computed(() => [
+  { label: hubT('filters.allStatuses'), value: ALL },
+  { label: hubT('filters.ai'), value: 'ai' },
+  { label: hubT('filters.pending'), value: 'pending' },
+  { label: hubT('filters.drafts'), value: 'draft' },
+  { label: hubT('filters.approved'), value: 'approved' }
+])
 
 const missingItems = computed(() => [
-  { label: 'Переведено на все', value: ALL },
-  ...props.languages.filter(l => l !== 'en').map(l => ({ label: `Нет перевода: ${l.toUpperCase()}`, value: l }))
+  { label: hubT('filters.allTranslated'), value: ALL },
+  ...props.languages.filter(l => l !== 'en').map(l => ({ label: hubT('filters.missing', { lang: l.toUpperCase() }), value: l }))
 ])
 
 const statusModel = computed({
@@ -55,7 +55,7 @@ const crumbs = computed(() => {
 
 const { copy } = useCopy()
 
-const copyLink = () => copy(window.location.href, 'Ссылка на выборку скопирована')
+const copyLink = () => copy(window.location.href, hubT('filters.linkCopied'))
 </script>
 
 <template>
@@ -84,20 +84,20 @@ const copyLink = () => copy(window.location.href, 'Ссылка на выбор�
       icon="i-lucide-history"
       :color="stale ? 'warning' : 'neutral'"
       :variant="stale ? 'soft' : 'outline'"
-      title="Английский поменяли после перевода — перевод нужно сверить"
+      :title="$t('filters.staleTitle')"
       @click="stale = !stale"
     >
-      Перевод устарел
+      {{ $t('filters.stale') }}
     </UButton>
     <UButton
       size="sm"
       icon="i-lucide-archive"
       :color="deprecated ? 'warning' : 'neutral'"
       :variant="deprecated ? 'soft' : 'outline'"
-      title="Ключи, помеченные устаревшими: их нет в таблице и выгрузках, вернуть можно в любой момент"
+      :title="$t('filters.deprecatedTitle')"
       @click="deprecated = !deprecated"
     >
-      Ключ устарел
+      {{ $t('filters.deprecated') }}
     </UButton>
     <UButton
       size="sm"
@@ -106,7 +106,7 @@ const copyLink = () => copy(window.location.href, 'Ссылка на выбор�
       :variant="recent ? 'soft' : 'outline'"
       @click="recent = !recent"
     >
-      За неделю
+      {{ $t('filters.recent') }}
     </UButton>
     <UBadge
       v-if="prefix"
@@ -116,7 +116,7 @@ const copyLink = () => copy(window.location.href, 'Ссылка на выбор�
       class="gap-1 font-mono"
     >
       <nav
-        aria-label="Раздел"
+        :aria-label="$t('filters.section')"
         class="flex items-center gap-0.5"
       >
         <template
@@ -132,7 +132,7 @@ const copyLink = () => copy(window.location.href, 'Ссылка на выбор�
             v-if="i < crumbs.length - 1"
             type="button"
             class="text-muted underline-offset-2 hover:text-highlighted hover:underline"
-            :title="`Перейти к ${crumb.prefix}`"
+            :title="$t('filters.goTo', { prefix: crumb.prefix })"
             @click="prefix = crumb.prefix"
           >
             {{ crumb.label }}
@@ -147,8 +147,8 @@ const copyLink = () => copy(window.location.href, 'Ссылка на выбор�
       <button
         type="button"
         class="ml-1 text-muted hover:text-default"
-        aria-label="Убрать раздел"
-        title="Убрать раздел"
+        :aria-label="$t('filters.removeSection')"
+        :title="$t('filters.removeSection')"
         @click="prefix = ''"
       >
         <UIcon
@@ -167,20 +167,20 @@ const copyLink = () => copy(window.location.href, 'Ссылка на выбор�
         variant="ghost"
         color="neutral"
         icon="i-lucide-x"
-        title="Сбросить"
+        :title="$t('filters.reset')"
         @click="emit('reset')"
       >
-        <span class="max-md:sr-only">Сбросить</span>
+        <span class="max-md:sr-only">{{ $t('filters.reset') }}</span>
       </UButton>
       <UButton
         size="sm"
         variant="ghost"
         color="neutral"
         icon="i-lucide-link"
-        title="Ссылка на выборку"
+        :title="$t('filters.link')"
         @click="copyLink"
       >
-        <span class="max-md:sr-only">Ссылка на выборку</span>
+        <span class="max-md:sr-only">{{ $t('filters.link') }}</span>
       </UButton>
     </div>
   </div>

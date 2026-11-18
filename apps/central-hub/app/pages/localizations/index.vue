@@ -3,7 +3,7 @@ import type { DropdownMenuItem } from '@nuxt/ui'
 import { createReusableTemplate } from '@vueuse/core'
 import type { Localization } from '~/composables/useLocalizations'
 
-definePageMeta({ title: 'Локализации' })
+definePageMeta({ titleKey: 'nav.localizations' })
 
 const toast = useToast()
 const notifyError = useNotifyError()
@@ -240,11 +240,11 @@ const approveSelected = async () => {
   try {
     const { count } = await $fetch<{ count: number }>('/api/keys/approve', { method: 'POST', body: { keys } })
     toast.add(count
-      ? { title: `Утверждено: ${count} ${plural(count, ['перевод', 'перевода', 'переводов'])}`, color: 'success' }
-      : { title: 'Всё выделенное уже утверждено', color: 'neutral' })
+      ? { title: hubT('loc.approved', { count }), color: 'success' }
+      : { title: hubT('loc.allApproved'), color: 'neutral' })
     clearSelection()
   } catch (error) {
-    await notifyError('Не утвердилось', error)
+    await notifyError(hubT('loc.approveFailed'), error)
   } finally {
     approving.value = false
   }
@@ -294,9 +294,9 @@ const exportZip = async () => {
     const files = Object.fromEntries(languageCodes.value.map(lang =>
       [`${lang}.json`, Object.fromEntries(all.map(row => [row.technical_key, row.translations?.[lang] ?? '']))]))
     await downloadJsonZip(files, 'localizations.zip')
-    toast.add({ title: 'Экспорт ZIP завершён', color: 'success' })
+    toast.add({ title: hubT('loc.zipDone'), color: 'success' })
   } catch (error) {
-    toast.add({ title: 'Ошибка экспорта', description: (error as Error).message, color: 'error' })
+    toast.add({ title: hubT('loc.exportError'), description: (error as Error).message, color: 'error' })
   } finally {
     exporting.value = false
   }
@@ -304,14 +304,14 @@ const exportZip = async () => {
 
 // --- Меню «Ещё» уже 768 px: то, чему не хватило места в тулбаре ---
 const moreItems = computed<DropdownMenuItem[][]>(() => [
-  [{ label: 'Очередь перевода', icon: 'i-lucide-list-todo', children: queueItems.value }],
+  [{ label: hubT('nav.queue'), icon: 'i-lucide-list-todo', children: queueItems.value }],
   [
     { label: 'Export ZIP', icon: 'i-lucide-download', disabled: exporting.value, onSelect: exportZip },
     { label: 'Export Figma', icon: 'i-lucide-figma', onSelect: () => { figmaOpen.value = true } }
   ]
 ])
 
-const keysTotal = computed(() => (total.value === null ? '…' : keysCount(total.value)))
+const keysTotal = computed(() => (total.value === null ? '…' : hubT('common.keys', { count: total.value })))
 
 // --- Правка в шторке снизу: на касании вместо редактора в ячейке ---
 const sheet = ref<{ key: string, lang: string, initial: string } | null>(null)
@@ -385,14 +385,14 @@ usePresenceEditing(() => (sheetOpen.value && sheet.value ? { key: sheet.value.ke
           :icon="treeShown ? 'i-lucide-panel-left-close' : 'i-lucide-panel-left-open'"
           color="neutral"
           variant="ghost"
-          :aria-label="treeShown ? 'Скрыть разделы' : 'Показать разделы'"
+          :aria-label="$t(treeShown ? 'loc.hideSections' : 'loc.showSections')"
           @click="toggleTree"
         />
         <UInput
           ref="searchInput"
           v-model="q"
           icon="i-lucide-search"
-          placeholder="Поиск по ключу или тексту…"
+          :placeholder="$t('loc.searchPlaceholder')"
           class="w-full min-w-32 max-w-sm"
           :ui="{ trailing: 'pe-1' }"
         >
@@ -404,8 +404,8 @@ usePresenceEditing(() => (sheetOpen.value && sheet.value ? { key: sheet.value.ke
             <button
               type="button"
               class="rounded p-1 text-muted hover:text-default"
-              aria-label="Очистить поиск"
-              title="Очистить поиск"
+              :aria-label="$t('loc.clearSearch')"
+              :title="$t('loc.clearSearch')"
               @mousedown.prevent
               @click="clearSearch"
             >
@@ -427,9 +427,9 @@ usePresenceEditing(() => (sheetOpen.value && sheet.value ? { key: sheet.value.ke
           color="warning"
           variant="subtle"
           icon="i-lucide-wifi-off"
-          title="Нет связи с сервером — переподключаюсь. Правки коллег появятся, когда связь вернётся"
+          :title="$t('loc.offlineTitle')"
         >
-          <span class="max-sm:sr-only">Нет связи — переподключаюсь…</span>
+          <span class="max-sm:sr-only">{{ $t('loc.offline') }}</span>
         </UBadge>
         <!-- Уже 1280 px — в строке фильтров, вместе с тегами -->
         <span class="hidden whitespace-nowrap text-xs text-muted xl:inline">
@@ -446,10 +446,10 @@ usePresenceEditing(() => (sheetOpen.value && sheet.value ? { key: sheet.value.ke
             icon="i-lucide-list-todo"
             color="neutral"
             variant="soft"
-            title="Очередь перевода"
+            :title="$t('nav.queue')"
             class="hidden md:inline-flex"
           >
-            <span class="max-[1365px]:sr-only">Очередь перевода</span>
+            <span class="max-[1365px]:sr-only">{{ $t('nav.queue') }}</span>
           </UButton>
           <template #queue-trailing="{ item }">
             <ReuseQueueCount :item="item" />
@@ -486,10 +486,10 @@ usePresenceEditing(() => (sheetOpen.value && sheet.value ? { key: sheet.value.ke
 
         <UButton
           icon="i-lucide-plus"
-          title="Новый ключ"
+          :title="$t('loc.newKey')"
           @click="creating = true"
         >
-          <span class="max-sm:sr-only">Новый ключ</span>
+          <span class="max-sm:sr-only">{{ $t('loc.newKey') }}</span>
         </UButton>
 
         <UDropdownMenu
@@ -502,7 +502,7 @@ usePresenceEditing(() => (sheetOpen.value && sheet.value ? { key: sheet.value.ke
             color="neutral"
             variant="soft"
             class="md:hidden"
-            aria-label="Ещё"
+            :aria-label="$t('loc.more')"
           />
           <template #queue-trailing="{ item }">
             <ReuseQueueCount :item="item" />
@@ -565,14 +565,14 @@ usePresenceEditing(() => (sheetOpen.value && sheet.value ? { key: sheet.value.ke
         name="i-lucide-refresh-cw"
         class="size-4 shrink-0"
       />
-      <span class="flex-1">Пока не было связи, изменилось много строк — таблица может быть неполной.</span>
+      <span class="flex-1">{{ $t('loc.tooManyChanges') }}</span>
       <UButton
         size="xs"
         color="warning"
         variant="soft"
         @click="reload()"
       >
-        Обновить таблицу
+        {{ $t('loc.refreshTable') }}
       </UButton>
     </div>
 
@@ -647,7 +647,7 @@ usePresenceEditing(() => (sheetOpen.value && sheet.value ? { key: sheet.value.ke
     <USlideover
       v-model:open="treeDrawer"
       side="left"
-      title="Разделы"
+      :title="$t('loc.sections')"
       :ui="{ content: 'max-w-xs' }"
     >
       <template #content>
@@ -666,7 +666,7 @@ usePresenceEditing(() => (sheetOpen.value && sheet.value ? { key: sheet.value.ke
               size="lg"
               @click="treeDrawer = false"
             >
-              Показать {{ keysTotal }}
+              {{ $t('loc.show', { keys: keysTotal }) }}
             </UButton>
           </div>
         </div>
@@ -676,7 +676,7 @@ usePresenceEditing(() => (sheetOpen.value && sheet.value ? { key: sheet.value.ke
     <USlideover
       v-model:open="panelSheetOpen"
       side="right"
-      title="Ключ"
+      :title="$t('grid.key')"
     >
       <template #content>
         <ReusePanel :in-sheet="true" />
@@ -695,11 +695,11 @@ usePresenceEditing(() => (sheetOpen.value && sheet.value ? { key: sheet.value.ke
 
     <!-- Одна строка: что не влезло, прячется, а не переносится -->
     <AppHotkeys class="overflow-hidden whitespace-nowrap">
-      <span><kbd>↑↓←→</kbd> навигация</span>
-      <span><kbd>Enter</kbd> / печатай — правка · <kbd>Shift+Enter</kbd> перенос · <kbd>Esc</kbd> отмена</span>
-      <span><kbd>⌘C</kbd> / <kbd>⌘V</kbd> · <kbd>Del</kbd> очистить · <kbd>⌘Z</kbd> отменить</span>
-      <span><kbd>Enter</kbd> на ключе — панель</span>
-      <span class="ml-auto"><kbd>Ctrl+K</kbd> поиск и команды</span>
+      <span><kbd>↑↓←→</kbd> {{ $t('loc.hotkeys.navigation') }}</span>
+      <span><kbd>Enter</kbd> {{ $t('loc.hotkeys.editStart') }} · <kbd>Shift+Enter</kbd> {{ $t('loc.hotkeys.newline') }} · <kbd>Esc</kbd> {{ $t('loc.hotkeys.cancel') }}</span>
+      <span><kbd>⌘C</kbd> / <kbd>⌘V</kbd> · <kbd>Del</kbd> {{ $t('loc.hotkeys.clear') }} · <kbd>⌘Z</kbd> {{ $t('loc.hotkeys.undo') }}</span>
+      <span><kbd>Enter</kbd> {{ $t('loc.hotkeys.panel') }}</span>
+      <span class="ml-auto"><kbd>Ctrl+K</kbd> {{ $t('loc.hotkeys.search') }}</span>
     </AppHotkeys>
   </div>
 </template>

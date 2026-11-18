@@ -1,7 +1,7 @@
 // Подсказки к полю «Ключ» в форме «Новый ключ»: что может идти следующей частью — из «Как называть ключи»,
 // справочника и разделов, которые уже есть. Чистые функции: форма держит только фокус, курсор и клавиатуру.
 import { registryKindOf, type NEW_KEY_ROOTS, type RegistryKind } from '@amaya/l10n-core'
-import { keysCount } from '../../shared/utils/plural'
+import type { Translate } from '../../shared/utils/plural'
 
 /** Раздел из дерева ключей (/api/keys/tree). */
 export interface KeyTreeNode {
@@ -24,32 +24,22 @@ export const indexKeyTree = (roots: KeyTreeNode[]): KeyTreeIndex => {
   return index
 }
 
-// Первая часть ключа — из «Как называть ключи»; порядок — от самого частого
-const ROOT_HINTS = {
-  app: 'Игра: пейволлы, онбординги, баннеры',
-  web: 'Сайт или лендинг',
-  common: 'Общее для всех: кнопки, ссылки, цены, фразы',
-  brand: 'Отличается по юрлицу',
-  ds: 'Строки компонентов дизайн-системы',
-  test: 'Только для A/B-теста: test.<тест>.'
-} satisfies Record<typeof NEW_KEY_ROOTS[number], string>
+// Первая часть ключа — из «Как называть ключи»; порядок — от самого частого. Пояснения — в словаре: keyHints.roots.<начало>
+const ROOTS = ['app', 'web', 'common', 'brand', 'ds', 'test'] as const satisfies readonly (typeof NEW_KEY_ROOTS[number])[]
 
-// Типичные разделы — пока в игре или на сайте своих ещё нет
-const TYPICAL: Record<string, Record<string, string>> = {
-  common: { button: 'кнопки', link: 'ссылки', price: 'цены', period: 'периоды', legal: 'юридические фразы' },
-  app: { paywall: 'пейволл', onboarding: 'онбординг', banner: 'баннер' },
-  web: { home: 'главная страница', faq: 'вопросы и ответы' },
-  brand: { legal: 'юридические фразы' }
+// Типичные разделы — пока в игре или на сайте своих ещё нет. Пояснения — keyHints.typical.<начало>.<раздел>
+const TYPICAL: Record<string, readonly string[]> = {
+  common: ['button', 'link', 'price', 'period', 'legal'],
+  app: ['paywall', 'onboarding', 'banner'],
+  web: ['home', 'faq'],
+  brand: ['legal']
 }
 
-const KIND_ADD: Record<RegistryKind, string> = { game: 'игру', site: 'сайт', brand: 'бренд', test: 'тест', project: 'проект' }
-const KIND_NEW: Record<RegistryKind, string> = { game: 'новую игру', site: 'новый сайт', brand: 'новый бренд', test: 'новый тест', project: 'новый проект' }
-
-/** «добавить игру в справочник» — винительный падеж вида кода. */
-export const addCodeLabel = (kind: RegistryKind) => `добавить ${KIND_ADD[kind]} в справочник`
+/** «добавить игру в справочник» — на языке интерфейса. */
+export const addCodeLabel = (kind: RegistryKind, t: Translate) => t(`keyHints.add.${kind}`)
 
 /** «как новую игру» — код, которого ещё нет в справочнике. */
-export const newCodeLabel = (kind: RegistryKind) => KIND_NEW[kind]
+export const newCodeLabel = (kind: RegistryKind, t: Translate) => t(`keyHints.asNew.${kind}`)
 
 /** Справочник второй части нового ключа: app → игры, web → сайты. legacy.* новым ключам нельзя — для него никакого. */
 export const newKeyRegistryKind = (root: string) => (root === 'legacy' ? undefined : registryKindOf(root))
@@ -78,37 +68,40 @@ interface SuggestContext {
   tree: KeyTreeIndex
   // «InApp», «InApp и Pages Hub» — useExportRules
   targetNames: (key: string) => string
+  // Словарь интерфейса: пояснения и счётчики — на его языке
+  t: Translate
 }
 
 // Сколько ключей уже в разделе: «12 ключей» в подсказке
-const sectionKeys = (tree: KeyTreeIndex, path: string) => {
+const sectionKeys = (tree: KeyTreeIndex, path: string, t: Translate) => {
   const count = tree.get(path)?.keys
-  return count ? keysCount(count) : ''
+  return count ? t('common.keys', { count }, count) : ''
 }
 
 // Что может идти после готовых частей. closed — выбор из известного списка (начала, справочник)
-function partsAfter(done: string[], { registry, tree, targetNames }: SuggestContext): { parts: Part[], kind?: RegistryKind, closed: boolean } {
+function partsAfter(done: string[], { registry, tree, targetNames, t }: SuggestContext): { parts: Part[], kind?: RegistryKind, closed: boolean } {
   const path = done.join('.')
   // test.<тест>. — дальше обычный ключ: подсказки те же, что с начала
   const inner = done[0] === 'test' && done.length >= 2 ? done.slice(2) : done
   if (!inner.length) {
-    const roots = Object.entries(ROOT_HINTS).filter(([root]) => !(done[0] === 'test' && root === 'test'))
+    const roots = ROOTS.filter(root => !(done[0] === 'test' && root === 'test'))
     // У начала сразу видно, в какой проект уйдёт ключ: app. — InApp, web. — Pages Hub
-    return { parts: roots.map(([segment, hint]) => ({ segment, hint, targets: targetNames(`${path ? `${path}.` : ''}${segment}.`) })), closed: true }
+    return { parts: roots.map(segment => ({ segment, hint: t(`keyHints.roots.${segment}`), targets: targetNames(`${path ? `${path}.` : ''}${segment}.`) })), closed: true }
   }
   const root = inner[0]!
   const kind = inner.length === 1 ? newKeyRegistryKind(root) : undefined
   if (kind) {
     const parts = registry
       .filter(entry => entry.kind === kind)
-      .map(entry => ({ segment: entry.code, hint: [entry.title, sectionKeys(tree, `${path}.${entry.code}`)].filter(Boolean).join(' · ') }))
+      .map(entry => ({ segment: entry.code, hint: [entry.title, sectionKeys(tree, `${path}.${entry.code}`, t)].filter(Boolean).join(' · ') }))
     return { parts, kind, closed: true }
   }
-  const typical = inner.length === (newKeyRegistryKind(root) ? 2 : 1) ? TYPICAL[root] ?? {} : {}
+  const typical = inner.length === (newKeyRegistryKind(root) ? 2 : 1) ? TYPICAL[root] ?? [] : []
+  const typicalHint = (segment: string) => (typical.includes(segment) ? t(`keyHints.typical.${root}.${segment}`) : '')
   const existing = tree.get(path)?.children ?? []
-  const parts = existing.map(node => ({ segment: node.label, hint: [typical[node.label], sectionKeys(tree, node.path)].filter(Boolean).join(' · ') }))
-  for (const [segment, hint] of Object.entries(typical)) {
-    if (!parts.some(part => part.segment === segment)) parts.push({ segment, hint })
+  const parts = existing.map(node => ({ segment: node.label, hint: [typicalHint(node.label), sectionKeys(tree, node.path, t)].filter(Boolean).join(' · ') }))
+  for (const segment of typical) {
+    if (!parts.some(part => part.segment === segment)) parts.push({ segment, hint: typicalHint(segment) })
   }
   return { parts, closed: false }
 }
@@ -128,7 +121,7 @@ export function keySuggestions(value: string, context: SuggestContext): KeySugge
   const list: KeySuggestion[] = shown.map(part => ({ value: `${base}${part.segment}.`, segment: part.segment, hint: part.hint, targets: part.targets }))
   // Кода нет в справочнике — предлагаем добавить: после совпадений, а если их нет — первым
   if (kind && /^[a-z0-9_]{2,}$/.test(partial) && !parts.some(part => part.segment === partial)) {
-    const add = { value: `${base}${partial}.`, segment: partial, hint: addCodeLabel(kind), add: kind }
+    const add = { value: `${base}${partial}.`, segment: partial, hint: addCodeLabel(kind, context.t), add: kind }
     if (matches.length) list.push(add)
     else list.unshift(add)
   }

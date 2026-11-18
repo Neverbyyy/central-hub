@@ -1,0 +1,45 @@
+{
+  "roots": {
+    "app": "Game: paywalls, onboardings, banners",
+    "web": "Site or landing",
+    "common": "Shared by everything: buttons, links, prices, phrases",
+    "brand": "Differs by legal entity",
+    "ds": "Design system component strings",
+    "test": "Only for an A/B test: test.<test>."
+  },
+  "typical": {
+    "common": {
+      "button": "buttons",
+      "link": "links",
+      "price": "prices",
+      "period": "periods",
+      "legal": "legal phrases"
+    },
+    "app": {
+      "paywall": "paywall",
+      "onboarding": "onboarding",
+      "banner": "banner"
+    },
+    "web": {
+      "home": "home page",
+      "faq": "questions and answers"
+    },
+    "brand": {
+      "legal": "legal phrases"
+    }
+  },
+  "add": {
+    "game": "add the game to the registry",
+    "site": "add the site to the registry",
+    "brand": "add the brand to the registry",
+    "test": "add the test to the registry",
+    "project": "add the project to the registry"
+  },
+  "asNew": {
+    "game": "a new game",
+    "site": "a new site",
+    "brand": "a new brand",
+    "test": "a new test",
+    "project": "a new project"
+  }
+}

@@ -12,8 +12,8 @@ const props = defineProps<{
   linkable?: boolean
 }>()
 
-const device = computed(() => PRESENCE_DEVICE[props.person.device])
-const duration = computed(() => presenceDuration(props.person.since, props.now))
+const { t } = useI18n()
+const duration = computed(() => presenceDuration(props.person.since, props.now, t))
 const editingTo = computed(() => (props.person.editing ? keyRoute(props.person.editing.key) : undefined))
 </script>
 
@@ -29,11 +29,11 @@ const editingTo = computed(() => (props.person.editing ? keyRoute(props.person.e
         <span
           v-if="self"
           class="text-muted"
-        >вы</span>
+        >{{ $t('presence.you') }}</span>
         <UIcon
-          :name="device.icon"
+          :name="PRESENCE_DEVICE_ICON[person.device]"
           class="ms-auto size-3.5 shrink-0 text-muted"
-          :aria-label="device.label"
+          :aria-label="$t(`presence.device.${person.device}`)"
         />
       </div>
       <p
@@ -44,7 +44,7 @@ const editingTo = computed(() => (props.person.editing ? keyRoute(props.person.e
         {{ person.email }}
       </p>
       <p class="truncate text-muted">
-        {{ duration ? `В сервисе ${duration}` : 'В сервисе' }}
+        {{ duration ? $t('presence.hereFor', { duration }) : $t('presence.here') }}
       </p>
       <p
         v-if="person.editing"
@@ -55,7 +55,7 @@ const editingTo = computed(() => (props.person.editing ? keyRoute(props.person.e
           class="size-3 shrink-0"
           :style="{ color: presenceColor(person.name) }"
         />
-        <span class="shrink-0">Правит</span>
+        <span class="shrink-0">{{ $t('presence.editing') }}</span>
         <ULink
           v-if="linkable && editingTo"
           :to="editingTo"

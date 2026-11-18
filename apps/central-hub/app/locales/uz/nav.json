@@ -1,0 +1,14 @@
+{
+  "home": "Bosh sahifa",
+  "localizations": "Lokalizatsiyalar",
+  "queue": "Tarjima navbati",
+  "abTests": "A/B testlar",
+  "abTestsSoon": "tez orada",
+  "abTestsLater": "A/B testlar keyinroq paydo bo‘ladi",
+  "mcp": "MCP",
+  "settings": "Sozlamalar",
+  "logout": "Chiqish",
+  "menu": "Menyu",
+  "userTitle": "Tahrirlar «{name}» nomi bilan imzolanadi · {account}",
+  "passwordLogin": "umumiy parol bilan kirilgan"
+}

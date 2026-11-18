@@ -1,0 +1,19 @@
+{
+  "hello": "Salom, {name}",
+  "tagline": "Barcha mahsulotlar matnlari, dizayn tizimi va stendlar — bir joyda.",
+  "findKey": "Kalitni topish",
+  "open": "Ochish",
+  "groups": {
+    "texts": "Matnlar",
+    "design": "Dizayn tizimi",
+    "work": "Ishchi stendlar"
+  },
+  "services": {
+    "localizations": { "title": "Lokalizatsiyalar", "description": "Barcha mahsulotlar kalitlari va tarjimalari: qidiruv, tarjima navbati, kodga va Figma’ga eksport." },
+    "mcp": { "title": "Neyrotarmoqlar uchun MCP", "description": "Token va yo‘riqnoma: Claude Code satrlarni qidiradi, kalitlar yaratadi va qoralama tarjimalar yozadi." },
+    "storybook": { "title": "Storybook", "description": "Komponentlar, tokenlar va mavzular, paywall va lendinglarning to‘liq ekranlari." },
+    "emulator": { "title": "InApp emulyatori", "description": "Qurilma ramkasida paywall va onbordinglar: xarid, yopish, hodisalar jurnali." },
+    "landings": { "title": "Lendinglar", "description": "Dizayn tizimidagi Cars 2 va Farm lendinglari, barcha tillarda." },
+    "webviews": { "title": "WebViews", "description": "Testlardagi barcha InApp variantlari — faqat ko‘rish." }
+  }
+}

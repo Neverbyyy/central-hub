@@ -2,7 +2,7 @@
 import type { TextIssue } from '@amaya/l10n-core'
 
 // Замечания к тексту под полем: ошибки (не сохранится) — красным, предупреждения — янтарным.
-// Те же проверки в очереди перевода и в шторке правки (checkText из l10n-core)
+// Те же проверки в очереди перевода и в шторке правки (checkText из l10n-core), текст — на языке интерфейса (ruleText)
 defineProps<{ issues: TextIssue[] }>()
 </script>
 
@@ -16,7 +16,7 @@ defineProps<{ issues: TextIssue[] }>()
       :key="issue.message"
       :class="issue.level === 'error' ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400'"
     >
-      {{ issue.message }}
+      {{ ruleText(issue.message) }}
     </li>
   </ul>
 </template>

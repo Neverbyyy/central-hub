@@ -1,0 +1,27 @@
+{
+  "online": "{count} onlayn",
+  "inService": "Hozir xizmatda · {count}",
+  "summary": "Hozir xizmatda {count} — {who}. Ro‘yxatni ko‘rsatish",
+  "withYou": "{names} va siz",
+  "onlyYou": "faqat siz",
+  "nobodyElse": "Sizdan boshqa hozir hech kim yo‘q.",
+  "you": "siz",
+  "here": "Xizmatda",
+  "hereFor": "Xizmatda {duration}",
+  "editing": "Tahrirlamoqda",
+  "duration": {
+    "lessThanMinute": "bir daqiqadan kam",
+    "minutes": "{minutes} daq",
+    "hours": "{hours} soat",
+    "hoursMinutes": "{hours} soat {minutes} daq"
+  },
+  "cell": {
+    "one": "{who} tahrirlamoqda: {lang}",
+    "many": "{who} +{more} tahrirlamoqda: {lang}"
+  },
+  "device": {
+    "desktop": "kompyuter",
+    "tablet": "planshet",
+    "phone": "telefon"
+  }
+}

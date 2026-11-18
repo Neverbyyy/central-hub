@@ -21,7 +21,7 @@ defineEmits<{ retry: [] }>()
       class="ml-1 font-medium text-default underline underline-offset-2"
       @click="$emit('retry')"
     >
-      Повторить
+      {{ $t('common.retry') }}
     </button>
   </p>
 </template>

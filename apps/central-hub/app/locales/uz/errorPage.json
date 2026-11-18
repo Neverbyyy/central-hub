@@ -1,0 +1,10 @@
+{
+  "notFoundTitle": "Sahifa topilmadi",
+  "notFoundText": "Ehtimol, u o‘chirilgan, nomi o‘zgartirilgan yoki havola noto‘g‘ri.",
+  "brokenTitle": "Nimadir buzildi",
+  "brokenText": "Sahifani yangilab ko‘ring. Yordam bermasa, quyidagi matnni xizmatni qo‘llab-quvvatlaydigan odamga yuboring.",
+  "reload": "Sahifani yangilash",
+  "home": "Bosh sahifaga",
+  "tabNotFound": "Sahifa topilmadi",
+  "tabError": "Xato"
+}

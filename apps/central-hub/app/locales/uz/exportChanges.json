@@ -1,0 +1,16 @@
+{
+  "kinds": {
+    "added": "Qo‘shildi",
+    "changed": "O‘zgartirildi",
+    "removed": "O‘chirildi"
+  },
+  "title": "O‘zgarishlar — {project}",
+  "descriptionRepo": "{repo} ga PR sifatida ketadi. Asosiy shoxga — PR merge qilinganda.",
+  "descriptionNoRepo": "PR ga nima ketadi",
+  "truncated": "{file} faylida {total} ta o‘zgarishdan dastlabki {shown} tasi ko‘rsatilgan — hammasi PR da bo‘ladi.",
+  "findInTable": "Jadvaldan topish",
+  "showMore": "{left} tadan yana {count} tasini ko‘rsatish",
+  "footer": "{files}da {changes}",
+  "changes": "{count} ta o‘zgarish",
+  "files": "{count} ta fayl"
+}

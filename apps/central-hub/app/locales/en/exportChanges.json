@@ -1,0 +1,16 @@
+{
+  "kinds": {
+    "added": "Added",
+    "changed": "Changed",
+    "removed": "Removed"
+  },
+  "title": "Changes — {project}",
+  "descriptionRepo": "Will go into a PR to {repo}. Into the main branch — once the PR is merged.",
+  "descriptionNoRepo": "What goes into the PR",
+  "truncated": "{file} shows the first {shown} of {total} changes — all of them will be in the PR.",
+  "findInTable": "Find in the table",
+  "showMore": "Show {count} more of {left}",
+  "footer": "{changes} in {files}",
+  "changes": "{count} change | {count} changes",
+  "files": "{count} file | {count} files"
+}

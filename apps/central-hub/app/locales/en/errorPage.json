@@ -1,0 +1,10 @@
+{
+  "notFoundTitle": "Page not found",
+  "notFoundText": "It may have been deleted or renamed, or the link is wrong.",
+  "brokenTitle": "Something went wrong",
+  "brokenText": "Try reloading the page. If that doesn’t help, send the text below to whoever supports the service.",
+  "reload": "Reload page",
+  "home": "Go home",
+  "tabNotFound": "Page not found",
+  "tabError": "Error"
+}

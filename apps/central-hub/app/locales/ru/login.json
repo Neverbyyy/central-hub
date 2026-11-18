@@ -1,0 +1,28 @@
+{
+  "tab": "Вход",
+  "title": "Вход",
+  "nameTitle": "Как вас зовут?",
+  "nameHint": "Имя подписывает ваши правки в истории строк.",
+  "nameLabel": "Имя",
+  "namePlaceholder": "Введите ваше имя",
+  "continue": "Продолжить",
+  "passwordHint": "Сервис закрыт общим паролем команды.",
+  "password": "Пароль",
+  "showPassword": "Показать пароль",
+  "hidePassword": "Скрыть пароль",
+  "signIn": "Войти",
+  "or": "или",
+  "googleOnly": "Только через рабочий аккаунт {domain}",
+  "google": "Войти через Google",
+  "workAccount": "Рабочий аккаунт {domain}",
+  "notConfigured": "Вход не настроен: на сервере нужен NUXT_HUB_PASSWORD или NUXT_GOOGLE_CLIENT_ID и NUXT_GOOGLE_CLIENT_SECRET.",
+  "language": "Язык",
+  "errors": {
+    "denied": "Вход отменён. Чтобы продолжить, выберите аккаунт Google.",
+    "state": "Ссылка входа устарела или открыта в другой вкладке — нажмите «Войти через Google» ещё раз.",
+    "notAllowed": "{email} — не рабочий аккаунт компании. Войдите аккаунтом {'@'}{domain}.",
+    "thisAccount": "Этот аккаунт",
+    "google": "Google не ответил — попробуйте ещё раз через минуту.",
+    "off": "Вход через Google не настроен на сервере."
+  }
+}

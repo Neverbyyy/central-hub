@@ -1,0 +1,12 @@
+{
+  "limitError": "A whole number from 1 to 10,000",
+  "saved": "Key properties saved",
+  "formLabel": "Key properties",
+  "description": "Description",
+  "descriptionPlaceholder": "Where the string is shown and what its limits are",
+  "tags": "Tags",
+  "maxLength": "Length limit",
+  "noLimit": "no limit",
+  "figma": "Figma link",
+  "hotkeys": "Ctrl+Enter — save · Esc — cancel"
+}

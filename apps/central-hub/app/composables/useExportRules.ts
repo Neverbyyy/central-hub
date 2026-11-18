@@ -5,8 +5,7 @@ export interface ExportRule extends ExportSetPrefixes {
   path_template: string
 }
 
-// Названия наборов (exportProjectName, exportProjectList) — в shared/utils/exportSets.ts: сервер тоже называет набор в
-// тексте ошибки
+// Названия наборов на языке интерфейса — projectList (app/utils/projectName.ts)
 
 /**
  * В какой проект попадёт ключ: app. — InApp, web. — Pages Hub, common. — во все; app.cars2. и web.lp_cars2. — ещё
@@ -16,7 +15,7 @@ export function useExportRules() {
   const { data: rules } = useFetch<ExportRule[]>('/api/export/rules', { key: 'export-rules', server: false, lazy: true, default: () => [] })
 
   // «InApp», «InApp и Pages Hub», «InApp, Pages Hub и Дизайн-система»; пустая строка — ни в один проект
-  const targetNames = (key: string) => exportProjectList(rules.value.filter(rule => keyInExportSet(rule, key)).map(rule => rule.name))
+  const targetNames = (key: string) => projectList(rules.value.filter(rule => keyInExportSet(rule, key)).map(rule => rule.name))
 
   return { rules, targetNames }
 }

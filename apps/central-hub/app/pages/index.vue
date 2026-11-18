@@ -4,9 +4,9 @@ const user = useHubUser()
 // Та же палитра, что по Ctrl+K / ⌘K (CommandPalette в лейауте)
 const paletteOpen = useCommandPaletteOpen()
 
-const groups = HUB_SERVICE_GROUPS.map(group => ({
-  ...group,
-  services: HUB_SERVICES.filter(service => service.group === group.id)
+const groups = HUB_SERVICE_GROUPS.map(id => ({
+  id,
+  services: HUB_SERVICES.filter(service => service.group === id)
 }))
 
 // Плитка с иконкой — цветом группы: тексты — основной цвет сервиса, дизайн-система — синий, рабочие стенды — нейтральный
@@ -22,10 +22,10 @@ const TILE: Record<HubServiceGroup, string> = {
     <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div class="min-w-0">
         <h1 class="text-2xl font-bold text-highlighted">
-          {{ user.firstName ? `Привет, ${user.firstName}` : 'Amaya Central Hub' }}
+          {{ user.firstName ? $t('home.hello', { name: user.firstName }) : 'Amaya Central Hub' }}
         </h1>
         <p class="mt-1 text-muted">
-          Тексты всех продуктов, дизайн-система и стенды — в одном месте.
+          {{ $t('home.tagline') }}
         </p>
       </div>
 
@@ -37,7 +37,7 @@ const TILE: Record<HubServiceGroup, string> = {
         class="self-start sm:self-auto"
         @click="paletteOpen = true"
       >
-        Найти ключ
+        {{ $t('home.findKey') }}
         <template #trailing>
           <!-- На телефоне клавиатуры нет — подсказка только с 640 px -->
           <span class="ms-2 hidden items-center gap-0.5 sm:flex">
@@ -57,7 +57,7 @@ const TILE: Record<HubServiceGroup, string> = {
         :id="`services-${group.id}`"
         class="mb-3 text-xs font-semibold uppercase tracking-wider text-muted"
       >
-        {{ group.label }}
+        {{ $t(`home.groups.${group.id}`) }}
       </h2>
 
       <UPageGrid class="gap-4">
@@ -65,8 +65,8 @@ const TILE: Record<HubServiceGroup, string> = {
         <UPageCard
           v-for="service in group.services"
           :key="service.id"
-          :title="service.title"
-          :description="service.description"
+          :title="$t(`home.services.${service.id}.title`)"
+          :description="$t(`home.services.${service.id}.description`)"
           :to="service.to"
           :target="service.external ? '_blank' : undefined"
           variant="outline"
@@ -88,7 +88,7 @@ const TILE: Record<HubServiceGroup, string> = {
 
           <template #footer>
             <span class="flex items-center gap-1 text-xs text-muted">
-              {{ service.external ? serviceHost(service) : 'Открыть' }}
+              {{ service.external ? serviceHost(service) : $t('home.open') }}
               <UIcon
                 :name="service.external ? 'i-lucide-arrow-up-right' : 'i-lucide-arrow-right'"
                 class="size-3.5"

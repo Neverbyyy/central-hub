@@ -1,0 +1,9 @@
+{
+  "retry": "Retry",
+  "copied": "Copied",
+  "somethingWrong": "Something went wrong",
+  "cancel": "Cancel",
+  "save": "Save",
+  "keys": "{count} key | {count} keys",
+  "loading": "Loading…"
+}

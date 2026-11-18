@@ -163,7 +163,7 @@ const setActive = (row: number, col: number) => {
 const blockEdit = () => {
   if (!props.readonly) return false
   // Один тост с постоянным id — печать по ячейке не плодит их
-  toast.add({ id: 'grid-readonly', title: 'Ключ помечен устаревшим', description: 'Чтобы править, верните его: панель ключа → «Вернуть»', color: 'warning' })
+  toast.add({ id: 'grid-readonly', title: hubT('grid.readonlyTitle'), description: hubT('grid.readonlyText'), color: 'warning' })
   return true
 }
 
@@ -339,7 +339,7 @@ defineExpose({ reset })
         <input
           type="checkbox"
           class="size-3.5 cursor-pointer accent-gray-900"
-          aria-label="Выделить все"
+          :aria-label="$t('grid.selectAll')"
           :checked="allSelected"
           :indeterminate="selectedCount > 0 && !allSelected"
           :disabled="!rows.length"
@@ -347,7 +347,7 @@ defineExpose({ reset })
         >
       </label>
       <div class="loc-cell loc-sticky left-[40px] border-r border-default px-3">
-        Ключ
+        {{ $t('grid.key') }}
       </div>
       <div
         v-for="lang in languages"
@@ -357,10 +357,10 @@ defineExpose({ reset })
         {{ lang.toUpperCase() }}
       </div>
       <div class="loc-cell px-3">
-        Создан
+        {{ $t('grid.created') }}
       </div>
       <div class="loc-cell px-3">
-        Изменён
+        {{ $t('grid.updated') }}
       </div>
     </div>
 
@@ -390,7 +390,7 @@ defineExpose({ reset })
 
     <LoadError
       v-else-if="!rows.length && error"
-      :message="`Таблица не загрузилась: ${error}`"
+      :message="$t('grid.tableFailed', { error })"
       class="sticky left-0 py-20 text-center text-sm"
       :style="stickyStyle"
       @retry="emit('retry')"
@@ -400,7 +400,7 @@ defineExpose({ reset })
       class="sticky left-0 py-20 text-center text-sm text-muted"
       :style="stickyStyle"
     >
-      {{ loading ? 'Загрузка…' : 'Ничего не найдено' }}
+      {{ $t(loading ? 'common.loading' : 'grid.nothingFound') }}
     </div>
 
     <template v-else>
@@ -429,7 +429,7 @@ defineExpose({ reset })
       <!-- Сорвалась дозагрузка — список не обрывается молча -->
       <LoadError
         v-if="error"
-        :message="`Следующие строки не загрузились: ${error}`"
+        :message="$t('grid.moreFailed', { error })"
         class="sticky left-0 flex h-10 items-center justify-center text-sm"
         :style="stickyStyle"
         @retry="emit('retry')"

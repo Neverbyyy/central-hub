@@ -64,17 +64,13 @@ export async function syncToGithub(event: H3Event, { set, revision, files }: Exp
 
 /**
  * Сначала дизайн-система: набор с review_set (InApp, Pages Hub) выгружается, только когда общие с проверкой ключи уже
- * в её основной ветке — их проверили в Storybook и смержили. Правило и текст — те же, что у окна (reviewGate,
- * reviewGateMessage); здесь — на случай, если окно устарело или его обошли. Срочная правка — force в маршруте.
+ * в её основной ветке — их проверили в Storybook и смержили. Правило то же, что у окна (reviewGate); здесь — на случай,
+ * если окно устарело или его обошли. Срочная правка — force в маршруте.
  */
 export async function requireReviewed(event: H3Event, set: ExportSet) {
   if (!set.review_set) return
-  if (!exportRepos(event).has(set.review_set)) {
-    throw new HubError(`${reviewGateMessage(set.review_set, 'not-connected')} (NUXT_EXPORT_REPOS). Срочно — выгрузите без проверки`, 409)
-  }
+  if (!exportRepos(event).has(set.review_set)) throw new HubError(reviewGateMessage(set.review_set, 'not-connected'), 409)
   // Только чтение: сравнение файлов проверки с её основной веткой
   const block = reviewGate(set, await exportToGithub(event, set.review_set, { actor: '', dryRun: true }))
-  if (block) {
-    throw new HubError(`${reviewGateMessage(set.review_set, block)}. Смержите её PR или выгрузите без проверки`, 409)
-  }
+  if (block) throw new HubError(reviewGateMessage(set.review_set, block), 409)
 }

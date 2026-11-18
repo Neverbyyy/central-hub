@@ -1,0 +1,43 @@
+{
+  "title": "История",
+  "empty": "Пока пусто",
+  "cleared": "Очищено",
+  "hideTexts": "Скрыть тексты",
+  "hideDetails": "Скрыть подробности",
+  "noName": "без имени",
+  "loading": "Загружаю…",
+  "all": "Вся история ({total})",
+  "more": "Показать ещё {count}",
+  "texts": "Тексты ({count})",
+  "details": "Подробности ({count})",
+  "deprecated": "Помечен устаревшим",
+  "restored": "Возвращён из устаревших",
+  "fields": {
+    "created": "Создан",
+    "translation": "Текст",
+    "status": "Статус",
+    "description": "Описание",
+    "max_length": "Лимит",
+    "tags": "Теги",
+    "figma_url": "Figma"
+  },
+  "sources": {
+    "ui": "интерфейс",
+    "mcp": "ИИ через MCP",
+    "import": "импорт",
+    "sql": "база",
+    "test": "автотест"
+  },
+  "status": {
+    "approved": "утверждён",
+    "draft": "черновик",
+    "ai": "от ИИ"
+  },
+  "summary": {
+    "created": "Создан",
+    "approved": "Утверждено: {langs}",
+    "importTexts": "Импорт: тексты на {count} языке | Импорт: тексты на {count} языках | Импорт: тексты на {count} языках",
+    "texts": "Тексты: {langs}",
+    "changes": "{count} изменение: {fields} | {count} изменения: {fields} | {count} изменений: {fields}"
+  }
+}

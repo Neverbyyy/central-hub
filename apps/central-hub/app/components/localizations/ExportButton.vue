@@ -17,32 +17,32 @@ const { openPrs } = useOpenPrs()
       icon="i-lucide-git-pull-request"
       color="neutral"
       class="relative"
-      title="Выгрузить в код"
+      :title="$t('exportButton.label')"
       @click="$emit('click')"
     >
       <!-- Главное действие видно всегда; уже 768 px — значком с баджем -->
-      <span class="max-md:sr-only">Выгрузить в код</span>
+      <span class="max-md:sr-only">{{ $t('exportButton.label') }}</span>
       <template
         v-if="openPrs.length"
         #trailing
       >
         <span
           class="absolute -right-1.5 -top-1.5 min-w-4 rounded-full bg-primary px-1 text-center text-[10px] font-semibold leading-4 text-inverted ring-2 ring-(--ui-bg)"
-          :aria-label="`открыто PR: ${openPrs.length}`"
+          :aria-label="$t('exportButton.openCount', { count: openPrs.length })"
         >{{ openPrs.length }}</span>
       </template>
     </UButton>
     <template #content>
       <div class="text-xs">
         <p class="mb-1.5 text-muted">
-          {{ openPrs.length === 1 ? 'Открыт PR — ждёт мержа' : 'Открыты PR — ждут мержа' }}
+          {{ $t('exportButton.waiting', openPrs.length) }}
         </p>
         <div class="grid grid-cols-[auto_auto] gap-x-4 gap-y-1">
           <template
             v-for="pr in openPrs"
             :key="pr.set"
           >
-            <span class="font-medium">{{ exportProjectName(pr.set) }} #{{ pr.number }}</span>
+            <span class="font-medium">{{ projectName(pr.set) }} #{{ pr.number }}</span>
             <span class="text-muted">{{ pr.actor ? `${pr.actor} · ${formatDateTime(pr.at, { year: false })}` : '' }}</span>
           </template>
         </div>

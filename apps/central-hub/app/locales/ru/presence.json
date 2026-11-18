@@ -1,0 +1,27 @@
+{
+  "online": "{count} онлайн",
+  "inService": "Сейчас в сервисе · {count}",
+  "summary": "Сейчас в сервисе {count} — {who}. Показать список",
+  "withYou": "{names} и вы",
+  "onlyYou": "только вы",
+  "nobodyElse": "Кроме вас, сейчас никого нет.",
+  "you": "вы",
+  "here": "В сервисе",
+  "hereFor": "В сервисе {duration}",
+  "editing": "Правит",
+  "duration": {
+    "lessThanMinute": "меньше минуты",
+    "minutes": "{minutes} мин",
+    "hours": "{hours} ч",
+    "hoursMinutes": "{hours} ч {minutes} мин"
+  },
+  "cell": {
+    "one": "{who} правит {lang}",
+    "many": "{who} +{more} правят {lang}"
+  },
+  "device": {
+    "desktop": "компьютер",
+    "tablet": "планшет",
+    "phone": "телефон"
+  }
+}

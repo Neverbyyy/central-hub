@@ -79,22 +79,22 @@ const toggle = async (tag: string, on: boolean, { quiet = false, keys = [...targ
     if (!quiet && keys.length > 1 && count) {
       toast.add({
         title: on
-          ? `Тег «${tag}» добавлен к ${count} ${plural(count, ['ключу', 'ключам', 'ключам'])}`
-          : `Тег «${tag}» снят с ${count} ${plural(count, ['ключа', 'ключей', 'ключей'])}`,
+          ? hubT('tags.addedTo', { tag, count })
+          : hubT('tags.removedFrom', { tag, count }),
         color: 'success'
       })
     }
     return true
   } catch (error) {
     change.revert()
-    await notifyError(on ? 'Тег не добавился' : 'Тег не снялся', error)
+    await notifyError(hubT(on ? 'tags.addFailed' : 'tags.removeFailed'), error)
     return false
   }
 }
 
 /** Создать тег и сразу поставить ключам; true — тег создан (поставить могло не выйти — об этом тост). */
 const createAndApply = async (name: string, keys = [...targets.value]) => {
-  const message = tagNameError(name)
+  const message = tagNameText(name, hubT)
   if (message) {
     toast.add({ title: message, color: 'warning' })
     return false
@@ -103,13 +103,13 @@ const createAndApply = async (name: string, keys = [...targets.value]) => {
   try {
     tag = await create(name)
   } catch (error) {
-    await notifyError('Тег не создался', error)
+    await notifyError(hubT('tags.createFailed'), error)
     return false
   }
   query.value = ''
   const n = keys.length
   if (await toggle(tag, true, { quiet: true, keys })) {
-    toast.add({ title: `Тег «${tag}» создан`, description: n > 1 ? `Добавлен к ${n} ${plural(n, ['ключу', 'ключам', 'ключам'])}` : 'Добавлен к ключу', color: 'success' })
+    toast.add({ title: hubT('tags.created', { tag }), description: n > 1 ? hubT('tags.createdFor', { count: n }) : hubT('tags.createdForOne'), color: 'success' })
   }
   return true
 }
@@ -141,7 +141,7 @@ const onSearchKey = (event: KeyboardEvent) => {
 // --- Кнопка «Создать тег» внизу подменю: набрано новое имя — создать и сразу поставить; поле пусто — окно
 // «Новый тег», как в «Все теги»: тег из него ставится тем же ключам ---
 const newName = computed(() => (query.value.trim() && !exact.value ? query.value.trim() : ''))
-const newNameError = computed(() => (newName.value ? tagNameError(newName.value) : null))
+const newNameError = computed(() => (newName.value ? tagNameText(newName.value, hubT) : null))
 
 const dialogOpen = ref(false)
 // Для каких ключей открыли окно: меню к этому времени закрыто, а targets поменяет следующий правый клик
@@ -150,8 +150,8 @@ let dialogPending = false
 const dialogDescription = computed(() => {
   const n = dialogKeys.value.length
   return n > 1
-    ? `Тег применится сразу к ${n} ${plural(n, ['выделенному ключу', 'выделенным ключам', 'выделенным ключам'])}`
-    : `Тег применится сразу к ключу «${dialogKeys.value[0] ?? ''}»`
+    ? hubT('tags.applyMany', { count: n })
+    : hubT('tags.applyOne', { key: dialogKeys.value[0] ?? '' })
 })
 const saveDialog = (name: string) => createAndApply(name, dialogKeys.value)
 
@@ -176,11 +176,11 @@ const field = (item: unknown, name: 'label' | 'partial') => String((item as Reco
 
 const items = computed<ContextMenuItem[][]>(() => {
   const n = targets.value.length
-  if (!n) return [[{ type: 'label', label: 'Теги ставятся правым кликом по строке' }]]
+  if (!n) return [[{ type: 'label', label: hubT('tags.rightClickHint') }]]
   // Один ключ — его имя моноширинным, как в таблице; несколько — обычной подписью
-  const title: ContextMenuItem = n > 1 ? { type: 'label', label: `Выделено: ${keysCount(n)}` } : { type: 'label', label: targets.value[0], slot: 'key' }
+  const title: ContextMenuItem = n > 1 ? { type: 'label', label: hubT('tags.selectedCount', { keys: hubT('common.keys', { count: n }) }) } : { type: 'label', label: targets.value[0], slot: 'key' }
   if (props.readonly) {
-    return [[title], [{ label: 'Добавить тег', icon: 'i-lucide-tag', disabled: true, description: 'Ключ устарел — сначала верните его' }]]
+    return [[title], [{ label: hubT('tags.addTag'), icon: 'i-lucide-tag', disabled: true, description: hubT('tags.deprecatedHint') }]]
   }
 
   const children: ContextMenuItem[] = filterTags(tags.value, query.value).map((tag) => {
@@ -191,7 +191,7 @@ const items = computed<ContextMenuItem[][]>(() => {
       checked: all,
       slot: 'tag',
       // У части выделенных — «2 из 5»; клик ставит тег всем
-      partial: count && !all ? `${count} из ${n}` : '',
+      partial: count && !all ? hubT('tags.partial', { count, total: n }) : '',
       // Меню остаётся открытым: можно отметить несколько тегов подряд
       onSelect: (event: Event) => event.preventDefault(),
       onUpdateChecked: (on: boolean) => toggle(tag, on)
@@ -200,11 +200,11 @@ const items = computed<ContextMenuItem[][]>(() => {
   // Создаёт кнопка внизу (content-bottom), не пункт списка. Пустое подменю Nuxt UI не рисует — нужна хотя бы подпись
   if (!children.length) {
     // Обычным приглушённым текстом, не заголовком: что создать, говорит кнопка внизу
-    children.push({ type: 'label', label: query.value.trim() ? 'Совпадений нет' : 'Тегов пока нет', class: 'font-normal text-muted' })
+    children.push({ type: 'label', label: hubT(query.value.trim() ? 'tags.noMatches' : 'tags.noTags'), class: 'font-normal text-muted' })
   }
 
   // На телефоне подменю ложится поверх меню, но целиком на экране
-  return [[title], [{ label: 'Добавить тег', icon: 'i-lucide-tag', children, content: { class: 'w-64 max-w-[calc(100vw-1rem)]', prioritizePosition: true } }]]
+  return [[title], [{ label: hubT('tags.addTag'), icon: 'i-lucide-tag', children, content: { class: 'w-64 max-w-[calc(100vw-1rem)]', prioritizePosition: true } }]]
 })
 </script>
 
@@ -251,9 +251,9 @@ const items = computed<ContextMenuItem[][]>(() => {
           size="sm"
           variant="none"
           icon="i-lucide-search"
-          placeholder="Найти или создать тег"
+          :placeholder="$t('tags.findOrCreateShort')"
           class="w-full"
-          aria-label="Найти или создать тег"
+          :aria-label="$t('tags.findOrCreateShort')"
           @keydown="onSearchKey"
         />
       </div>
@@ -275,7 +275,7 @@ const items = computed<ContextMenuItem[][]>(() => {
           :disabled="!!newNameError"
           @click="onCreateClick"
         >
-          <span class="truncate">{{ newName ? `Создать тег «${newName}»` : 'Создать тег' }}</span>
+          <span class="truncate">{{ newName ? $t('tags.create', { name: newName }) : $t('tags.createPlain') }}</span>
         </UButton>
         <p
           v-if="newNameError"

@@ -1,14 +1,17 @@
 import { keyInExportSet, type ExportSetPrefixes } from '@amaya/l10n-core'
-import { plural } from './plural'
+import { DEFAULT_HUB_LOCALE, joinList, type HubLocale } from './hubLocale'
 
 // Наборы выгрузки по-человечески: inapp → InApp; ds — дизайн-система и экраны в этом же монорепо.
-// Общие для окна «Выгрузка в код» и сервера: сервер называет набор в тексте ошибки
-const EXPORT_PROJECTS: Record<string, string> = { inapp: 'InApp', pages_hub: 'Pages Hub', ds: 'Дизайн-система' }
-export const exportProjectName = (name: string) => EXPORT_PROJECTS[name] ?? name
+// Общие для окна «Выгрузка в код» и сервера: сервер называет набор в тексте ошибки. InApp и Pages Hub — имена,
+// не переводятся; дизайн-систему — на языке интерфейса
+const EXPORT_PROJECTS: Record<string, string> = { inapp: 'InApp', pages_hub: 'Pages Hub' }
+const DESIGN_SYSTEM: Record<HubLocale, string> = { ru: 'Дизайн-система', en: 'Design system', uz: 'Dizayn tizimi' }
+export const exportProjectName = (name: string, locale: HubLocale = DEFAULT_HUB_LOCALE) =>
+  name === 'ds' ? DESIGN_SYSTEM[locale] : EXPORT_PROJECTS[name] ?? name
 
-const projectList = new Intl.ListFormat('ru', { type: 'conjunction' })
-/** «InApp», «InApp и Pages Hub» — наборы по-человечески одной строкой; пустая строка — ни одного. */
-export const exportProjectList = (names: string[]) => projectList.format(names.map(exportProjectName))
+/** «InApp», «InApp и Pages Hub» / «InApp and Pages Hub» — наборы одной строкой; пустая строка — ни одного. */
+export const exportProjectList = (names: string[], locale: HubLocale = DEFAULT_HUB_LOCALE) =>
+  joinList(names.map(name => exportProjectName(name, locale)), locale)
 
 /**
  * Предпросмотр набора проверки (review_set, дизайн-система): что ещё не в его основной ветке. Структурно — и серверный
@@ -49,21 +52,15 @@ export function reviewGate(target: ExportSetPrefixes, review: ReviewPreview): Re
   return keys.size || truncated ? { keys: [...keys].sort(), truncated } : null
 }
 
-// «3 общих ключа», «3+ общих ключа» (не все строки пришли), «много изменений» (ни одного видимого)
-function blockSize(block: ReviewBlock) {
-  if (!block.keys.length) return 'много изменений'
-  const n = block.keys.length
-  return `${n}${block.truncated ? '+' : ''} ${plural(n, ['общий ключ', 'общих ключа', 'общих ключей'])}`
-}
-
 /**
- * Почему набор ждёт проверку — одной фразой для окна и для ошибки сервера: «Сначала — «Дизайн-система»: 3 общих ключа
- * ещё не в её основной ветке». block — что держит; 'not-connected' — проверка не подключена к GitHub (NUXT_EXPORT_REPOS);
- * 'failed' — её предпросмотр не загрузился.
+ * Почему сервер не выгружает набор (ошибка 409): «Сначала — «Дизайн-система»: общие ключи (3) ещё не в её основной
+ * ветке…». block — что держит; 'not-connected' — проверка не подключена к GitHub (NUXT_EXPORT_REPOS). Окно пишет то же
+ * своими словами из словаря. Число — в скобках, без форм множественного: на язык интерфейса текст переводит каталог
+ * ошибок сервера по русскому шаблону (server/utils/errorMessages.ts)
  */
-export function reviewGateMessage(reviewSet: string, block: ReviewBlock | 'not-connected' | 'failed') {
+export function reviewGateMessage(reviewSet: string, block: ReviewBlock | 'not-connected') {
   const review = `«${exportProjectName(reviewSet)}»`
-  if (block === 'not-connected') return `Сначала — ${review}, но она не подключена к GitHub`
-  if (block === 'failed') return `Сначала — ${review}, но сравнить её с репозиторием не получилось`
-  return `Сначала — ${review}: ${blockSize(block)} ещё не в её основной ветке`
+  if (block === 'not-connected') return `Сначала — ${review}, но она не подключена к GitHub (NUXT_EXPORT_REPOS). Срочно — выгрузите без проверки`
+  const what = block.keys.length ? `общие ключи (${block.keys.length}${block.truncated ? '+' : ''})` : 'много изменений'
+  return `Сначала — ${review}: ${what} ещё не в её основной ветке. Смержите её PR или выгрузите без проверки`
 }

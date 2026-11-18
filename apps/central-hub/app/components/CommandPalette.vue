@@ -10,6 +10,7 @@ const searching = ref(false)
 
 const supabase = useSupabaseClient()
 const route = useRoute()
+const { t } = useI18n()
 
 defineShortcuts({
   meta_k: {
@@ -80,29 +81,29 @@ const groups = computed<CommandPaletteGroup<CommandPaletteItem>[]>(() => {
   }))
 
   const actions: CommandPaletteItem[] = [
-    { label: 'Новый ключ', icon: 'i-lucide-plus', onSelect: () => go({ path: '/localizations', query: { ...(route.path === '/localizations' ? route.query : {}), new: '1' } }) },
+    { label: t('palette.newKey'), icon: 'i-lucide-plus', onSelect: () => go({ path: '/localizations', query: { ...(route.path === '/localizations' ? route.query : {}), new: '1' } }) },
     ...languages.value.map(lang => ({
-      label: `Очередь перевода: ${lang.code.toUpperCase()}`,
-      suffix: lang.name,
+      label: t('palette.queue', { lang: lang.code.toUpperCase() }),
+      suffix: languageName(lang.code),
       icon: 'i-lucide-list-todo',
       onSelect: () => go({ path: '/localizations/queue', query: { lang: lang.code } })
     })),
-    { label: 'Показать: не утверждённые', icon: 'i-lucide-circle-dashed', onSelect: () => go({ path: '/localizations', query: { status: 'pending' } }) },
-    { label: 'Показать: от ИИ', icon: 'i-lucide-sparkles', onSelect: () => go({ path: '/localizations', query: { status: 'ai' } }) },
-    { label: 'Показать: устаревшие переводы', icon: 'i-lucide-history', onSelect: () => go({ path: '/localizations', query: { stale: '1' } }) },
-    { label: 'Показать: изменённые за неделю', icon: 'i-lucide-calendar-clock', onSelect: () => go({ path: '/localizations', query: { recent: '1' } }) },
-    { label: 'Тема: светлая', icon: 'i-lucide-sun', onSelect: () => setTheme('light') },
-    { label: 'Тема: тёмная', icon: 'i-lucide-moon', onSelect: () => setTheme('dark') }
+    { label: t('palette.showPending'), icon: 'i-lucide-circle-dashed', onSelect: () => go({ path: '/localizations', query: { status: 'pending' } }) },
+    { label: t('palette.showAi'), icon: 'i-lucide-sparkles', onSelect: () => go({ path: '/localizations', query: { status: 'ai' } }) },
+    { label: t('palette.showStale'), icon: 'i-lucide-history', onSelect: () => go({ path: '/localizations', query: { stale: '1' } }) },
+    { label: t('palette.showRecent'), icon: 'i-lucide-calendar-clock', onSelect: () => go({ path: '/localizations', query: { recent: '1' } }) },
+    { label: t('palette.themeLight'), icon: 'i-lucide-sun', onSelect: () => setTheme('light') },
+    { label: t('palette.themeDark'), icon: 'i-lucide-moon', onSelect: () => setTheme('dark') }
   ]
 
   const pages: CommandPaletteItem[] = [
-    { label: 'Главная', icon: 'i-lucide-house', onSelect: () => go('/') },
-    { label: 'Локализации', icon: 'i-lucide-languages', onSelect: () => go('/localizations') },
-    { label: 'Настройки', icon: 'i-lucide-settings', onSelect: () => go('/settings') },
-    { label: 'MCP для нейросетей', suffix: 'токен и инструкция', icon: 'ri:robot-2-line', onSelect: () => go('/ai') },
+    { label: t('nav.home'), icon: 'i-lucide-house', onSelect: () => go('/') },
+    { label: t('nav.localizations'), icon: 'i-lucide-languages', onSelect: () => go('/localizations') },
+    { label: t('nav.settings'), icon: 'i-lucide-settings', onSelect: () => go('/settings') },
+    { label: t('palette.mcp'), suffix: t('palette.mcpHint'), icon: 'ri:robot-2-line', onSelect: () => go('/ai') },
     // Внешние сервисы — из того же списка, что карточки на главной (utils/services.ts), в новой вкладке
     ...HUB_SERVICES.filter(service => service.external).map(service => ({
-      label: service.title,
+      label: t(`home.services.${service.id}.title`),
       icon: service.icon,
       onSelect: () => {
         open.value = false
@@ -113,9 +114,9 @@ const groups = computed<CommandPaletteGroup<CommandPaletteItem>[]>(() => {
 
   return [
     // Ключи уже отобраны базой — повторно фильтровать их нечётким поиском не нужно
-    { id: 'keys', label: 'Ключи', items: keys, ignoreFilter: true },
-    { id: 'actions', label: 'Действия', items: actions },
-    { id: 'pages', label: 'Разделы', items: pages }
+    { id: 'keys', label: t('palette.groups.keys'), items: keys, ignoreFilter: true },
+    { id: 'actions', label: t('palette.groups.actions'), items: actions },
+    { id: 'pages', label: t('palette.groups.pages'), items: pages }
   ]
 })
 </script>
@@ -130,7 +131,7 @@ const groups = computed<CommandPaletteGroup<CommandPaletteItem>[]>(() => {
         v-model:search-term="searchTerm"
         :groups="groups"
         :loading="searching"
-        placeholder="Ключ, текст или команда…"
+        :placeholder="$t('palette.placeholder')"
         close
         class="h-96"
         @update:open="open = $event"

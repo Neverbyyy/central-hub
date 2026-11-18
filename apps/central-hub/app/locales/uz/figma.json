@@ -1,0 +1,20 @@
+{
+  "exported": "Figma uchun eksport qilindi: {keys}",
+  "failed": "Eksport qilinmadi",
+  "title": "Figma’dagi matnlar",
+  "description": "Plagin matnlarni to‘g‘ridan-to‘g‘ri xizmatdan oladi va maketdagi o‘zgaruvchilarni yangilaydi — tugma bilan yoki jonli.",
+  "pluginName": "Amaya Hub — Lokalizatsiya",
+  "pluginHint": "Bo‘limlar va tillar plaginda tanlanadi. Matnlar shu yerda, xizmatda tahrirlanadi.",
+  "downloadPlugin": "Plaginni yuklab olish",
+  "step1": "Arxivni oching.",
+  "step2": "Kompyuter uchun Figma ilovasida: Plugins → Development → Import plugin from manifest → {file}.",
+  "step3": "Plaginni ishga tushiring va tokenni qo‘ying:",
+  "zipHint": "Plaginsiz — o‘rnatilgan import uchun arxiv: har bir til uchun bitta fayl. Barcha fayllarni Variables oynasiga torting: har biri rejimga, / bilan nomlar esa guruhlar daraxtiga aylanadi.",
+  "sections": "Bo‘limlar",
+  "loadingSections": "Bo‘limlar yuklanmoqda…",
+  "collapse": "{section} ni yig‘ish",
+  "expand": "{section} ni yoyish",
+  "languages": "Tillar — rejimlar",
+  "modes": "{count} ta rejim",
+  "downloadZip": "ZIP’ni yuklab olish"
+}

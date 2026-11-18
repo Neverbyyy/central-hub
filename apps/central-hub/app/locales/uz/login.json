@@ -1,0 +1,28 @@
+{
+  "tab": "Kirish",
+  "title": "Kirish",
+  "nameTitle": "Ismingiz nima?",
+  "nameHint": "Ismingiz satrlar tarixidagi tahrirlaringizni imzolaydi.",
+  "nameLabel": "Ism",
+  "namePlaceholder": "Ismingizni kiriting",
+  "continue": "Davom etish",
+  "passwordHint": "Xizmat jamoaning umumiy paroli bilan yopilgan.",
+  "password": "Parol",
+  "showPassword": "Parolni ko‘rsatish",
+  "hidePassword": "Parolni yashirish",
+  "signIn": "Kirish",
+  "or": "yoki",
+  "googleOnly": "Faqat {domain} ish akkaunti orqali",
+  "google": "Google orqali kirish",
+  "workAccount": "{domain} ish akkaunti",
+  "notConfigured": "Kirish sozlanmagan: serverda NUXT_HUB_PASSWORD yoki NUXT_GOOGLE_CLIENT_ID va NUXT_GOOGLE_CLIENT_SECRET kerak.",
+  "language": "Til",
+  "errors": {
+    "denied": "Kirish bekor qilindi. Davom etish uchun Google akkauntini tanlang.",
+    "state": "Kirish havolasi eskirgan yoki boshqa tabda ochilgan — «Google orqali kirish»ni yana bosing.",
+    "notAllowed": "{email} — kompaniyaning ish akkaunti emas. {'@'}{domain} akkaunti bilan kiring.",
+    "thisAccount": "Bu akkaunt",
+    "google": "Google javob bermadi — bir daqiqadan so‘ng qayta urinib ko‘ring.",
+    "off": "Google orqali kirish serverda sozlanmagan."
+  }
+}

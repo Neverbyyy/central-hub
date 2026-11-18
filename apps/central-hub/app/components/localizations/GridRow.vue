@@ -26,15 +26,15 @@ const emit = defineEmits<{
 }>()
 
 // Утверждённые без отметки — их большинство, отметки только у того, что требует внимания
-const STATUS_LABEL = { ai: 'Черновой перевод нейросети', draft: 'Черновик — ещё не утверждён' } as const
+const STATUS_LABEL = { ai: 'grid.statusAi', draft: 'grid.statusDraft' } as const
 
 const cellTitle = (lang: string) => {
   const text = props.row.translations?.[lang]
   if (!text) return undefined
   const notes = [text]
   const status = props.row.status?.[lang]
-  if (status === 'ai' || status === 'draft') notes.push(STATUS_LABEL[status])
-  if (props.row.stale_langs?.includes(lang)) notes.push('Перевод устарел: английский поменяли после перевода')
+  if (status === 'ai' || status === 'draft') notes.push(hubT(STATUS_LABEL[status]))
+  if (props.row.stale_langs?.includes(lang)) notes.push(hubT('grid.staleNote'))
   return notes.join('\n')
 }
 </script>
@@ -56,7 +56,7 @@ const cellTitle = (lang: string) => {
       <input
         type="checkbox"
         class="size-3.5 cursor-pointer accent-gray-900"
-        :aria-label="`Выделить ${row.technical_key}`"
+        :aria-label="$t('grid.selectKey', { key: row.technical_key })"
         :checked="selected"
         @change="emit('toggle', row.technical_key, ($event.target as HTMLInputElement).checked)"
       >
@@ -82,7 +82,7 @@ const cellTitle = (lang: string) => {
       >
         <span
           class="loc-tags-icon"
-          :aria-label="`Теги: ${row.tags.join(', ')}`"
+          :aria-label="$t('grid.tagsLabel', { tags: row.tags.join(', ') })"
         >
           <UIcon
             name="i-lucide-tag"
@@ -115,7 +115,7 @@ const cellTitle = (lang: string) => {
       <span
         v-if="editors?.[lang]?.length"
         class="loc-presence"
-      >{{ presenceLabel(editors[lang]!, lang) }}</span>
+      >{{ presenceLabel(editors[lang]!, lang, $t) }}</span>
       <span
         v-if="row.translations?.[lang]"
         class="truncate"
@@ -134,18 +134,18 @@ const cellTitle = (lang: string) => {
         <span
           v-if="row.status?.[lang] === 'ai'"
           class="absolute right-1 top-0.5 text-[9px] leading-none text-violet-500"
-          aria-label="от ИИ"
+          :aria-label="$t('grid.ai')"
         >✦</span>
         <span
           v-else-if="row.status?.[lang] === 'draft'"
           class="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-gray-400"
-          aria-label="черновик"
+          :aria-label="$t('grid.draft')"
         />
       </template>
       <span
         v-if="row.stale_langs?.includes(lang)"
         class="absolute left-1 top-1 size-1.5 rounded-full bg-orange-500"
-        aria-label="перевод устарел"
+        :aria-label="$t('grid.stale')"
       />
 
       <LocalizationsCellEditor

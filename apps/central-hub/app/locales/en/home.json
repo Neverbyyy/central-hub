@@ -1,0 +1,19 @@
+{
+  "hello": "Hi, {name}",
+  "tagline": "Texts for all products, the design system and stands — in one place.",
+  "findKey": "Find a key",
+  "open": "Open",
+  "groups": {
+    "texts": "Texts",
+    "design": "Design system",
+    "work": "Production stands"
+  },
+  "services": {
+    "localizations": { "title": "Localizations", "description": "Keys and translations for all products: search, translation queue, export to code and Figma." },
+    "mcp": { "title": "MCP for AI", "description": "Token and setup guide: Claude Code searches strings, creates keys and writes draft translations." },
+    "storybook": { "title": "Storybook", "description": "Components, tokens and themes, full paywall and landing screens." },
+    "emulator": { "title": "InApp emulator", "description": "Paywalls and onboardings in a device frame: purchase, closing, event log." },
+    "landings": { "title": "Landings", "description": "Cars 2 and Farm landings built on the design system, in every language." },
+    "webviews": { "title": "WebViews", "description": "All InApp variants from experiments — view only." }
+  }
+}

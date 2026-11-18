@@ -2,15 +2,15 @@ import { describe, expect, it } from 'vitest'
 import { errorMessage } from '../../apps/central-hub/app/utils/errorMessage'
 import { changeFileName, changeKind, quoteChange, totalChanges, type FileChange } from '../../apps/central-hub/app/utils/exportChanges'
 import { formatDateTime } from '../../apps/central-hub/app/utils/formatDate'
-import { keysCount, plural } from '../../apps/central-hub/shared/utils/plural'
+import { ruT } from './i18n'
 
-describe('plural и keysCount', () => {
+// Формы русского множественного числа в словаре — правило hubPluralRules.ru (shared/utils/plural.ts)
+describe('множественное число в словаре', () => {
   it.each([
     [1, 'ключ'], [2, 'ключа'], [4, 'ключа'], [5, 'ключей'], [11, 'ключей'], [12, 'ключей'], [14, 'ключей'],
     [21, 'ключ'], [22, 'ключа'], [101, 'ключ'], [111, 'ключей'], [0, 'ключей'], [2722, 'ключа']
   ])('%i — %s', (count, form) => {
-    expect(plural(count, ['ключ', 'ключа', 'ключей'])).toBe(form)
-    expect(keysCount(count)).toBe(`${count} ${form}`)
+    expect(ruT('common.keys', count)).toBe(`${count} ${form}`)
   })
 })
 

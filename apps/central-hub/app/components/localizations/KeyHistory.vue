@@ -23,7 +23,7 @@ const [DefineEntry, ReuseEntry] = createReusableTemplate<{ entry: HistoryEntry }
 <template>
   <section>
     <h3 class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted">
-      История
+      {{ $t('history.title') }}
       <span
         v-if="total"
         class="ml-1 font-normal normal-case tracking-normal text-muted"
@@ -40,7 +40,7 @@ const [DefineEntry, ReuseEntry] = createReusableTemplate<{ entry: HistoryEntry }
       v-else-if="!actions.length"
       class="text-muted"
     >
-      Пока пусто
+      {{ $t('history.empty') }}
     </p>
 
     <!-- Было / стало одной записи: статус строкой, текст — красным и зелёным -->
@@ -49,7 +49,7 @@ const [DefineEntry, ReuseEntry] = createReusableTemplate<{ entry: HistoryEntry }
         v-if="entry.field === 'status'"
         class="text-toned"
       >
-        {{ entryValueText(entry, entry.old_value) }} → <span class="font-medium text-gray-800 dark:text-gray-100">{{ entryValueText(entry, entry.new_value) }}</span>
+        {{ entryValueText(entry, entry.old_value, $t) }} → <span class="font-medium text-gray-800 dark:text-gray-100">{{ entryValueText(entry, entry.new_value, $t) }}</span>
       </p>
       <template v-else-if="entryHasDiff(entry)">
         <p
@@ -68,7 +68,7 @@ const [DefineEntry, ReuseEntry] = createReusableTemplate<{ entry: HistoryEntry }
           v-else
           class="italic text-muted"
         >
-          Очищено
+          {{ $t('history.cleared') }}
         </p>
       </template>
     </DefineEntry>
@@ -87,12 +87,12 @@ const [DefineEntry, ReuseEntry] = createReusableTemplate<{ entry: HistoryEntry }
               v-if="action.entries[0]!.lang"
               class="rounded bg-default px-1 font-mono text-[10px] font-semibold uppercase text-muted ring-1 ring-default"
             >{{ action.entries[0]!.lang }}</span>
-            <span class="font-medium text-gray-800 dark:text-gray-100">{{ entryTitle(action.entries[0]!) }}</span>
+            <span class="font-medium text-gray-800 dark:text-gray-100">{{ entryTitle(action.entries[0]!, $t) }}</span>
           </template>
           <span
             v-else
             class="font-medium text-gray-800 dark:text-gray-100"
-          >{{ actionSummary(action) }}</span>
+          >{{ actionSummary(action, $t) }}</span>
           <span class="ml-auto shrink-0 text-[10px] tabular-nums text-muted">{{ formatDateTime(action.created_at) }}</span>
         </div>
         <div class="space-y-1 px-3 py-2">
@@ -112,7 +112,7 @@ const [DefineEntry, ReuseEntry] = createReusableTemplate<{ entry: HistoryEntry }
                 class="size-3.5 text-muted transition-transform"
                 :class="{ 'rotate-90': open.has(action.id) }"
               />
-              {{ open.has(action.id) ? (isCreationAction(action) ? 'Скрыть тексты' : 'Скрыть подробности') : actionDetailsLabel(action) }}
+              {{ open.has(action.id) ? $t(isCreationAction(action) ? 'history.hideTexts' : 'history.hideDetails') : actionDetailsLabel(action, $t) }}
             </button>
             <ul
               v-if="open.has(action.id)"
@@ -128,14 +128,14 @@ const [DefineEntry, ReuseEntry] = createReusableTemplate<{ entry: HistoryEntry }
                     v-if="entry.lang"
                     class="rounded bg-default px-1 font-mono text-[10px] font-semibold uppercase text-muted ring-1 ring-default"
                   >{{ entry.lang }}</span>
-                  <span class="font-medium text-gray-800 dark:text-gray-100">{{ entryTitle(entry) }}</span>
+                  <span class="font-medium text-gray-800 dark:text-gray-100">{{ entryTitle(entry, $t) }}</span>
                 </div>
                 <ReuseEntry :entry="entry" />
               </li>
             </ul>
           </template>
           <p class="text-[10px] text-muted">
-            {{ action.actor || 'без имени' }} · {{ historySourceLabel(action.source) }}
+            {{ action.actor || $t('history.noName') }} · {{ historySourceLabel(action.source, $t) }}
           </p>
         </div>
       </li>
@@ -148,7 +148,7 @@ const [DefineEntry, ReuseEntry] = createReusableTemplate<{ entry: HistoryEntry }
       :disabled="loadingMore"
       @click="$emit('more')"
     >
-      {{ loadingMore ? 'Загружаю…' : actions.length <= HISTORY_FIRST ? `Вся история (${total})` : `Показать ещё ${Math.min(HISTORY_MORE, total - actions.length)}` }}
+      {{ loadingMore ? $t('history.loading') : actions.length <= HISTORY_FIRST ? $t('history.all', { total }) : $t('history.more', { count: Math.min(HISTORY_MORE, total - actions.length) }) }}
     </button>
   </section>
 </template>

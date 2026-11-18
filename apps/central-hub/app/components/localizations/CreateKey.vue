@@ -25,6 +25,7 @@ const toast = useToast()
 const authRedirect = useAuthRedirect()
 const notifyError = useNotifyError()
 const errorText = useErrorText()
+const { t } = useI18n()
 
 // Тексты и лимит длины в форме не спрашиваем: текст вписывают потом в гриде или через MCP, лимит — в панели ключа
 const emptyForm = () => ({ key: '', description: '', tags: [] as string[] })
@@ -101,7 +102,7 @@ const keyTargets = computed(() => {
 
 // Подсказки к последней части ключа — utils/keySuggestions. Только когда поле в фокусе и курсор в конце
 const suggestions = computed<KeySuggestion[]>(() => (keyFocused.value && caretAtEnd.value && !dismissed.value
-  ? keySuggestions(form.key, { registry: props.registry, tree: treeIndex.value, targetNames })
+  ? keySuggestions(form.key, { registry: props.registry, tree: treeIndex.value, targetNames, t: hubT })
   : []))
 
 // Пока часть не начали набирать, ничего не выбрано: Enter и Tab работают как обычно
@@ -148,7 +149,7 @@ const parentKeys = (value: string) => {
   return segments.slice(3).map((_, i) => segments.slice(0, i + 3).join('.'))
 }
 
-const nameError = computed(() => (key.value ? newKeyError(key.value, context.value) : null))
+const nameError = computed(() => (key.value ? ruleText(newKeyError(key.value, context.value)) : null))
 
 watchDebounced(key, async (value) => {
   if (!value || nameError.value) return
@@ -173,17 +174,10 @@ watchDebounced(key, async (value) => {
 const takenNow = computed(() => (taken.value?.for === key.value ? taken.value : null))
 
 const takenMessage = computed(() => {
-  const t = takenNow.value
-  if (!t) return null
-  if (t.kind === 'same') {
-    return t.deprecated
-      ? `Ключ «${t.key}» уже есть, он помечен устаревшим — верните его вместо нового`
-      : `Ключ «${t.key}» уже есть`
-  }
-  if (t.kind === 'parent') {
-    return `«${t.key}» — уже строка, а не раздел: внутри неё ключ не создать. Если это раздел, пометьте строку устаревшей — имя освободится`
-  }
-  return `Уже есть ключ «${t.key}»: «${key.value}» — раздел, а не строка`
+  const taken = takenNow.value
+  if (!taken) return null
+  const variant = taken.kind === 'same' && taken.deprecated ? 'sameDeprecated' : taken.kind
+  return t(`createKey.taken.${variant}`, { key: taken.key, value: key.value })
 })
 
 // Неизвестный код объясняет плашка «нет в справочнике» с кнопкой «Добавить» — второй раз красным не пишем
@@ -209,7 +203,7 @@ const openTaken = () => {
   open.value = false
 }
 // Пока поле пустое, не ругаемся — об этом скажет подсказка у кнопки
-const descriptionMessage = computed(() => (form.description.trim() ? descriptionError(form.description) : null))
+const descriptionMessage = computed(() => (form.description.trim() ? ruleText(descriptionError(form.description)) : null))
 
 // Код из справочника, которого ещё нет: app.<игра>, web.<сайт>, brand.<бренд>, test.<тест>.
 // Предлагаем добавить код, только когда он дописан — после него уже есть точка.
@@ -244,13 +238,13 @@ const addCode = async () => {
   addingCode.value = true
   try {
     await $fetch('/api/registry', { method: 'POST', body: { ...missing, title: codeTitle.value } })
-    toast.add({ title: `Добавлено в справочник: ${missing.code}`, color: 'success' })
+    toast.add({ title: t('createKey.codeAdded', { code: missing.code }), color: 'success' })
     codeTitle.value = ''
     emit('registryChanged')
     // Код есть — дальше раздел: курсор обратно в ключ, подсказки покажут типичные разделы
     focusKeyEnd()
   } catch (error) {
-    await notifyError('Не добавилось', error)
+    await notifyError(t('createKey.addFailed'), error)
   } finally {
     addingCode.value = false
   }
@@ -274,7 +268,7 @@ const loadSimilar = async (value: string) => {
   } catch (error) {
     if (value !== key.value) return
     similar.value = []
-    similarError.value = await errorText('Похожие строки не загрузились', error) ?? ''
+    similarError.value = await errorText(t('createKey.similarFailed'), error) ?? ''
   }
 }
 
@@ -285,11 +279,11 @@ const { copy } = useCopy()
 // Что мешает создать ключ — показывается рядом с кнопкой, чтобы она не была выключена молча
 const blockers = computed(() => {
   const list: string[] = []
-  if (!key.value) list.push('ключ')
-  else if (missingCode.value) list.push(addCodeLabel(missingCode.value.kind))
-  else if (nameError.value) list.push(unfinished.value ? 'дописать ключ' : 'исправить ключ')
-  else if (takenMessage.value) list.push('другое имя ключа')
-  if (descriptionError(form.description)) list.push(`описание от ${MIN_DESCRIPTION_LENGTH} символов`)
+  if (!key.value) list.push(t('createKey.need.key'))
+  else if (missingCode.value) list.push(addCodeLabel(missingCode.value.kind, hubT))
+  else if (nameError.value) list.push(t(unfinished.value ? 'createKey.need.finishKey' : 'createKey.need.fixKey'))
+  else if (takenMessage.value) list.push(t('createKey.need.otherName'))
+  if (descriptionError(form.description)) list.push(t('createKey.need.description', { min: MIN_DESCRIPTION_LENGTH }))
   return list
 })
 
@@ -309,7 +303,7 @@ const submit = async () => {
       method: 'POST',
       body: { key: key.value, description: form.description, tags: form.tags }
     })
-    toast.add({ title: 'Ключ создан', description: created.key, color: 'success' })
+    toast.add({ title: t('createKey.created'), description: created.key, color: 'success' })
     emit('created', created.key)
     Object.assign(form, emptyForm())
     open.value = false
@@ -331,8 +325,8 @@ const onKeydown = (event: KeyboardEvent) => {
 <template>
   <USlideover
     v-model:open="open"
-    title="Новый ключ"
-    description="Имя по схеме «Как называть ключи», описание обязательно. Сначала посмотрите похожие строки."
+    :title="$t('createKey.title')"
+    :description="$t('createKey.description')"
     :ui="{ content: 'max-w-xl' }"
     :content="{ onEscapeKeyDown: onEscape }"
     @after:enter="focusKeyEnd"
@@ -344,13 +338,13 @@ const onKeydown = (event: KeyboardEvent) => {
         @keydown="onKeydown"
       >
         <UFormField
-          label="Ключ"
+          :label="$t('createKey.key')"
           required
           :error="shownKeyMessage ?? undefined"
         >
           <template #help>
             <span v-if="keyTargets === null">
-              Начните вводить — подсказки покажут, что дальше. От общего к частному: app.cars2.paywall.title
+              {{ $t('createKey.keyHelp') }}
             </span>
             <span
               v-else
@@ -360,7 +354,7 @@ const onKeydown = (event: KeyboardEvent) => {
                 name="i-lucide-git-pull-request"
                 class="size-3.5 shrink-0"
               />
-              {{ keyTargets ? `Выгрузка в код: ${keyTargets}` : 'В код не выгружается: такие ключи не входят ни в один проект' }}
+              {{ keyTargets ? $t('createKey.exportTo', { targets: keyTargets }) : $t('createKey.notExported') }}
             </span>
           </template>
           <div class="relative">
@@ -393,7 +387,7 @@ const onKeydown = (event: KeyboardEvent) => {
               <ul
                 id="key-suggestions"
                 role="listbox"
-                aria-label="Подсказки к ключу"
+                :aria-label="$t('createKey.suggestions')"
                 class="max-h-64 overflow-y-auto p-1"
               >
                 <li
@@ -421,12 +415,28 @@ const onKeydown = (event: KeyboardEvent) => {
                   <span
                     v-if="item.targets"
                     class="ml-auto shrink-0 rounded bg-elevated px-1.5 py-0.5 text-[11px] text-toned"
-                    :title="`Выгрузка в код: ${item.targets}`"
+                    :title="$t('createKey.exportTo', { targets: item.targets })"
                   >{{ item.targets }}</span>
                 </li>
               </ul>
               <p class="border-t border-default px-3 py-1.5 text-[11px] text-muted">
-                <UKbd>↑</UKbd> <UKbd>↓</UKbd> выбрать · <UKbd>Enter</UKbd> или <UKbd>Tab</UKbd> подставить · <UKbd>Esc</UKbd> скрыть
+                <i18n-t keypath="createKey.suggestionsHint">
+                  <template #up>
+                    <UKbd>↑</UKbd>
+                  </template>
+                  <template #down>
+                    <UKbd>↓</UKbd>
+                  </template>
+                  <template #enter>
+                    <UKbd>Enter</UKbd>
+                  </template>
+                  <template #tab>
+                    <UKbd>Tab</UKbd>
+                  </template>
+                  <template #esc>
+                    <UKbd>Esc</UKbd>
+                  </template>
+                </i18n-t>
               </p>
             </div>
           </div>
@@ -442,7 +452,7 @@ const onKeydown = (event: KeyboardEvent) => {
               class="ml-1 font-medium underline underline-offset-2"
               @click="openTaken"
             >
-              Открыть «{{ takenNow.key }}»
+              {{ $t('createKey.openTaken', { key: takenNow.key }) }}
             </button>
           </template>
         </UFormField>
@@ -451,12 +461,12 @@ const onKeydown = (event: KeyboardEvent) => {
           v-if="missingCode"
           class="flex flex-col gap-2 rounded-lg border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 p-3 text-sm text-amber-900 dark:text-amber-200"
         >
-          <span>Кода «{{ missingCode.code }}» нет в справочнике.</span>
+          <span>{{ $t('createKey.missingCode', { code: missingCode.code }) }}</span>
           <div
             v-if="similarCodes.length"
             class="flex flex-wrap items-center gap-1"
           >
-            <span>Возможно, вы имели в виду:</span>
+            <span>{{ $t('createKey.didYouMean') }}</span>
             <UButton
               v-for="entry in similarCodes"
               :key="entry.code"
@@ -469,14 +479,14 @@ const onKeydown = (event: KeyboardEvent) => {
               {{ entry.code }} — {{ entry.title }}
             </UButton>
           </div>
-          <span>{{ similarCodes.length ? 'Или добавить' : 'Добавить' }} в справочник как {{ newCodeLabel(missingCode.kind) }}:</span>
+          <span>{{ $t(similarCodes.length ? 'createKey.orAddAs' : 'createKey.addAs', { what: newCodeLabel(missingCode.kind, hubT) }) }}</span>
           <div class="flex gap-2">
             <UInput
               ref="codeTitleInput"
               v-model="codeTitle"
               size="sm"
               class="flex-1"
-              placeholder="Название, например Cars 2"
+              :placeholder="$t('createKey.codeTitle')"
               @keydown.enter.prevent="addCode"
             />
             <UButton
@@ -486,16 +496,16 @@ const onKeydown = (event: KeyboardEvent) => {
               :disabled="!codeTitle.trim()"
               @click="addCode"
             >
-              Добавить
+              {{ $t('createKey.add') }}
             </UButton>
           </div>
         </div>
 
         <UFormField
-          label="Описание"
+          :label="$t('keyMeta.description')"
           required
           :error="descriptionMessage ?? undefined"
-          help="Где показывается строка и какие у неё ограничения"
+          :help="$t('keyMeta.descriptionPlaceholder')"
         >
           <UTextarea
             v-model="form.description"
@@ -505,13 +515,13 @@ const onKeydown = (event: KeyboardEvent) => {
           />
         </UFormField>
 
-        <UFormField label="Теги">
+        <UFormField :label="$t('keyMeta.tags')">
           <LocalizationsTagSelect v-model="form.tags" />
         </UFormField>
 
         <section>
           <h3 class="mb-1 text-xs font-semibold text-muted">
-            Похожие строки
+            {{ $t('createKey.similar') }}
           </h3>
           <LoadError
             v-if="similarError"
@@ -523,7 +533,7 @@ const onKeydown = (event: KeyboardEvent) => {
             v-else-if="!similar.length"
             class="text-xs text-muted"
           >
-            {{ form.key ? 'Похожих нет' : 'Появятся, когда начнёте вводить ключ' }}
+            {{ form.key ? $t('createKey.noSimilar') : $t('createKey.similarLater') }}
           </p>
           <ul
             v-else
@@ -536,8 +546,8 @@ const onKeydown = (event: KeyboardEvent) => {
               <button
                 type="button"
                 class="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-muted"
-                :title="`Скопировать ${item.technical_key}`"
-                @click="copy(item.technical_key, 'Ключ скопирован')"
+                :title="$t('createKey.copyKey', { key: item.technical_key })"
+                @click="copy(item.technical_key, $t('createKey.keyCopied'))"
               >
                 <span class="min-w-0 flex-1">
                   <span class="block truncate font-mono text-[11px] text-blue-600 dark:text-blue-400">{{ item.technical_key }}</span>
@@ -566,13 +576,23 @@ const onKeydown = (event: KeyboardEvent) => {
           class="text-xs text-warning"
           role="status"
         >
-          Чтобы создать, нужно: {{ blockers.join(', ') }}
+          {{ $t('createKey.needed', { list: blockers.join(', ') }) }}
         </span>
         <span
           v-else
           class="text-xs text-muted"
         >
-          <UKbd>Ctrl</UKbd> + <UKbd>Enter</UKbd> создать · <UKbd>Esc</UKbd> закрыть
+          <i18n-t keypath="createKey.hotkeys">
+            <template #ctrl>
+              <UKbd>Ctrl</UKbd>
+            </template>
+            <template #enter>
+              <UKbd>Enter</UKbd>
+            </template>
+            <template #esc>
+              <UKbd>Esc</UKbd>
+            </template>
+          </i18n-t>
         </span>
         <UButton
           class="shrink-0"
@@ -580,7 +600,7 @@ const onKeydown = (event: KeyboardEvent) => {
           :disabled="!canSubmit"
           @click="submit"
         >
-          Создать ключ
+          {{ $t('createKey.submit') }}
         </UButton>
       </div>
     </template>

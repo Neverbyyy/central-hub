@@ -41,6 +41,7 @@ const emit = defineEmits<{
 const toast = useToast()
 const authRedirect = useAuthRedirect()
 const notifyError = useNotifyError()
+const { t } = useI18n()
 
 const sets = ref<ExportSetInfo[] | null>(null)
 const setsError = ref('')
@@ -121,7 +122,7 @@ const previewOf = (name: string): SyncResult | null => {
 
 // --- Сначала дизайн-система ---
 // Рабочий проект ждёт, пока общие с дизайн-системой ключи не окажутся в её основной ветке: предпросмотр дизайн-системы
-// уже загружен в этом же окне, правило и текст те же, что на сервере (reviewGate, reviewGateMessage). Её PR смержили —
+// уже загружен в этом же окне, правило то же, что на сервере (reviewGate). Её PR смержили —
 // событие перечитывает её предпросмотр, и блок снимается сам
 interface Gate {
   // checking — дизайн-система ещё сравнивается; unavailable — не подключена или не сравнилась; blocked — держат ключи
@@ -132,14 +133,20 @@ interface Gate {
   pr: { number: number, url: string } | null
 }
 
+// «3 общих ключа», «3+ общих ключа» (не все строки пришли), «много изменений» (ни одного видимого)
+const blockSize = ({ keys, truncated }: NonNullable<ReturnType<typeof reviewGate>>) => (keys.length
+  ? t(truncated ? 'projectExport.gate.sharedKeysMore' : 'projectExport.gate.sharedKeys', keys.length)
+  : t('projectExport.gate.manyChanges'))
+
 const gateFor = (set: ExportSetInfo, review: ExportSetInfo | undefined): Gate | null => {
   if (!set.reviewSet) return null
-  if (!review?.connected) return { kind: 'unavailable', text: reviewGateMessage(set.reviewSet, 'not-connected'), pr: null }
+  const project = projectName(set.reviewSet)
+  if (!review?.connected) return { kind: 'unavailable', text: t('projectExport.gate.notConnected', { project }), pr: null }
   const preview = previews.value[review.name]
-  if (preview === undefined) return { kind: 'checking', text: `Проверяю «${exportProjectName(review.name)}»…`, pr: null }
-  if ('error' in preview) return { kind: 'unavailable', text: reviewGateMessage(set.reviewSet, 'failed'), pr: null }
+  if (preview === undefined) return { kind: 'checking', text: t('projectExport.gate.checking', { project }), pr: null }
+  if ('error' in preview) return { kind: 'unavailable', text: t('projectExport.gate.failed', { project }), pr: null }
   const block = reviewGate(set.prefixes, preview)
-  return block ? { kind: 'blocked', text: reviewGateMessage(set.reviewSet, block), pr: openPrOf(review) } : null
+  return block ? { kind: 'blocked', text: t('projectExport.gate.blocked', { project, size: blockSize(block) }), pr: openPrOf(review) } : null
 }
 
 // Один раз на смену наборов и предпросмотров, а не на каждую отрисовку: правило проходит все строки предпросмотра
@@ -162,7 +169,7 @@ const waitingFor = computed(() => {
       waiting.set(set.reviewSet, [...(waiting.get(set.reviewSet) ?? []), set.name])
     }
   }
-  return new Map([...waiting].map(([review, names]) => [review, exportProjectList(names)]))
+  return new Map([...waiting].map(([review, names]) => [review, projectList(names)]))
 })
 
 // «Выгрузить без проверки» — срочная правка: подтверждение прямо в карточке, без нового окна. Esc его отменяет
@@ -172,8 +179,8 @@ const confirmForce = ref<string | null>(null)
 const firstWorking = computed(() => sets.value?.findIndex(set => set.reviewSet) ?? -1)
 const stepTitle = (index: number) => {
   if (firstWorking.value <= 0) return null
-  if (index === 0) return 'Шаг 1 · Проверка в Storybook'
-  return index === firstWorking.value ? 'Шаг 2 · Рабочие проекты' : null
+  if (index === 0) return t('projectExport.step1')
+  return index === firstWorking.value ? t('projectExport.step2') : null
 }
 
 // Проекты, где есть что выгрузить, — для «Выгрузить во все»; рабочие проекты, которые ждут дизайн-систему, — нет
@@ -183,9 +190,9 @@ const readySets = computed(() => (sets.value ?? []).filter(set => set.connected 
 const pushAllLabel = computed(() => {
   const n = readySets.value.length
   const withPr = readySets.value.filter(set => openPrOf(set)).length
-  if (withPr === n) return `Обновить у всех (${n})`
-  if (!withPr) return `Создать PR во всех (${n})`
-  return `Выгрузить во все (${n})`
+  if (withPr === n) return t('projectExport.updateAll', { count: n })
+  if (!withPr) return t('projectExport.createAll', { count: n })
+  return t('projectExport.pushAll', { count: n })
 })
 // Пока предпросмотр сравнивает файлы, открытый PR — из списка наборов: «Создать» не должно мелькать
 const openPrOf = (set: ExportSetInfo) => {
@@ -195,7 +202,7 @@ const openPrOf = (set: ExportSetInfo) => {
 
 const prLabel = (set: ExportSetInfo) => {
   const pr = openPrOf(set)
-  return pr ? `Обновить PR #${pr.number}` : 'Создать PR'
+  return pr ? t('projectExport.updatePr', { number: pr.number }) : t('projectExport.createPr')
 }
 
 // Окно со всеми изменениями набора — поверх этого; Esc возвращает сюда.
@@ -224,15 +231,13 @@ watch(open, (value) => {
   if (value) reopen()
 }, { immediate: true })
 
-const OUTCOME_TITLE: Record<string, (pr: number) => string> = {
-  created: pr => `PR #${pr} создан`,
-  updated: pr => `PR #${pr} обновлён`,
-  closed: pr => `Выгружать нечего — PR #${pr} закрыт`
-}
+// Чем кончилась выгрузка с PR: «PR #7 создан» — в уведомлении и в строке последней выгрузки
+const PR_OUTCOMES = new Set(['created', 'updated', 'closed'])
+const outcomeTitle = (outcome: string, pr: number) => t(`projectExport.outcome.${outcome}`, { number: pr })
 
 // Строка последней выгрузки — одинаковая у всех, кто открыл окно: её данные с сервера, а не память окна
 const runTitle = (run: NonNullable<ExportSetInfo['lastRun']>) =>
-  run.pr_number ? OUTCOME_TITLE[run.outcome]?.(run.pr_number) ?? 'Выгрузка' : 'Выгрузка'
+  run.pr_number && PR_OUTCOMES.has(run.outcome) ? outcomeTitle(run.outcome, run.pr_number) : t('projectExport.run')
 
 // Выгрузка одного набора без уведомлений — общая для кнопки в карточке и «Выгрузить во все».
 // Строку статуса обновит loadSets после выгрузки, коллегам — событие сервера в канале export-pr.
@@ -252,19 +257,19 @@ const push = async (set: ExportSetInfo, { force = false } = {}) => {
     confirmForce.value = null
     changesOpen.value = false
     if (result.outcome === 'unchanged') {
-      toast.add({ title: 'В репозитории всё актуально', color: 'neutral' })
+      toast.add({ title: t('projectExport.upToDate'), color: 'neutral' })
     } else if (result.pr) {
       toast.add({
-        title: OUTCOME_TITLE[result.outcome]!(result.pr.number),
-        description: `${exportProjectName(set.name)}: в основную ветку тексты попадут после мержа`,
+        title: outcomeTitle(result.outcome, result.pr.number),
+        description: t('projectExport.mergeNote', { project: projectName(set.name) }),
         color: 'success',
         // Ссылка, а не onClick с window.open: обёртка действия в тосте перехватывает клик, ссылку открывает сам браузер
-        actions: result.outcome === 'closed' ? [] : [{ label: 'Открыть на GitHub', color: 'neutral', variant: 'outline', to: result.pr.url, target: '_blank' }]
+        actions: result.outcome === 'closed' ? [] : [{ label: t('projectExport.openOnGithub'), color: 'neutral', variant: 'outline', to: result.pr.url, target: '_blank' }]
       })
     }
     await loadSets()
   } catch (error) {
-    await notifyError('Не выгрузилось', error)
+    await notifyError(t('projectExport.failed'), error)
   } finally {
     setPushing([set.name], false)
   }
@@ -283,18 +288,18 @@ const pushAll = async () => {
   pushingAll.value = false
 
   const done = settled.flatMap((r, i) => r.status === 'fulfilled' && r.value.pr && r.value.outcome !== 'closed'
-    ? [{ project: exportProjectName(targets[i]!.name), result: r.value, pr: r.value.pr }]
+    ? [{ project: projectName(targets[i]!.name), result: r.value, pr: r.value.pr }]
     : [])
   if (done.length) {
     toast.add({
-      title: `Выгружено: ${done.length} ${plural(done.length, ['проект', 'проекта', 'проектов'])}`,
-      description: `${done.map(d => `${d.project} — ${OUTCOME_TITLE[d.result.outcome]!(d.pr.number)}`).join(' · ')}. В основные ветки тексты попадут после мержа`,
+      title: t('projectExport.pushed', done.length),
+      description: t('projectExport.pushedNote', { list: done.map(d => `${d.project} — ${outcomeTitle(d.result.outcome, d.pr.number)}`).join(' · ') }),
       color: 'success',
       actions: done.map(d => ({ label: `${d.project} #${d.pr.number}`, color: 'neutral' as const, variant: 'outline' as const, to: d.pr.url, target: '_blank' as const }))
     })
   }
   for (const [i, r] of settled.entries()) {
-    if (r.status === 'rejected') await notifyError(`${exportProjectName(targets[i]!.name)}: не выгрузилось`, r.reason)
+    if (r.status === 'rejected') await notifyError(t('projectExport.projectFailed', { project: projectName(targets[i]!.name) }), r.reason)
   }
   await loadSets()
 }
@@ -324,8 +329,8 @@ const findKey = (key: string) => {
   <!-- Пока открыто подтверждение «без проверки», Esc и клик мимо отменяют его, а не закрывают окно -->
   <UModal
     v-model:open="open"
-    title="Выгрузка в код"
-    description="Сначала — дизайн-система: проверьте тексты в Storybook и смержите PR. Потом — рабочие проекты. В код уходят только утверждённые тексты."
+    :title="$t('projectExport.title')"
+    :description="$t('projectExport.description')"
     :dismissible="!confirmForce"
     @close:prevent="confirmForce = null"
   >
@@ -356,7 +361,7 @@ const findKey = (key: string) => {
           v-else-if="!sets.length"
           class="text-muted"
         >
-          Наборов выгрузки пока нет.
+          {{ $t('projectExport.noSets') }}
         </p>
 
         <div
@@ -379,7 +384,7 @@ const findKey = (key: string) => {
               <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0">
                   <h3 class="font-semibold text-highlighted">
-                    {{ exportProjectName(set.name) }}
+                    {{ projectName(set.name) }}
                   </h3>
                   <template v-if="set.repo">
                     <a
@@ -407,7 +412,11 @@ const findKey = (key: string) => {
                     v-else
                     class="mt-0.5 text-xs text-muted"
                   >
-                    Не подключён: добавьте набор <span class="font-mono">{{ set.name }}</span> в NUXT_EXPORT_REPOS
+                    <i18n-t keypath="projectExport.notConnected">
+                      <template #name>
+                        <span class="font-mono">{{ set.name }}</span>
+                      </template>
+                    </i18n-t>
                   </p>
                 </div>
                 <UButton
@@ -428,7 +437,7 @@ const findKey = (key: string) => {
                 v-if="set.repo && !set.connected"
                 class="mt-2 text-xs text-warning"
               >
-                NUXT_GITHUB_TOKEN не задан на сервере — выгружать нечем.
+                {{ $t('projectExport.noToken') }}
               </p>
 
               <!-- Что уйдёт в PR -->
@@ -440,7 +449,7 @@ const findKey = (key: string) => {
                   v-if="previews[set.name] === undefined"
                   class="space-y-1.5"
                   aria-busy="true"
-                  aria-label="Сравниваю с репозиторием"
+                  :aria-label="$t('projectExport.comparing')"
                 >
                   <USkeleton class="h-3 w-44 rounded bg-elevated" />
                   <USkeleton class="h-3 w-64 rounded bg-elevated" />
@@ -458,7 +467,7 @@ const findKey = (key: string) => {
                   class="font-medium text-default underline underline-offset-2 hover:text-highlighted"
                   @click="showChanges(set)"
                 >
-                  Показать изменения ({{ totalChanges(previewOf(set.name)!.changes) }})
+                  {{ $t('projectExport.showChanges', { count: totalChanges(previewOf(set.name)!.changes) }) }}
                 </button>
                 <p
                   v-else
@@ -468,7 +477,7 @@ const findKey = (key: string) => {
                     name="i-lucide-check"
                     class="size-3.5 text-green-600 dark:text-green-400"
                   />
-                  В репозитории всё актуально
+                  {{ $t('projectExport.upToDate') }}
                 </p>
               </div>
 
@@ -481,7 +490,7 @@ const findKey = (key: string) => {
                   name="i-lucide-arrow-down"
                   class="size-3.5 shrink-0"
                 />
-                После мержа откроется выгрузка в {{ waitingFor.get(set.name) }}
+                {{ $t('projectExport.unlocks', { projects: waitingFor.get(set.name) }) }}
               </p>
 
               <!-- Шаг 2 ждёт шаг 1. Только когда здесь есть что выгружать: «всё актуально» ждать нечего -->
@@ -503,16 +512,21 @@ const findKey = (key: string) => {
                     />
                     <span>
                       {{ gateOf(set)!.text }}.
-                      <template v-if="gateOf(set)!.pr">
-                        Проверьте PR #{{ gateOf(set)!.pr!.number }} в Storybook и смержите —
-                        <a
-                          :href="gateOf(set)!.pr!.url"
-                          target="_blank"
-                          rel="noopener"
-                          class="font-medium underline underline-offset-2"
-                        >открыть на GitHub</a>.
-                      </template>
-                      <template v-else-if="gateOf(set)!.kind === 'blocked'">Создайте её PR выше.</template>
+                      <i18n-t
+                        v-if="gateOf(set)!.pr"
+                        keypath="projectExport.gate.reviewPr"
+                      >
+                        <template #number>{{ gateOf(set)!.pr!.number }}</template>
+                        <template #link>
+                          <a
+                            :href="gateOf(set)!.pr!.url"
+                            target="_blank"
+                            rel="noopener"
+                            class="font-medium underline underline-offset-2"
+                          >{{ $t('projectExport.openOnGithubInline') }}</a>
+                        </template>
+                      </i18n-t>
+                      <template v-else-if="gateOf(set)!.kind === 'blocked'">{{ $t('projectExport.gate.createPr') }}</template>
                     </span>
                   </p>
 
@@ -522,7 +536,7 @@ const findKey = (key: string) => {
                     class="mt-2 border-t border-warning/20 pt-2"
                   >
                     <p class="text-default">
-                      Тексты уйдут в {{ exportProjectName(set.name) }}, не пройдя проверку. В PR и журнале выгрузок останется отметка.
+                      {{ $t('projectExport.forceNote', { project: projectName(set.name) }) }}
                     </p>
                     <div class="mt-2 flex flex-wrap gap-2">
                       <UButton
@@ -533,7 +547,7 @@ const findKey = (key: string) => {
                         :disabled="!!pushing.size"
                         @click="push(set, { force: true })"
                       >
-                        Выгрузить без проверки
+                        {{ $t('projectExport.force') }}
                       </UButton>
                       <UButton
                         size="xs"
@@ -541,7 +555,7 @@ const findKey = (key: string) => {
                         variant="ghost"
                         @click="confirmForce = null"
                       >
-                        Отмена
+                        {{ $t('common.cancel') }}
                       </UButton>
                     </div>
                   </div>
@@ -551,7 +565,7 @@ const findKey = (key: string) => {
                     class="mt-1 ml-5 font-medium underline underline-offset-2"
                     @click="confirmForce = set.name"
                   >
-                    Выгрузить без проверки
+                    {{ $t('projectExport.force') }}
                   </button>
                 </div>
               </template>
@@ -560,14 +574,14 @@ const findKey = (key: string) => {
                 v-if="set.pending"
                 class="mt-2 text-xs text-warning"
               >
-                Ждут утверждения: {{ keysCount(set.pending) }} — их правки в выгрузку не попадут.
+                {{ $t('projectExport.pending', { keys: $t('common.keys', set.pending) }) }}
                 <!-- Черновики и тексты от ИИ — одной выборкой «Не утверждённые» -->
                 <button
                   type="button"
                   class="font-medium underline underline-offset-2"
                   @click="showPending"
                 >
-                  Показать
+                  {{ $t('projectExport.showPending') }}
                 </button>
               </p>
 
@@ -582,13 +596,13 @@ const findKey = (key: string) => {
                   :name="set.lastPr.state === 'merged' ? 'i-lucide-git-merge' : 'i-lucide-git-pull-request-closed'"
                   class="size-3.5 shrink-0"
                 />
-                {{ set.lastPr.state === 'merged' ? `PR #${set.lastPr.number} смержен` : `PR #${set.lastPr.number} закрыт без мержа` }} —
+                {{ $t(set.lastPr.state === 'merged' ? 'projectExport.prMerged' : 'projectExport.prClosed', { number: set.lastPr.number }) }} —
                 <a
                   :href="set.lastPr.url"
                   target="_blank"
                   rel="noopener"
                   class="font-medium underline underline-offset-2"
-                >открыть на GitHub</a>
+                >{{ $t('projectExport.openOnGithubInline') }}</a>
               </p>
               <!-- Последняя выгрузка — кто бы ни нажимал: «PR #11 обновлён · 31.10, 19:47 · Артём» -->
               <p
@@ -609,7 +623,7 @@ const findKey = (key: string) => {
                     target="_blank"
                     rel="noopener"
                     class="font-medium underline underline-offset-2"
-                  >открыть на GitHub</a>
+                  >{{ $t('projectExport.openOnGithubInline') }}</a>
                 </template>
               </p>
             </section>
@@ -620,7 +634,7 @@ const findKey = (key: string) => {
         <LocalizationsExportChanges
           v-if="changesFor"
           v-model:open="changesOpen"
-          :project="exportProjectName(changesFor.name)"
+          :project="projectName(changesFor.name)"
           :repo="changesFor.repo?.repo ?? null"
           :changes="previewOf(changesFor.name)?.changes ?? []"
           :pr-label="prLabel(changesFor)"
@@ -640,7 +654,7 @@ const findKey = (key: string) => {
     >
       <div class="flex w-full items-center justify-between gap-3">
         <span class="min-w-0 text-xs text-muted">
-          Изменения в {{ readySets.length }} {{ plural(readySets.length, ['проекте', 'проектах', 'проектах']) }}
+          {{ $t('projectExport.changesIn', readySets.length) }}
         </span>
         <UButton
           icon="i-lucide-git-pull-request"

@@ -1,4 +1,5 @@
 // Присутствие коллег: кто сейчас в сервисе и что правит. Чистые функции — состояние в composables/usePresence.ts
+import type { Translate } from '../../shared/utils/plural'
 
 export interface PresenceCell {
   key: string
@@ -118,20 +119,21 @@ export function presenceInitials(name: string): string {
   return ([...name.trim()][0] ?? '').toUpperCase()
 }
 
-/** Сколько человек в сервисе: «меньше минуты», «12 мин», «1 ч 5 мин» — без рода («зашёл» / «зашла»). */
-export function presenceDuration(since: number, now: number): string {
+/** Сколько человек в сервисе: «меньше минуты», «12 мин», «1 ч 5 мин» — без рода («зашёл» / «зашла»). t — словарь интерфейса. */
+export function presenceDuration(since: number, now: number, t: Translate): string {
   if (!since) return ''
   const minutes = Math.max(0, Math.floor((now - since) / 60000))
-  if (minutes < 1) return 'меньше минуты'
-  if (minutes < 60) return `${minutes} мин`
+  if (minutes < 1) return t('presence.duration.lessThanMinute')
+  if (minutes < 60) return t('presence.duration.minutes', { minutes })
   const hours = Math.floor(minutes / 60)
-  return minutes % 60 ? `${hours} ч ${minutes % 60} мин` : `${hours} ч`
+  return minutes % 60 ? t('presence.duration.hoursMinutes', { hours, minutes: minutes % 60 }) : t('presence.duration.hours', { hours })
 }
 
-export const PRESENCE_DEVICE: Record<PresenceDevice, { label: string, icon: string }> = {
-  desktop: { label: 'компьютер', icon: 'i-lucide-monitor' },
-  tablet: { label: 'планшет', icon: 'i-lucide-tablet' },
-  phone: { label: 'телефон', icon: 'i-lucide-smartphone' }
+// Подпись устройства — в словаре: presence.device.<устройство>
+export const PRESENCE_DEVICE_ICON: Record<PresenceDevice, string> = {
+  desktop: 'i-lucide-monitor',
+  tablet: 'i-lucide-tablet',
+  phone: 'i-lucide-smartphone'
 }
 
 /** Устройство по экрану: касание и короткая сторона меньше 600 — телефон, касание крупнее — планшет. */
@@ -156,8 +158,9 @@ export function presenceEditors(people: PresencePerson[], self: PresenceSelf): R
   return map
 }
 
-/** Метка на ячейке: «Антон правит DE», двое и больше — «Антон +1 правят DE». */
-export function presenceLabel(names: string[], lang: string): string {
-  const who = names.length > 1 ? `${names[0]} +${names.length - 1}` : names[0]
-  return `${who} ${names.length > 1 ? 'правят' : 'правит'} ${lang.toUpperCase()}`
+/** Метка на ячейке: «Антон правит DE», двое и больше — «Антон +1 правят DE». t — словарь интерфейса. */
+export function presenceLabel(names: string[], lang: string, t: Translate): string {
+  return names.length > 1
+    ? t('presence.cell.many', { who: names[0], more: names.length - 1, lang: lang.toUpperCase() })
+    : t('presence.cell.one', { who: names[0], lang: lang.toUpperCase() })
 }

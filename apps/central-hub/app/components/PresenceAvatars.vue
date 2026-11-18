@@ -12,10 +12,11 @@ const max = computed(() => (lg.value ? 4 : 2))
 const shown = computed(() => others.value.slice(0, max.value))
 const hidden = computed(() => others.value.length - shown.value.length)
 
+const { t } = useI18n()
 const summary = computed(() => {
   const names = others.value.map(person => person.name)
-  const who = names.length ? `${names.join(', ')} и вы` : 'только вы'
-  return `Сейчас в сервисе ${online.value} — ${who}. Показать список`
+  const who = names.length ? t('presence.withYou', { names: names.join(', ') }) : t('presence.onlyYou')
+  return t('presence.summary', { count: online.value, who })
 })
 </script>
 
@@ -63,14 +64,14 @@ const summary = computed(() => {
 
       <span class="flex items-center gap-1.5 text-sm text-muted">
         <span class="size-2 rounded-full bg-success" />
-        {{ online }} онлайн
+        {{ $t('presence.online', { count: online }) }}
       </span>
     </button>
 
     <template #content>
       <div class="w-80 p-1.5">
         <p class="px-2 pb-1.5 pt-1 text-xs font-semibold uppercase tracking-wide text-muted">
-          Сейчас в сервисе · {{ online }}
+          {{ $t('presence.inService', { count: online }) }}
         </p>
         <ul class="flex flex-col">
           <li
@@ -99,7 +100,7 @@ const summary = computed(() => {
           v-if="!others.length"
           class="px-2 pb-1 pt-2 text-xs text-muted"
         >
-          Кроме вас, сейчас никого нет.
+          {{ $t('presence.nobodyElse') }}
         </p>
       </div>
     </template>

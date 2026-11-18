@@ -1,0 +1,42 @@
+{
+  "title": "New key",
+  "description": "Name it by the “How to name keys” scheme, a description is required. Check the similar strings first.",
+  "key": "Key",
+  "keyHelp": "Start typing — hints will show what comes next. From general to specific: app.cars2.paywall.title",
+  "exportTo": "Exported to code: {targets}",
+  "notExported": "Not exported to code: such keys aren’t in any project",
+  "suggestions": "Key hints",
+  "suggestionsHint": "{up} {down} choose · {enter} or {tab} insert · {esc} hide",
+  "taken": {
+    "same": "Key “{key}” already exists",
+    "sameDeprecated": "Key “{key}” already exists and is deprecated — restore it instead of creating a new one",
+    "parent": "“{key}” is already a string, not a section: you can’t create a key inside it. If it’s a section, mark the string as deprecated — the name will be freed",
+    "inside": "Key “{key}” already exists: “{value}” is a section, not a string"
+  },
+  "openTaken": "Open “{key}”",
+  "missingCode": "Code “{code}” isn’t in the registry.",
+  "didYouMean": "Did you mean:",
+  "orAddAs": "Or add it to the registry as {what}:",
+  "addAs": "Add it to the registry as {what}:",
+  "codeTitle": "Name, e.g. Cars 2",
+  "add": "Add",
+  "codeAdded": "Added to the registry: {code}",
+  "addFailed": "Couldn’t add",
+  "similar": "Similar strings",
+  "similarFailed": "Similar strings didn’t load",
+  "noSimilar": "No similar strings",
+  "similarLater": "They’ll appear once you start typing the key",
+  "copyKey": "Copy {key}",
+  "keyCopied": "Key copied",
+  "need": {
+    "key": "a key",
+    "finishKey": "finish the key",
+    "fixKey": "fix the key",
+    "otherName": "a different key name",
+    "description": "a description of at least {min} characters"
+  },
+  "needed": "To create, you need: {list}",
+  "hotkeys": "{ctrl} + {enter} create · {esc} close",
+  "submit": "Create key",
+  "created": "Key created"
+}

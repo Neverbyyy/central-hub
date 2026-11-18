@@ -1,0 +1,29 @@
+{
+  "approved": "Tasdiqlandi: {count} ta tarjima",
+  "allApproved": "Tanlanganlarning hammasi allaqachon tasdiqlangan",
+  "approveFailed": "Tasdiqlanmadi",
+  "zipDone": "ZIP eksporti tugadi",
+  "exportError": "Eksport xatosi",
+  "hideSections": "Bo‘limlarni yashirish",
+  "showSections": "Bo‘limlarni ko‘rsatish",
+  "searchPlaceholder": "Kalit yoki matn bo‘yicha qidiruv…",
+  "clearSearch": "Qidiruvni tozalash",
+  "offlineTitle": "Server bilan aloqa yo‘q — qayta ulanmoqda. Hamkasblarning tahrirlari aloqa tiklanganda paydo bo‘ladi",
+  "offline": "Aloqa yo‘q — qayta ulanmoqda…",
+  "newKey": "Yangi kalit",
+  "more": "Yana",
+  "tooManyChanges": "Aloqa yo‘qligida ko‘p satrlar o‘zgardi — jadval to‘liq bo‘lmasligi mumkin.",
+  "refreshTable": "Jadvalni yangilash",
+  "sections": "Bo‘limlar",
+  "show": "{keys}ni ko‘rsatish",
+  "hotkeys": {
+    "navigation": "navigatsiya",
+    "editStart": "/ yozing — tahrirlash",
+    "newline": "yangi qator",
+    "cancel": "bekor qilish",
+    "clear": "tozalash",
+    "undo": "ortga qaytarish",
+    "panel": "kalitda — panel",
+    "search": "qidiruv va buyruqlar"
+  }
+}

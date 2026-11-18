@@ -38,6 +38,7 @@ const supabase = useSupabaseClient()
 const toast = useToast()
 const notifyError = useNotifyError()
 const errorText = useErrorText()
+const { t } = useI18n()
 
 const details = ref<KeyDetails | null>(null)
 const history = ref<HistoryAction[]>([])
@@ -73,7 +74,7 @@ const load = async (reset = false) => {
   if (gen !== generation) return
   loading.value = false
   if (row.error) {
-    loadError.value = `Ключ не загрузился: ${row.error.message}`
+    loadError.value = t('keyPanel.loadFailed', { error: row.error.message })
     // Панель ещё показывает прежний ключ — не выдаём его за этот
     if (details.value?.technical_key !== key) details.value = null
     return
@@ -85,7 +86,7 @@ const load = async (reset = false) => {
     history.value = log.page.actions
     historyTotal.value = log.page.total
   } else {
-    const text = await errorText('История не загрузилась', log.error)
+    const text = await errorText(t('keyPanel.historyFailed'), log.error)
     if (gen !== generation) return
     historyError.value = text ?? ''
     // Другой ключ — прежняя история ему не принадлежит
@@ -111,7 +112,7 @@ const loadMoreHistory = async () => {
     history.value = [...history.value, ...page.actions.filter(a => !seen.has(a.id))]
     historyTotal.value = page.total
   } catch (error) {
-    await notifyError('История не загрузилась', error)
+    await notifyError(t('keyPanel.historyFailed'), error)
   } finally {
     loadingMore.value = false
   }
@@ -186,10 +187,11 @@ const exportTargets = computed(() => (exportRules.value.length && details.value 
 const { copy } = useCopy()
 
 // --- Языки и статусы ---
+// label — ключ словаря
 const STATUS: Record<TranslationStatus, { label: string, color: 'neutral' | 'success' | 'secondary' }> = {
-  approved: { label: 'Утверждён', color: 'success' },
-  draft: { label: 'Черновик', color: 'neutral' },
-  ai: { label: '✦ От ИИ', color: 'secondary' }
+  approved: { label: 'keyPanel.status.approved', color: 'success' },
+  draft: { label: 'keyPanel.status.draft', color: 'neutral' },
+  ai: { label: 'keyPanel.status.ai', color: 'secondary' }
 }
 
 const languageRows = computed(() => props.languages.map((lang) => {
@@ -224,10 +226,10 @@ const approve = async (langs: string[]) => {
   approving.value = langs.length === 1 ? langs[0]! : '*'
   try {
     const { count } = await $fetch('/api/keys/approve', { method: 'POST', body: { key: props.technicalKey, langs } })
-    toast.add({ title: `Утверждено: ${count} ${plural(count, ['язык', 'языка', 'языков'])}`, color: 'success', duration: 2000 })
+    toast.add({ title: t('keyPanel.approved', count), color: 'success', duration: 2000 })
     await load()
   } catch (error) {
-    await notifyError('Не удалось утвердить', error)
+    await notifyError(t('keyPanel.approveFailed'), error)
   } finally {
     approving.value = null
   }
@@ -239,11 +241,11 @@ const restore = async () => {
   restoring.value = true
   try {
     await $fetch('/api/keys/restore', { method: 'POST', body: { keys: [props.technicalKey] } })
-    toast.add({ title: 'Ключ возвращён', description: props.technicalKey, color: 'success', duration: 2000 })
+    toast.add({ title: t('keyPanel.restored'), description: props.technicalKey, color: 'success', duration: 2000 })
     await load()
     emit('restored', props.technicalKey)
   } catch (error) {
-    await notifyError('Не удалось вернуть', error)
+    await notifyError(t('keyPanel.restoreFailed'), error)
   } finally {
     restoring.value = false
   }
@@ -262,7 +264,7 @@ const toggleAction = (id: number) => {
   <!-- Ширину и рамку задаёт место: колонка справа от грида или шторка на узком экране -->
   <aside
     class="flex shrink-0 flex-col overflow-hidden bg-default"
-    aria-label="Ключ"
+    :aria-label="$t('keyPanel.label')"
   >
     <div class="flex items-start gap-2 border-b border-default px-4 py-3">
       <div class="min-w-0 flex-1">
@@ -277,14 +279,14 @@ const toggleAction = (id: number) => {
             icon="i-lucide-copy"
             @click="copy(technicalKey)"
           >
-            Ключ
+            {{ $t('keyPanel.copyKey') }}
           </UButton>
           <UButton
             size="xs"
             color="neutral"
             variant="outline"
             icon="i-lucide-code"
-            :title="details?.legacy_path ? 'Путь строки в коде проекта' : undefined"
+            :title="details?.legacy_path ? $t('keyPanel.codePath') : undefined"
             @click="copy(`t('${codeKey}')`)"
           >
             t('…')
@@ -296,7 +298,7 @@ const toggleAction = (id: number) => {
         color="neutral"
         variant="ghost"
         icon="i-lucide-x"
-        aria-label="Закрыть панель"
+        :aria-label="$t('keyPanel.close')"
         @click="emit('close')"
       />
     </div>
@@ -305,7 +307,7 @@ const toggleAction = (id: number) => {
       v-if="!details && loading"
       class="p-4 text-xs text-muted"
     >
-      Загрузка…
+      {{ $t('common.loading') }}
     </div>
     <LoadError
       v-else-if="!details && loadError"
@@ -317,7 +319,7 @@ const toggleAction = (id: number) => {
       v-else-if="!details"
       class="p-4 text-xs text-muted"
     >
-      Ключ не найден
+      {{ $t('keyPanel.notFound') }}
     </div>
 
     <!-- Пока грузится следующий ключ, прежний виден приглушённым — без мигания «Загрузка…» на каждой стрелке -->
@@ -329,7 +331,7 @@ const toggleAction = (id: number) => {
       <!-- Перечитать не вышло, а прежние данные на экране — предупреждаем, что они могли устареть -->
       <LoadError
         v-if="loadError"
-        :message="`${loadError}. Показано то, что было загружено раньше.`"
+        :message="$t('keyPanel.staleData', { error: loadError })"
         tone="error"
         @retry="load()"
       />
@@ -358,7 +360,7 @@ const toggleAction = (id: number) => {
             v-else
             class="flex-1 text-muted"
           >
-            Без описания
+            {{ $t('keyPanel.noDescription') }}
           </p>
           <UButton
             v-if="!details.deprecated_at"
@@ -369,7 +371,7 @@ const toggleAction = (id: number) => {
             class="-mt-1 shrink-0"
             @click="editingMeta = true"
           >
-            Изменить
+            {{ $t('keyPanel.edit') }}
           </UButton>
         </div>
         <div class="flex flex-wrap items-center gap-1 text-muted">
@@ -382,7 +384,7 @@ const toggleAction = (id: number) => {
           >
             {{ tag }}
           </UBadge>
-          <span v-if="details.max_length">До {{ details.max_length }} символов</span>
+          <span v-if="details.max_length">{{ $t('keyPanel.maxLength', details.max_length) }}</span>
         </div>
         <a
           v-if="details.figma_url"
@@ -395,14 +397,18 @@ const toggleAction = (id: number) => {
             name="i-lucide-figma"
             class="size-3.5"
           />
-          Открыть в Figma
+          {{ $t('keyPanel.openFigma') }}
         </a>
-        <p
+        <i18n-t
           v-if="details.legacy_path"
+          keypath="keyPanel.inCode"
+          tag="p"
           class="text-muted"
         >
-          В коде проекта: <code class="font-mono">{{ codeKey }}</code>
-        </p>
+          <template #path>
+            <code class="font-mono">{{ codeKey }}</code>
+          </template>
+        </i18n-t>
         <p
           v-if="exportTargets !== null"
           class="flex items-center gap-1 text-muted"
@@ -411,10 +417,10 @@ const toggleAction = (id: number) => {
             name="i-lucide-git-pull-request"
             class="size-3.5 shrink-0"
           />
-          {{ exportTargets ? `Выгрузка в код: ${exportTargets}` : 'В код не выгружается: ключ не входит ни в один проект' }}
+          {{ exportTargets ? $t('keyPanel.exportTo', { targets: exportTargets }) : $t('keyPanel.notExported') }}
         </p>
         <p class="text-muted">
-          Создан {{ formatDateTime(details.created_at) }}<template v-if="details.created_by">
+          {{ $t('keyPanel.created', { date: formatDateTime(details.created_at) }) }}<template v-if="details.created_by">
             · {{ details.created_by }}
           </template>
         </p>
@@ -423,7 +429,7 @@ const toggleAction = (id: number) => {
       <section>
         <div class="mb-2 flex items-center justify-between">
           <h3 class="text-[11px] font-semibold uppercase tracking-wide text-muted">
-            Языки
+            {{ $t('keyPanel.languages') }}
           </h3>
           <UButton
             v-if="toApprove.length"
@@ -435,7 +441,7 @@ const toggleAction = (id: number) => {
             :disabled="!!approving"
             @click="approve(toApprove)"
           >
-            Утвердить всё ({{ toApprove.length }})
+            {{ $t('keyPanel.approveAll', { count: toApprove.length }) }}
           </UButton>
         </div>
         <ul class="divide-y divide-default">
@@ -454,7 +460,7 @@ const toggleAction = (id: number) => {
                 class="whitespace-pre-line break-words"
                 :class="item.text ? 'text-gray-800 dark:text-gray-100' : 'text-muted'"
               >
-                {{ item.text ?? 'нет перевода' }}
+                {{ item.text ?? $t('keyPanel.noTranslation') }}
               </p>
               <div
                 v-if="item.status || item.stale || item.tooLong"
@@ -466,16 +472,16 @@ const toggleAction = (id: number) => {
                   variant="subtle"
                   size="sm"
                 >
-                  {{ item.status.label }}
+                  {{ $t(item.status.label) }}
                 </UBadge>
                 <UBadge
                   v-if="item.stale"
                   color="warning"
                   variant="subtle"
                   size="sm"
-                  title="Английский поменяли после перевода"
+                  :title="$t('keyPanel.staleTitle')"
                 >
-                  Перевод устарел
+                  {{ $t('keyPanel.stale') }}
                 </UBadge>
                 <UBadge
                   v-if="item.tooLong"
@@ -483,7 +489,7 @@ const toggleAction = (id: number) => {
                   variant="subtle"
                   size="sm"
                 >
-                  Длиннее {{ details.max_length }}
+                  {{ $t('keyPanel.tooLong', { max: details.max_length }) }}
                 </UBadge>
               </div>
               <p
@@ -491,10 +497,10 @@ const toggleAction = (id: number) => {
                 class="mt-1 text-[11px] text-muted"
               >
                 <template v-if="'missing' in item.project">
-                  В код не выгружается, пока не утвердят
+                  {{ $t('keyPanel.notApproved') }}
                 </template>
                 <template v-else>
-                  В коде пока: {{ item.project.text === null ? 'null' : `«${item.project.text}»` }}
+                  {{ item.project.text === null ? $t('keyPanel.inCodeNull') : $t('keyPanel.inCodeNow', { text: item.project.text }) }}
                 </template>
               </p>
             </div>
@@ -504,8 +510,8 @@ const toggleAction = (id: number) => {
               color="neutral"
               variant="ghost"
               icon="i-lucide-check"
-              :title="`Утвердить ${item.lang.toUpperCase()}`"
-              :aria-label="`Утвердить ${item.lang.toUpperCase()}`"
+              :title="$t('keyPanel.approveLang', { lang: item.lang.toUpperCase() })"
+              :aria-label="$t('keyPanel.approveLang', { lang: item.lang.toUpperCase() })"
               :loading="approving === item.lang"
               :disabled="!!approving"
               @click="approve([item.lang])"
@@ -516,7 +522,7 @@ const toggleAction = (id: number) => {
               color="neutral"
               variant="ghost"
               icon="i-lucide-pencil"
-              :aria-label="`Изменить ${item.lang.toUpperCase()}`"
+              :aria-label="$t('keyPanel.editLang', { lang: item.lang.toUpperCase() })"
               @click="emit('edit', item.lang)"
             />
           </li>
@@ -539,7 +545,7 @@ const toggleAction = (id: number) => {
       v-if="details?.deprecated_at"
       class="flex items-center gap-2 border-t border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 px-4 py-2 text-xs text-amber-900 dark:text-amber-200"
     >
-      <span class="flex-1">Помечен устаревшим: его нет в таблице и выгрузках</span>
+      <span class="flex-1">{{ $t('keyPanel.deprecatedNote') }}</span>
       <UButton
         size="xs"
         color="warning"
@@ -548,7 +554,7 @@ const toggleAction = (id: number) => {
         :loading="restoring"
         @click="restore"
       >
-        Вернуть
+        {{ $t('keyPanel.restore') }}
       </UButton>
     </div>
     <div
@@ -562,7 +568,7 @@ const toggleAction = (id: number) => {
         icon="i-lucide-archive"
         @click="emit('deprecate', technicalKey)"
       >
-        Пометить устаревшим
+        {{ $t('keyPanel.deprecate') }}
       </UButton>
     </div>
   </aside>

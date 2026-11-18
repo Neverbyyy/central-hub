@@ -1,0 +1,30 @@
+{
+  "title": "Neyrotarmoqlar uchun MCP",
+  "intro": "Claude Code va boshqa MCP mijozlari xizmat matnlari bilan bevosita ishlaydi: satrlarni topadi, kalitlar yaratadi va qoralama tarjimalar yozadi.",
+  "address": "Server manzili",
+  "copyAddress": "Manzilni nusxalash",
+  "tokenLabel": "Token",
+  "howTo": "Claude Code’ni qanday ulash mumkin",
+  "step1": "Tokenni {variable} muhit o‘zgaruvchisiga saqlang — tugma buyruqni token bilan birga nusxalaydi.",
+  "copyFor": "{os} uchun buyruqni nusxalash",
+  "step2": "{file} faylini loyiha ildiziga qo‘ying.",
+  "copyMcpJson": ".mcp.json’ni nusxalash",
+  "step3": "Loyihada Claude Code’ni ishga tushiring va {server} serveriga ruxsat bering.",
+  "everywhere": "Barcha loyihalarda birdaniga, fayl va o‘zgaruvchisiz — bitta buyruq. Token {file} fayliga saqlanadi:",
+  "copyAdd": "claude mcp add buyrug‘ini nusxalash",
+  "canTitle": "Neyrotarmoq nima qila oladi",
+  "can": {
+    "search": "istalgan tildagi satrlarni qidirish va o‘qish",
+    "similar": "o‘xshash satrlarni topish — yangi kalitdan oldin majburiy",
+    "tree": "kalitlar daraxti va o‘yinlar, saytlar, testlar ma’lumotnomasini ko‘rish",
+    "create": "kalitlar yaratish — faqat tavsif bilan",
+    "drafts": "«sun’iy intellektdan» maqomi bilan qoralama tarjimalar yozish",
+    "check": "tarjima qilinmaganlarni ko‘rsatish, o‘rniga qo‘yishlar va uzunlikni tekshirish"
+  },
+  "tokenPlaceholder": "<token>",
+  "connection": "Ulanish",
+  "tokenHint": "Hamma uchun bitta — uni repozitoriyga qo‘ymang.",
+  "step3Hint": "{command} buyrug‘i uni ulangan deb ko‘rsatadi — keyin oddiy so‘zlar bilan so‘rash mumkin: «amaya-hub’dan Continue haqidagi satrlarni top».",
+  "tipTitle": "Bilib qo‘ying",
+  "os": "Operatsion tizim"
+}

@@ -1,0 +1,24 @@
+{
+  "loadFailed": "The queue didn’t load",
+  "conflictBy": "{actor} has already translated this string",
+  "conflict": "Someone has already translated this string",
+  "conflictText": "Now: “{current}”. Press Enter again to save your version.",
+  "back": "Back to table",
+  "remaining": "{count} left",
+  "doneSession": " · translated this session: {count}",
+  "languagesFailed": "Languages didn’t load: {error}",
+  "onlySkipped": "Only skipped strings are left",
+  "allDone": "Everything is translated into {lang}",
+  "backToSkipped": "Back to skipped",
+  "reasonStale": "English changed",
+  "reasonMissing": "No translation",
+  "upToDate": "Translation is up to date",
+  "skip": "Skip",
+  "hotkeys": {
+    "saveNext": "save and next",
+    "newline": "new line",
+    "skip": "skip",
+    "back": "back to table",
+    "draftNote": "Saved text is a draft — approve it in the key panel"
+  }
+}

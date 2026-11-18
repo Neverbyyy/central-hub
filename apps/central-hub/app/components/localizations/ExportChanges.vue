@@ -31,9 +31,9 @@ interface Row {
 const PAGE = 200
 
 const KIND: Record<ChangeKind, { label: string, sign: string, class: string }> = {
-  added: { label: 'Добавлено', sign: '+', class: 'text-green-600 dark:text-green-400' },
-  changed: { label: 'Изменено', sign: '~', class: 'text-amber-600 dark:text-amber-400' },
-  removed: { label: 'Удалено', sign: '−', class: 'text-red-600 dark:text-red-400' }
+  added: { label: 'exportChanges.kinds.added', sign: '+', class: 'text-green-600 dark:text-green-400' },
+  changed: { label: 'exportChanges.kinds.changed', sign: '~', class: 'text-amber-600 dark:text-amber-400' },
+  removed: { label: 'exportChanges.kinds.removed', sign: '−', class: 'text-red-600 dark:text-red-400' }
 }
 
 const shown = ref(PAGE)
@@ -70,8 +70,8 @@ useEventListener('keydown', (event: KeyboardEvent) => {
 <template>
   <UModal
     v-model:open="open"
-    :title="`Изменения — ${project}`"
-    :description="repo ? `Уйдёт в PR в ${repo}. В основную ветку — когда PR смержат.` : 'Что уйдёт в PR'"
+    :title="$t('exportChanges.title', { project })"
+    :description="repo ? $t('exportChanges.descriptionRepo', { repo }) : $t('exportChanges.descriptionNoRepo')"
     :ui="{ content: 'sm:max-w-4xl' }"
   >
     <template #body>
@@ -81,8 +81,7 @@ useEventListener('keydown', (event: KeyboardEvent) => {
           :key="change.path"
           class="text-xs text-warning"
         >
-          В {{ changeFileName(change.path) }} показаны первые {{ change.lines.length }} из
-          {{ change.added + change.changed + change.removed }} изменений — все будут в PR.
+          {{ $t('exportChanges.truncated', { file: changeFileName(change.path), shown: change.lines.length, total: change.added + change.changed + change.removed }) }}
         </p>
 
         <ul class="divide-y divide-default">
@@ -94,7 +93,7 @@ useEventListener('keydown', (event: KeyboardEvent) => {
             <button
               type="button"
               class="break-all text-left font-mono text-xs font-medium text-highlighted hover:underline"
-              title="Найти в таблице"
+              :title="$t('exportChanges.findInTable')"
               @click="emit('findKey', group.key)"
             >
               {{ group.key }}
@@ -108,7 +107,7 @@ useEventListener('keydown', (event: KeyboardEvent) => {
               <span
                 class="font-mono font-semibold"
                 :class="KIND[row.kind].class"
-                :title="KIND[row.kind].label"
+                :title="$t(KIND[row.kind].label)"
               >{{ KIND[row.kind].sign }}</span>
               <span class="whitespace-pre-line break-words">
                 <span
@@ -138,7 +137,7 @@ useEventListener('keydown', (event: KeyboardEvent) => {
             size="sm"
             @click="shown += PAGE"
           >
-            Показать ещё {{ Math.min(PAGE, groups.length - visible.length) }} из {{ groups.length - visible.length }}
+            {{ $t('exportChanges.showMore', { count: Math.min(PAGE, groups.length - visible.length), left: groups.length - visible.length }) }}
           </UButton>
         </div>
       </div>
@@ -160,8 +159,7 @@ useEventListener('keydown', (event: KeyboardEvent) => {
           v-else
           class="text-xs text-muted"
         >
-          {{ totalChanges(changes) }} {{ plural(totalChanges(changes), ['изменение', 'изменения', 'изменений']) }}
-          в {{ changes.length }} {{ plural(changes.length, ['файле', 'файлах', 'файлах']) }}
+          {{ $t('exportChanges.footer', { changes: $t('exportChanges.changes', totalChanges(changes)), files: $t('exportChanges.files', changes.length) }) }}
         </span>
         <UButton
           v-bind="prButton(!!blocked)"

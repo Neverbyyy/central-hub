@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const user = useHubUser()
+const { t } = useI18n()
 
 // Имя — из аккаунта Google или введённое при входе по паролю; сменить его — выйти и войти снова
 const logout = async () => {
@@ -9,7 +10,7 @@ const logout = async () => {
 }
 
 // Подсказка у имени: чем подписаны правки и как вошёл
-const userTitle = computed(() => `Правки подписаны именем «${user.value.name}» · ${user.value.email ?? 'вход по общему паролю'}`)
+const userTitle = computed(() => t('nav.userTitle', { name: user.value.name, account: user.value.email ?? t('nav.passwordLogin') }))
 </script>
 
 <template>
@@ -29,27 +30,27 @@ const userTitle = computed(() => `Правки подписаны именем �
         <AppSidebarLink
           to="/"
           icon="ri:home-line"
-          label="Главная"
+          :label="$t('nav.home')"
           class="mb-1"
         />
         <AppSidebarLink
           to="/localizations"
           icon="ri:earth-line"
-          label="Локализации"
+          :label="$t('nav.localizations')"
         />
 
         <!-- A/B-тестов в сервисе пока нет: пункт виден, но не ведёт на страницу прототипа -->
         <span
           class="flex items-center px-4 py-2 rounded-lg text-sm text-muted cursor-not-allowed select-none"
           aria-disabled="true"
-          title="A/B-тесты появятся позже"
+          :title="$t('nav.abTestsLater')"
         >
           <UIcon
             name="ri:earth-line"
             class="size-5 mr-2"
           />
-          AB-Тесты
-          <span class="ml-auto text-[10px]">скоро</span>
+          {{ $t('nav.abTests') }}
+          <span class="ml-auto text-[10px]">{{ $t('nav.abTestsSoon') }}</span>
         </span>
       </div>
     </section>
@@ -60,13 +61,13 @@ const userTitle = computed(() => `Правки подписаны именем �
       <AppSidebarLink
         to="/ai"
         icon="ri:robot-2-line"
-        label="MCP"
+        :label="$t('nav.mcp')"
         class="mx-2 mb-1"
       />
       <AppSidebarLink
         to="/settings"
         icon="ri:settings-3-line"
-        label="Настройки"
+        :label="$t('nav.settings')"
         class="mx-2 mb-2"
       />
 
@@ -87,8 +88,8 @@ const userTitle = computed(() => `Правки подписаны именем �
           size="xs"
           color="neutral"
           variant="ghost"
-          aria-label="Выйти"
-          title="Выйти"
+          :aria-label="$t('nav.logout')"
+          :title="$t('nav.logout')"
           @click="logout"
         />
       </div>

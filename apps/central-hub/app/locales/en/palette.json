@@ -1,0 +1,18 @@
+{
+  "placeholder": "Key, text or command…",
+  "groups": {
+    "keys": "Keys",
+    "actions": "Actions",
+    "pages": "Pages"
+  },
+  "newKey": "New key",
+  "queue": "Translation queue: {lang}",
+  "showPending": "Show: not approved",
+  "showAi": "Show: by AI",
+  "showStale": "Show: outdated translations",
+  "showRecent": "Show: changed this week",
+  "themeLight": "Theme: light",
+  "themeDark": "Theme: dark",
+  "mcp": "MCP for AI",
+  "mcpHint": "token and setup guide"
+}

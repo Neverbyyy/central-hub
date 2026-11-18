@@ -1,6 +1,7 @@
-// История ключа в панели: из записей «поле — было — стало» — заголовки и сводки карточек по-человечески
+// История ключа в панели: из записей «поле — было — стало» — заголовки и сводки карточек по-человечески.
+// Тексты — из словаря интерфейса (раздел history): функции принимают t — тот же, что $t в шаблоне
 
-import { plural } from '../../shared/utils/plural'
+import type { Translate } from '../../shared/utils/plural'
 
 export interface HistoryEntry {
   lang: string | null
@@ -23,40 +24,25 @@ export interface HistoryPage {
   actions: HistoryAction[]
 }
 
-const FIELD_LABEL: Record<string, string> = {
-  created: 'Создан',
-  translation: 'Текст',
-  status: 'Статус',
-  description: 'Описание',
-  max_length: 'Лимит',
-  tags: 'Теги',
-  figma_url: 'Figma'
-}
-
-const SOURCE_LABEL: Record<string, string> = {
-  ui: 'интерфейс',
-  mcp: 'ИИ через MCP',
-  import: 'импорт',
-  sql: 'база',
-  test: 'автотест'
-}
-
-const STATUS_WORD: Record<string, string> = { approved: 'утверждён', draft: 'черновик', ai: 'от ИИ' }
+// Подписи, которые есть в словаре; остальные поля, источники и статусы показываются как есть
+const FIELDS = new Set(['created', 'translation', 'status', 'description', 'max_length', 'tags', 'figma_url'])
+const SOURCES = new Set(['ui', 'mcp', 'import', 'sql', 'test'])
+const STATUSES = new Set(['approved', 'draft', 'ai'])
 
 /** Откуда правка: интерфейс, ИИ через MCP, импорт… */
-export const historySourceLabel = (source: string) => SOURCE_LABEL[source] ?? source
+export const historySourceLabel = (source: string, t: Translate) => (SOURCES.has(source) ? t(`history.sources.${source}`) : source)
 
 /** Заголовок записи; создание и пометка «устаревший» — события без «было → стало». */
-export const entryTitle = (entry: HistoryEntry) => entry.field === 'deprecated'
-  ? (entry.new_value ? 'Помечен устаревшим' : 'Возвращён из устаревших')
-  : (FIELD_LABEL[entry.field] ?? entry.field)
+export const entryTitle = (entry: HistoryEntry, t: Translate) => entry.field === 'deprecated'
+  ? t(entry.new_value ? 'history.deprecated' : 'history.restored')
+  : (FIELDS.has(entry.field) ? t(`history.fields.${entry.field}`) : entry.field)
 
 export const entryHasDiff = (entry: HistoryEntry) => entry.field !== 'created' && entry.field !== 'deprecated'
 
 /** Значение для «было → стало»: пустое — «—», статус — словом. */
-export const entryValueText = (entry: HistoryEntry, value: string | null) => {
+export const entryValueText = (entry: HistoryEntry, value: string | null, t: Translate) => {
   if (value === null || value === '') return '—'
-  return entry.field === 'status' ? (STATUS_WORD[value] ?? value) : value
+  return entry.field === 'status' && STATUSES.has(value) ? t(`history.status.${value}`) : value
 }
 
 /** Языки действия коротко: EN, RU, DE +6 */
@@ -70,25 +56,24 @@ export const isCreationAction = (action: HistoryAction) => action.entries.some(e
 /** Подробности действия; у создания сама запись «Создан» — уже заголовок карточки. */
 export const actionDetailEntries = (action: HistoryAction) => action.entries.filter(e => e.field !== 'created')
 
-export const actionDetailsLabel = (action: HistoryAction) => {
-  const n = actionDetailEntries(action).length
-  return isCreationAction(action) ? `Тексты (${n})` : `Подробности (${n})`
+export const actionDetailsLabel = (action: HistoryAction, t: Translate) => {
+  const count = actionDetailEntries(action).length
+  return t(isCreationAction(action) ? 'history.texts' : 'history.details', { count })
 }
 
 /** Сводка действия из нескольких записей; подробности — по клику. */
-export const actionSummary = (action: HistoryAction) => {
+export const actionSummary = (action: HistoryAction, t: Translate) => {
   const { entries } = action
   // Создание ключа вместе с первыми текстами — просто «Создан», тексты под кнопкой
-  if (isCreationAction(action)) return 'Создан'
-  if (entries.every(e => e.field === 'status' && e.new_value === 'approved')) return `Утверждено: ${entryLangs(entries)}`
+  if (isCreationAction(action)) return t('history.summary.created')
+  if (entries.every(e => e.field === 'status' && e.new_value === 'approved')) return t('history.summary.approved', { langs: entryLangs(entries) })
   if (entries.every(e => e.field === 'translation')) {
-    const texts = entries.length
     return action.source === 'import'
-      ? `Импорт: тексты на ${texts} ${plural(texts, ['языке', 'языках', 'языках'])}`
-      : `Тексты: ${entryLangs(entries)}`
+      ? t('history.summary.importTexts', entries.length)
+      : t('history.summary.texts', { langs: entryLangs(entries) })
   }
-  const fields = [...new Set(entries.map(e => entryTitle(e)))]
-  return `${entries.length} ${plural(entries.length, ['изменение', 'изменения', 'изменений'])}: ${fields.join(', ').toLowerCase()}`
+  const fields = [...new Set(entries.map(e => entryTitle(e, t)))].join(', ').toLocaleLowerCase()
+  return t('history.summary.changes', { fields, count: entries.length }, entries.length)
 }
 
 // Панель ключа показывает историю порциями: сначала последние 10 действий, «Показать ещё» — по 20

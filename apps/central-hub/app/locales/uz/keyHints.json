@@ -1,0 +1,45 @@
+{
+  "roots": {
+    "app": "O‘yin: paywall, onbording, bannerlar",
+    "web": "Sayt yoki lending",
+    "common": "Hamma uchun umumiy: tugmalar, havolalar, narxlar, iboralar",
+    "brand": "Yuridik shaxsga qarab farq qiladi",
+    "ds": "Dizayn tizimi komponentlari satrlari",
+    "test": "Faqat A/B test uchun: test.<test>."
+  },
+  "typical": {
+    "common": {
+      "button": "tugmalar",
+      "link": "havolalar",
+      "price": "narxlar",
+      "period": "davrlar",
+      "legal": "yuridik iboralar"
+    },
+    "app": {
+      "paywall": "paywall",
+      "onboarding": "onbording",
+      "banner": "banner"
+    },
+    "web": {
+      "home": "bosh sahifa",
+      "faq": "savol-javoblar"
+    },
+    "brand": {
+      "legal": "yuridik iboralar"
+    }
+  },
+  "add": {
+    "game": "o‘yinni ma’lumotnomaga qo‘shish",
+    "site": "saytni ma’lumotnomaga qo‘shish",
+    "brand": "brendni ma’lumotnomaga qo‘shish",
+    "test": "testni ma’lumotnomaga qo‘shish",
+    "project": "loyihani ma’lumotnomaga qo‘shish"
+  },
+  "asNew": {
+    "game": "yangi o‘yin",
+    "site": "yangi sayt",
+    "brand": "yangi brend",
+    "test": "yangi test",
+    "project": "yangi loyiha"
+  }
+}

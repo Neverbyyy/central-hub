@@ -33,13 +33,13 @@ export function useQueueMenu(prefix: Ref<string>) {
 
   const queueItems = computed<DropdownMenuItem[][]>(() => [
     [
-      { type: 'label', label: prefix.value ? `Раздел ${prefix.value}` : 'Все ключи' },
+      { type: 'label', label: prefix.value ? hubT('queueMenu.section', { prefix: prefix.value }) : hubT('tree.allKeys') },
       ...(counts.value === 'error'
-        ? [{ type: 'label' as const, label: 'Не удалось посчитать — откройте меню ещё раз', class: 'font-normal text-red-600 dark:text-red-400' }]
+        ? [{ type: 'label' as const, label: hubT('queueMenu.failed'), class: 'font-normal text-red-600 dark:text-red-400' }]
         : [])
     ],
     targets.value.map(l => ({
-      label: `${l.code.toUpperCase()} — ${l.name}`,
+      label: `${l.code.toUpperCase()} — ${languageName(l.code)}`,
       // Свой хвост со счётчиком (#queue-trailing) — и в кнопке очереди, и в подменю «Ещё»
       slot: 'queue',
       count: trailing(l.code),

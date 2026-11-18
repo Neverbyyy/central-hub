@@ -1,0 +1,27 @@
+{
+  "online": "{count} online",
+  "inService": "Online now · {count}",
+  "summary": "Online now: {count} — {who}. Show the list",
+  "withYou": "{names} and you",
+  "onlyYou": "only you",
+  "nobodyElse": "Nobody else is here right now.",
+  "you": "you",
+  "here": "Online",
+  "hereFor": "Online for {duration}",
+  "editing": "Editing",
+  "duration": {
+    "lessThanMinute": "less than a minute",
+    "minutes": "{minutes} min",
+    "hours": "{hours} h",
+    "hoursMinutes": "{hours} h {minutes} min"
+  },
+  "cell": {
+    "one": "{who} is editing {lang}",
+    "many": "{who} +{more} are editing {lang}"
+  },
+  "device": {
+    "desktop": "computer",
+    "tablet": "tablet",
+    "phone": "phone"
+  }
+}

@@ -49,16 +49,16 @@ describe('reviewGate', () => {
 })
 
 describe('reviewGateMessage', () => {
-  it('одна фраза для окна и сервера: сколько общих ключей ждут; не все строки пришли — с плюсом; ни одного видимого — «много изменений»', () => {
-    expect(reviewGateMessage('ds', { keys: ['a'], truncated: false })).toBe('Сначала — «Дизайн-система»: 1 общий ключ ещё не в её основной ветке')
-    expect(reviewGateMessage('ds', { keys: ['a', 'b', 'c'], truncated: false })).toContain(': 3 общих ключа ещё')
-    expect(reviewGateMessage('ds', { keys: ['a', 'b', 'c', 'd', 'e'], truncated: true })).toContain(': 5+ общих ключей ещё')
+  it('ошибка сервера: сколько общих ключей ждут; не все строки пришли — с плюсом; ни одного видимого — «много изменений»', () => {
+    expect(reviewGateMessage('ds', { keys: ['a'], truncated: false }))
+      .toBe('Сначала — «Дизайн-система»: общие ключи (1) ещё не в её основной ветке. Смержите её PR или выгрузите без проверки')
+    expect(reviewGateMessage('ds', { keys: ['a', 'b', 'c', 'd', 'e'], truncated: true })).toContain(': общие ключи (5+) ещё')
     expect(reviewGateMessage('ds', { keys: [], truncated: true })).toContain(': много изменений ещё')
   })
 
-  it('проверка недоступна — так и говорим, с понятной причиной', () => {
-    expect(reviewGateMessage('ds', 'not-connected')).toBe('Сначала — «Дизайн-система», но она не подключена к GitHub')
-    expect(reviewGateMessage('ds', 'failed')).toBe('Сначала — «Дизайн-система», но сравнить её с репозиторием не получилось')
+  it('дизайн-система не подключена — так и говорим, с выходом', () => {
+    expect(reviewGateMessage('ds', 'not-connected'))
+      .toBe('Сначала — «Дизайн-система», но она не подключена к GitHub (NUXT_EXPORT_REPOS). Срочно — выгрузите без проверки')
   })
 })
 

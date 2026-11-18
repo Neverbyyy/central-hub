@@ -1,9 +1,10 @@
 // Общие токены — плагина Figma и MCP: один на всех, значение — переменная окружения на сервере. Грузятся только
 // в браузере и только там, где их показывают, поэтому в разметку и в payload SSR не попадают. Запрос — один на вкладку:
 // поле токена и команды с ним в инструкции берут значение отсюда
+// Подписи — в словаре: token.<вид>.label / .hint
 export const SHARED_TOKENS = {
-  figma: { label: 'Токен плагина', env: 'NUXT_FIGMA_TOKEN', hint: 'Вставьте его в плагин' },
-  mcp: { label: 'Токен MCP', env: 'NUXT_MCP_TOKEN', hint: 'Сохраните его в переменную AMAYA_HUB_TOKEN' }
+  figma: { env: 'NUXT_FIGMA_TOKEN' },
+  mcp: { env: 'NUXT_MCP_TOKEN' }
 } as const
 
 export type SharedTokenKind = keyof typeof SHARED_TOKENS
@@ -12,6 +13,7 @@ const requests = new Map<SharedTokenKind, Promise<string | null>>()
 
 export function useSharedToken(kind: SharedTokenKind) {
   const notifyError = useNotifyError()
+  const { t } = useI18n()
   const token = ref<string | null>(null)
   const loading = ref(true)
   const failed = ref(false)
@@ -25,7 +27,7 @@ export function useSharedToken(kind: SharedTokenKind) {
     } catch (error) {
       requests.delete(kind)
       failed.value = true
-      if (own) await notifyError('Токен не загрузился', error)
+      if (own) await notifyError(t('token.loadFailed'), error)
     } finally {
       loading.value = false
     }

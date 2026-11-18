@@ -106,10 +106,10 @@ const exportFile = async () => {
     // Имя файла станет именем режима в Figma: en, ru, de…
     const files = Object.fromEntries(Object.entries(result.files).map(([lang, tree]) => [`${lang}.json`, tree]))
     await downloadJsonZip(files, `figma-${prefixes.join('+')}.zip`)
-    toast.add({ title: `Для Figma выгружено: ${keysCount(result.keys)}`, color: 'success' })
+    toast.add({ title: hubT('figma.exported', { keys: hubT('common.keys', { count: result.keys }) }), color: 'success' })
     open.value = false
   } catch (error) {
-    await notifyError('Не выгрузилось', error)
+    await notifyError(hubT('figma.failed'), error)
   } finally {
     exporting.value = false
   }
@@ -126,8 +126,8 @@ const onKeydown = (event: KeyboardEvent) => {
 <template>
   <UModal
     v-model:open="open"
-    title="Тексты в Figma"
-    description="Плагин берёт тексты прямо из сервиса и обновляет переменные в макете — по кнопке или вживую."
+    :title="$t('figma.title')"
+    :description="$t('figma.description')"
   >
     <template #body>
       <div
@@ -138,10 +138,10 @@ const onKeydown = (event: KeyboardEvent) => {
           <div class="flex items-start justify-between gap-3">
             <div>
               <h3 class="font-semibold text-highlighted">
-                Amaya Hub — Локализация
+                {{ $t('figma.pluginName') }}
               </h3>
               <p class="mt-0.5 text-xs text-muted">
-                Разделы и языки выбираются в плагине. Тексты правятся здесь в сервисе.
+                {{ $t('figma.pluginHint') }}
               </p>
             </div>
             <UButton
@@ -153,13 +153,19 @@ const onKeydown = (event: KeyboardEvent) => {
               variant="soft"
               class="shrink-0"
             >
-              Скачать плагин
+              {{ $t('figma.downloadPlugin') }}
             </UButton>
           </div>
           <ol class="mt-2 list-decimal space-y-0.5 pl-4 text-xs text-toned">
-            <li>Распакуйте архив.</li>
-            <li>В приложении Figma для компьютера: Plugins → Development → Import plugin from manifest → <code>manifest.json</code>.</li>
-            <li>Запустите плагин и вставьте токен:</li>
+            <li>{{ $t('figma.step1') }}</li>
+            <li>
+              <i18n-t keypath="figma.step2">
+                <template #file>
+                  <code>manifest.json</code>
+                </template>
+              </i18n-t>
+            </li>
+            <li>{{ $t('figma.step3') }}</li>
           </ol>
           <SharedToken
             kind="figma"
@@ -168,17 +174,16 @@ const onKeydown = (event: KeyboardEvent) => {
         </section>
 
         <p class="text-xs text-muted">
-          Без плагина — архив для встроенного импорта: файл на каждый язык. Перетащите все файлы в окно Variables:
-          каждый станет режимом, имена через / — деревом групп.
+          {{ $t('figma.zipHint') }}
         </p>
 
         <section>
           <h3 class="mb-1.5 text-xs font-semibold text-muted">
-            Разделы
+            {{ $t('figma.sections') }}
           </h3>
           <LoadError
             v-if="!tree && treeStatus === 'error'"
-            message="Разделы не загрузились."
+            :message="$t('tree.failed')"
             class="text-xs"
             @retry="refreshTree()"
           />
@@ -186,7 +191,7 @@ const onKeydown = (event: KeyboardEvent) => {
             v-else-if="!tree"
             class="text-xs text-muted"
           >
-            Загрузка разделов…
+            {{ $t('figma.loadingSections') }}
           </div>
           <ul
             v-else
@@ -203,7 +208,7 @@ const onKeydown = (event: KeyboardEvent) => {
                 type="button"
                 class="flex size-6 shrink-0 items-center justify-center rounded text-muted hover:bg-elevated hover:text-default"
                 :aria-expanded="expanded.has(row.path)"
-                :aria-label="`${expanded.has(row.path) ? 'Свернуть' : 'Развернуть'} ${row.label}`"
+                :aria-label="$t(expanded.has(row.path) ? 'figma.collapse' : 'figma.expand', { section: row.label })"
                 @click="toggleExpanded(row.path)"
               >
                 <UIcon
@@ -235,7 +240,7 @@ const onKeydown = (event: KeyboardEvent) => {
 
         <section>
           <h3 class="mb-1.5 text-xs font-semibold text-muted">
-            Языки — режимы
+            {{ $t('figma.languages') }}
           </h3>
           <div class="flex flex-wrap gap-1">
             <UButton
@@ -257,7 +262,7 @@ const onKeydown = (event: KeyboardEvent) => {
     <template #footer>
       <div class="flex w-full items-center justify-between gap-3">
         <span class="text-xs text-muted">
-          {{ keysCount(total) }} · {{ chosenLanguages.length }} {{ plural(chosenLanguages.length, ['режим', 'режима', 'режимов']) }}
+          {{ $t('common.keys', total) }} · {{ $t('figma.modes', chosenLanguages.length) }}
         </span>
         <UButton
           icon="i-lucide-download"
@@ -265,7 +270,7 @@ const onKeydown = (event: KeyboardEvent) => {
           :disabled="!canExport"
           @click="exportFile"
         >
-          Скачать ZIP
+          {{ $t('figma.downloadZip') }}
         </UButton>
       </div>
     </template>

@@ -1,0 +1,20 @@
+{
+  "allStatuses": "Barcha maqomlar",
+  "ai": "✦ SI tomonidan",
+  "pending": "Tasdiqlanmaganlar",
+  "drafts": "Qoralamalar",
+  "approved": "Tasdiqlanganlar",
+  "allTranslated": "Hammasiga tarjima qilingan",
+  "missing": "Tarjima yo‘q: {lang}",
+  "linkCopied": "Tanlovga havola nusxalandi",
+  "staleTitle": "Inglizcha matn tarjimadan keyin o‘zgartirilgan — tarjimani tekshirish kerak",
+  "stale": "Tarjima eskirgan",
+  "deprecatedTitle": "Eskirgan deb belgilangan kalitlar: ular jadvalda va eksportlarda yo‘q, istalgan vaqtda qaytarish mumkin",
+  "deprecated": "Kalit eskirgan",
+  "recent": "Shu hafta",
+  "section": "Bo‘lim",
+  "goTo": "{prefix} ga o‘tish",
+  "removeSection": "Bo‘limni olib tashlash",
+  "reset": "Tozalash",
+  "link": "Tanlovga havola"
+}

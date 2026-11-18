@@ -107,12 +107,12 @@ const onSelect = (item: Item | undefined) => {
       :aria-current="!prefix ? 'true' : undefined"
       @click="emit('select', '', true)"
     >
-      Все ключи
+      {{ $t('tree.allKeys') }}
     </button>
     <div class="flex-1 overflow-auto px-1 pb-3">
       <LoadError
         v-if="status === 'error' && !data"
-        message="Разделы не загрузились."
+        :message="$t('tree.failed')"
         class="px-2 py-1 text-xs"
         @retry="refresh()"
       />
@@ -121,7 +121,7 @@ const onSelect = (item: Item | undefined) => {
         v-else-if="!data"
         class="px-2"
         aria-busy="true"
-        aria-label="Загрузка разделов"
+        :aria-label="$t('tree.loading')"
       >
         <div
           v-for="(row, i) in SKELETON"

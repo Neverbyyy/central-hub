@@ -1,0 +1,10 @@
+{
+  "appearance": "Appearance",
+  "themeHint": "Choose the interface theme",
+  "theme": "Theme",
+  "light": "Light",
+  "dark": "Dark",
+  "language": "Language",
+  "languageHint": "The language of the service interface.",
+  "subtitle": "Make the interface your own"
+}

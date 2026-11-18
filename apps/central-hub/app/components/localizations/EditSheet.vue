@@ -53,7 +53,7 @@ const onKeydown = (e: KeyboardEvent) => {
   <UDrawer
     v-model:open="open"
     :title="technicalKey"
-    :description="source === undefined ? `Исходный текст, ${lang.toUpperCase()}` : `Перевод на ${lang.toUpperCase()}`"
+    :description="$t(source === undefined ? 'editSheet.source' : 'editSheet.translation', { lang: lang.toUpperCase() })"
     :ui="{ title: 'break-all font-mono text-xs', body: 'space-y-3' }"
   >
     <template #body>
@@ -79,7 +79,7 @@ const onKeydown = (e: KeyboardEvent) => {
           autoresize
           class="w-full"
           :ui="{ base: 'text-base' }"
-          :placeholder="`Текст на ${lang.toUpperCase()}`"
+          :placeholder="$t('editSheet.placeholder', { lang: lang.toUpperCase() })"
           @keydown="onKeydown"
         />
         <LocalizationsTextIssues :issues="issues" />
@@ -95,7 +95,7 @@ const onKeydown = (e: KeyboardEvent) => {
           class="flex-1 justify-center"
           @click="open = false"
         >
-          Отмена
+          {{ $t('common.cancel') }}
         </UButton>
         <UButton
           size="lg"
@@ -103,7 +103,7 @@ const onKeydown = (e: KeyboardEvent) => {
           :disabled="hasErrors"
           @click="save"
         >
-          Сохранить
+          {{ $t('common.save') }}
         </UButton>
       </div>
     </template>

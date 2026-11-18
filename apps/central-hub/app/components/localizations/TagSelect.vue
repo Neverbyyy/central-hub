@@ -20,7 +20,7 @@ const onCreate = async (name: string) => {
     add(existing)
     return
   }
-  const message = tagNameError(name)
+  const message = tagNameText(name, hubT)
   if (message) {
     toast.add({ title: message, color: 'warning' })
     return
@@ -28,7 +28,7 @@ const onCreate = async (name: string) => {
   try {
     add(await create(name))
   } catch (error) {
-    await notifyError('Тег не создался', error)
+    await notifyError(hubT('tags.createFailed'), error)
   }
 }
 </script>
@@ -40,18 +40,18 @@ const onCreate = async (name: string) => {
     multiple
     :size="size"
     create-item="always"
-    placeholder="Выберите теги"
-    :search-input="{ placeholder: 'Найти или создать тег…' }"
+    :placeholder="$t('tags.select')"
+    :search-input="{ placeholder: $t('tags.findOrCreate') }"
     class="w-full"
     @create="onCreate"
     @update:open="(open: boolean) => open && load()"
   >
     <template #create-item-label="{ item }">
-      Создать тег «{{ item }}»
+      {{ $t('tags.create', { name: item }) }}
     </template>
     <template #empty>
       <p class="text-center text-sm text-muted">
-        Тегов пока нет — введите название
+        {{ $t('tags.noneYet') }}
       </p>
     </template>
   </USelectMenu>

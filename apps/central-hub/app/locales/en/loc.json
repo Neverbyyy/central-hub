@@ -1,0 +1,29 @@
+{
+  "approved": "Approved: {count} translation | Approved: {count} translations",
+  "allApproved": "Everything selected is already approved",
+  "approveFailed": "Approval failed",
+  "zipDone": "ZIP export finished",
+  "exportError": "Export error",
+  "hideSections": "Hide sections",
+  "showSections": "Show sections",
+  "searchPlaceholder": "Search by key or text…",
+  "clearSearch": "Clear search",
+  "offlineTitle": "No connection to the server — reconnecting. Colleagues’ edits will appear when the connection is back",
+  "offline": "No connection — reconnecting…",
+  "newKey": "New key",
+  "more": "More",
+  "tooManyChanges": "Many strings changed while you were offline — the table may be incomplete.",
+  "refreshTable": "Refresh table",
+  "sections": "Sections",
+  "show": "Show {keys}",
+  "hotkeys": {
+    "navigation": "navigation",
+    "editStart": "/ type — edit",
+    "newline": "new line",
+    "cancel": "cancel",
+    "clear": "clear",
+    "undo": "undo",
+    "panel": "on a key — panel",
+    "search": "search and commands"
+  }
+}

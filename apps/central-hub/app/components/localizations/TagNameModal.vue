@@ -32,7 +32,7 @@ const error = computed(() => {
   const from = shown.value.from
   if (!open.value || saving.value || done.value || !name || name === from) return null
   const taken = findTag(tags.value.filter(tag => tag !== from), name)
-  return tagNameError(name) ?? (taken ? `Тег «${taken}» уже есть` : null)
+  return tagNameText(name, hubT) ?? (taken ? hubT('tags.exists', { name: taken }) : null)
 })
 
 const submit = async () => {
@@ -57,16 +57,16 @@ const submit = async () => {
 <template>
   <UModal
     v-model:open="open"
-    :title="shown.from ? 'Переименовать тег' : 'Новый тег'"
-    :description="shown.description ?? (shown.from ? `Новое имя получат все ключи с тегом «${shown.from}»` : 'Ключи в него — правым кликом по строке → «Добавить тег»')"
+    :title="$t(shown.from ? 'tags.renameTitle' : 'tags.newTitle')"
+    :description="shown.description ?? (shown.from ? $t('tags.renameHint', { name: shown.from }) : $t('tags.newHint'))"
   >
     <template #body>
       <UInput
         v-model="value"
         autofocus
         class="w-full"
-        :placeholder="shown.from ? undefined : 'Например, promo_black_friday'"
-        aria-label="Название тега"
+        :placeholder="shown.from ? undefined : $t('tags.namePlaceholder')"
+        :aria-label="$t('tags.nameLabel')"
         :color="error ? 'error' : undefined"
         @keydown.enter.prevent="submit"
       />
@@ -84,14 +84,14 @@ const submit = async () => {
           variant="ghost"
           @click="open = false"
         >
-          Отмена
+          {{ $t('common.cancel') }}
         </UButton>
         <UButton
           :loading="saving"
           :disabled="!!error || !value.trim()"
           @click="submit"
         >
-          {{ shown.from ? 'Переименовать' : 'Создать' }}
+          {{ $t(shown.from ? 'tags.rename' : 'tags.createButton') }}
         </UButton>
       </div>
     </template>

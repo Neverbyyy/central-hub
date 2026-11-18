@@ -1,4 +1,12 @@
 // Меню тегов: что отмечать и что показывать по запросу. Чистые функции — состояние в composables/useTags.ts
+import type { Translate } from '../../shared/utils/plural'
+import { MAX_TAG_LENGTH, tagNameProblem } from '../../shared/utils/tags'
+
+/** Что не так с именем тега — на языке интерфейса (правило общее с сервером: tagNameProblem); null — можно. */
+export function tagNameText(name: string, t: Translate): string | null {
+  const problem = tagNameProblem(name)
+  return problem && t(`tags.errors.${problem}`, { max: MAX_TAG_LENGTH })
+}
 
 /** Сколько ключей уже с тегом: all — у всех (галочка), count — для «2 из 5». */
 export function tagCoverage(lists: readonly (readonly string[])[], tag: string) {

@@ -1,0 +1,30 @@
+{
+  "title": "MCP for AI",
+  "intro": "Claude Code and other MCP clients work with the service texts directly: they find strings, create keys and write draft translations.",
+  "address": "Server address",
+  "copyAddress": "Copy address",
+  "tokenLabel": "Token",
+  "howTo": "How to connect Claude Code",
+  "step1": "Save the token to the environment variable {variable} — the button copies the command with the token already in it.",
+  "copyFor": "Copy the command for {os}",
+  "step2": "Put {file} in the project root.",
+  "copyMcpJson": "Copy .mcp.json",
+  "step3": "Start Claude Code in the project and allow the {server} server.",
+  "everywhere": "In all projects at once, without a file or variable — one command. The token is saved to {file}:",
+  "copyAdd": "Copy the claude mcp add command",
+  "canTitle": "What the AI can do",
+  "can": {
+    "search": "search and read strings in any language",
+    "similar": "find similar strings — required before creating a new key",
+    "tree": "browse the key tree and the registry of games, sites and tests",
+    "create": "create keys — only with a description",
+    "drafts": "write draft translations with the “by AI” status",
+    "check": "show untranslated strings, check placeholders and length"
+  },
+  "tokenPlaceholder": "<token>",
+  "connection": "Connection",
+  "tokenHint": "One for everyone — never commit it to a repository.",
+  "step3Hint": "The {command} command will show it as connected — then just ask in plain words: “find strings about Continue in amaya-hub”.",
+  "tipTitle": "Good to know",
+  "os": "Operating system"
+}

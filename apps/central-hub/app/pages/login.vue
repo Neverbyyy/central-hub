@@ -1,6 +1,9 @@
 <script setup lang="ts">
 definePageMeta({ layout: false })
-useSeoMeta({ title: 'Вход — Amaya Central Hub' })
+const { t } = useI18n()
+useSeoMeta({ title: () => `${t('login.tab')} — Amaya Central Hub` })
+// Язык — и до входа: настройки доступны только после него
+const { locale, setLocale } = useHubLocale()
 
 // Вход. Основной, пока сервис в разработке, — общий пароль: верный пароль → «Как вас зовут?» (имя подписывает правки).
 // Снизу запасной — через Google: имя и адрес из аккаунта, пускает любой рабочий аккаунт домена компании (user.domain);
@@ -14,20 +17,18 @@ const next = computed(() => internalPath(route.query.next))
 // Уже вошёл — сразу дальше
 if (user.value.authed) await navigateTo(next.value, { replace: true })
 
-// Перед тире — неразрывный пробел: тире не уходит в начало строки
-const NBSP = String.fromCharCode(160)
-
 // Полный переход, а не $fetch: сервер уводит к Google и принимает возврат (/api/auth/google/callback)
 const googleHref = computed(() => `/api/auth/google${next.value === '/' ? '' : `?next=${encodeURIComponent(next.value)}`}`)
 
 const googleError = computed(() => {
   const email = typeof route.query.email === 'string' ? route.query.email : ''
   switch (route.query.error) {
-    case 'denied': return 'Вход отменён. Чтобы продолжить, выберите аккаунт Google.'
-    case 'state': return 'Ссылка входа устарела или открыта в другой вкладке — нажмите «Войти через Google» ещё раз.'
-    case 'not-allowed': return `${email || 'Этот аккаунт'}${NBSP}— не рабочий аккаунт компании. Войдите аккаунтом @${user.value.domain ?? '…'}.`
-    case 'google': return 'Google не ответил — попробуйте ещё раз через минуту.'
-    case 'off': return 'Вход через Google не настроен на сервере.'
+    case 'denied': return t('login.errors.denied')
+    case 'state': return t('login.errors.state')
+    // Перед тире — неразрывный пробел (в словаре): тире не уходит в начало строки
+    case 'not-allowed': return t('login.errors.notAllowed', { email: email || t('login.errors.thisAccount'), domain: user.value.domain ?? '…' })
+    case 'google': return t('login.errors.google')
+    case 'off': return t('login.errors.off')
     default: return ''
   }
 })
@@ -85,16 +86,16 @@ const submit = async () => {
         @submit.prevent="submit"
       >
         <h1 class="mb-1 text-lg font-semibold">
-          Как вас зовут?
+          {{ $t('login.nameTitle') }}
         </h1>
         <p class="mb-4 text-sm text-muted">
-          Имя подписывает ваши правки в истории строк.
+          {{ $t('login.nameHint') }}
         </p>
         <UInput
           v-model="name"
           name="name"
-          aria-label="Имя"
-          placeholder="Введите ваше имя"
+          :aria-label="$t('login.nameLabel')"
+          :placeholder="$t('login.namePlaceholder')"
           autocomplete="name"
           autofocus
           size="lg"
@@ -116,13 +117,13 @@ const submit = async () => {
           :loading="pending"
           :disabled="!canSubmit"
         >
-          Продолжить
+          {{ $t('login.continue') }}
         </UButton>
       </form>
 
       <template v-else>
         <h1 class="mb-1 text-lg font-semibold">
-          Вход
+          {{ $t('login.title') }}
         </h1>
 
         <!-- Шаг 1: общий пароль -->
@@ -131,14 +132,14 @@ const submit = async () => {
           @submit.prevent="submit"
         >
           <p class="mb-4 text-sm text-muted">
-            Сервис закрыт общим паролем команды.
+            {{ $t('login.passwordHint') }}
           </p>
           <UInput
             id="password"
             v-model="password"
             name="password"
             :type="showPassword ? 'text' : 'password'"
-            placeholder="Пароль"
+            :placeholder="$t('login.password')"
             autocomplete="current-password"
             autofocus
             size="lg"
@@ -155,7 +156,7 @@ const submit = async () => {
                 variant="link"
                 size="sm"
                 :icon="showPassword ? 'i-lucide-eye-off' : 'i-lucide-eye'"
-                :aria-label="showPassword ? 'Скрыть пароль' : 'Показать пароль'"
+                :aria-label="$t(showPassword ? 'login.hidePassword' : 'login.showPassword')"
                 :aria-pressed="showPassword"
                 aria-controls="password"
                 @mousedown.prevent
@@ -178,7 +179,7 @@ const submit = async () => {
             :loading="pending"
             :disabled="!canSubmit"
           >
-            Войти
+            {{ $t('login.signIn') }}
           </UButton>
         </form>
 
@@ -186,7 +187,7 @@ const submit = async () => {
         <template v-if="user.domain">
           <USeparator
             v-if="user.passwordLogin"
-            label="или"
+            :label="$t('login.or')"
             class="my-5"
           />
           <!-- Только Google (без общего пароля) — как будет потом -->
@@ -194,7 +195,7 @@ const submit = async () => {
             v-else
             class="mb-4 text-sm text-muted"
           >
-            Только через рабочий аккаунт {{ user.domain }}
+            {{ $t('login.googleOnly', { domain: user.domain }) }}
           </p>
           <UButton
             :to="googleHref"
@@ -205,13 +206,13 @@ const submit = async () => {
             variant="outline"
             icon="i-simple-icons-google"
           >
-            Войти через Google
+            {{ $t('login.google') }}
           </UButton>
           <p
             v-if="user.passwordLogin"
             class="mt-2 text-center text-xs text-muted"
           >
-            Рабочий аккаунт {{ user.domain }}
+            {{ $t('login.workAccount', { domain: user.domain }) }}
           </p>
           <p
             v-if="googleError"
@@ -226,9 +227,29 @@ const submit = async () => {
           v-if="!user.domain && !user.passwordLogin"
           class="text-sm text-warning"
         >
-          Вход не настроен: на сервере нужен NUXT_HUB_PASSWORD или NUXT_GOOGLE_CLIENT_ID и NUXT_GOOGLE_CLIENT_SECRET.
+          {{ $t('login.notConfigured') }}
         </p>
       </template>
+
+      <!-- Язык интерфейса — уже здесь: до входа настройки недоступны. Название — на самом языке -->
+      <div
+        class="mt-6 flex justify-center gap-4 text-xs"
+        role="group"
+        :aria-label="$t('login.language')"
+      >
+        <button
+          v-for="code in HUB_LOCALES"
+          :key="code"
+          type="button"
+          :lang="code"
+          :aria-pressed="locale === code"
+          class="rounded px-1 py-0.5 focus-visible:outline-2 focus-visible:outline-primary"
+          :class="locale === code ? 'font-semibold text-highlighted' : 'text-muted hover:text-default'"
+          @click="setLocale(code)"
+        >
+          {{ HUB_LOCALE_NAMES[code] }}
+        </button>
+      </div>
     </div>
   </div>
 </template>

@@ -1,0 +1,12 @@
+{
+  "limitError": "Целое число от 1 до 10 000",
+  "saved": "Свойства ключа сохранены",
+  "formLabel": "Свойства ключа",
+  "description": "Описание",
+  "descriptionPlaceholder": "Где показывается строка и какие у неё ограничения",
+  "tags": "Теги",
+  "maxLength": "Лимит длины",
+  "noLimit": "без лимита",
+  "figma": "Ссылка на Figma",
+  "hotkeys": "Ctrl+Enter — сохранить · Esc — отмена"
+}

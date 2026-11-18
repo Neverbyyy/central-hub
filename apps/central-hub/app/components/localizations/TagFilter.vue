@@ -14,8 +14,6 @@ const { tags, counts, state, load, create, rename, remove } = useTags()
 const open = ref(false)
 const search = ref('')
 
-const keysWord = (n: number) => plural(n, ['ключа', 'ключей', 'ключей'])
-
 // Выбран хоть один тег — поле подсвечено, как остальные включённые фильтры
 const ui = computed(() => ({ ...(model.value.length ? ACTIVE_SELECT_UI : {}), content: 'min-w-64' }))
 
@@ -27,17 +25,17 @@ const newName = computed(() => {
 
 /** Создать тег; true — получилось (ошибки — тостом). */
 const createTag = async (name: string) => {
-  const message = tagNameError(name)
+  const message = tagNameText(name, hubT)
   if (message) {
     toast.add({ title: message, color: 'warning' })
     return false
   }
   try {
     const tag = await create(name)
-    toast.add({ title: `Тег «${tag}» создан`, description: 'Ключи в него — правым кликом по строке → «Добавить тег»', color: 'success' })
+    toast.add({ title: hubT('tags.created', { tag }), description: hubT('tags.createdHint'), color: 'success' })
     return true
   } catch (error) {
-    await notifyError('Тег не создался', error)
+    await notifyError(hubT('tags.createFailed'), error)
     return false
   }
 }
@@ -74,7 +72,7 @@ const onSearchKey = (event: KeyboardEvent) => {
   onCreateClick()
 }
 // Обработчик уходит в поле поиска вместе с пропсами (в типах InputProps его нет — поэтому не литералом)
-const searchInput = { placeholder: 'Найти или создать тег…', onKeydown: onSearchKey }
+const searchInput = computed(() => ({ placeholder: hubT('tags.findOrCreate'), onKeydown: onSearchKey }))
 
 // Что сделать с именем из окна: создать тег или переименовать; true — окно закрывается
 const saveName = async (name: string) => {
@@ -84,10 +82,10 @@ const saveName = async (name: string) => {
     const { count } = await rename(from, name)
     // Тег был выбран в фильтре — выборка остаётся той же
     if (model.value.includes(from)) model.value = model.value.map(tag => (tag === from ? name : tag))
-    toast.add({ title: `Тег «${from}» теперь «${name}»`, description: count ? `Обновлён у ${count} ${keysWord(count)}` : undefined, color: 'success' })
+    toast.add({ title: hubT('tags.renamed', { from, name }), description: count ? hubT('tags.updatedFor', { count }) : undefined, color: 'success' })
     return true
   } catch (error) {
-    await notifyError('Тег не переименовался', error)
+    await notifyError(hubT('tags.renameFailed'), error)
     return false
   }
 }
@@ -116,9 +114,9 @@ const confirmDelete = async () => {
     const { count } = await remove(tag)
     if (model.value.includes(tag)) model.value = model.value.filter(t => t !== tag)
     deleting.value = null
-    toast.add({ title: `Тег «${tag}» удалён`, description: count ? `Снят с ${count} ${keysWord(count)}` : undefined, color: 'success' })
+    toast.add({ title: hubT('tags.deleted', { tag }), description: count ? hubT('tags.removedFromKeys', { count }) : undefined, color: 'success' })
   } catch (error) {
-    await notifyError('Тег не удалился', error)
+    await notifyError(hubT('tags.deleteFailed'), error)
   } finally {
     removing.value = false
   }
@@ -133,7 +131,7 @@ const confirmDelete = async () => {
     v-bind="$attrs"
     :items="tags"
     multiple
-    placeholder="Все теги"
+    :placeholder="$t('tags.allTags')"
     :size="size"
     :search-input="searchInput"
     :ui="ui"
@@ -154,8 +152,8 @@ const confirmDelete = async () => {
             type="button"
             tabindex="-1"
             class="flex size-5 items-center justify-center rounded text-muted transition-colors hover:bg-accented hover:text-highlighted"
-            :aria-label="`Переименовать тег ${item}`"
-            title="Переименовать"
+            :aria-label="$t('tags.renameLabel', { tag: item })"
+            :title="$t('tags.rename')"
             @pointerdown.stop.prevent
             @click.stop.prevent="openNaming(String(item))"
           >
@@ -168,8 +166,8 @@ const confirmDelete = async () => {
             type="button"
             tabindex="-1"
             class="flex size-5 items-center justify-center rounded text-muted transition-colors hover:bg-accented hover:text-highlighted"
-            :aria-label="`Удалить тег ${item}`"
-            title="Удалить"
+            :aria-label="$t('tags.deleteLabel', { tag: item })"
+            :title="$t('tags.delete')"
             @pointerdown.stop.prevent
             @click.stop.prevent="startDelete(String(item))"
           >
@@ -185,16 +183,16 @@ const confirmDelete = async () => {
     <template #empty>
       <p class="text-center text-sm text-muted">
         <template v-if="newName">
-          Тега «{{ newName }}» нет — Enter создаст его
+          {{ $t('tags.enterCreates', { name: newName }) }}
         </template>
         <template v-else-if="state === 'loading'">
-          Загружаю теги…
+          {{ $t('tags.loading') }}
         </template>
         <template v-else-if="state === 'error'">
-          Теги не загрузились — обновите страницу
+          {{ $t('tags.loadFailed') }}
         </template>
         <template v-else>
-          Тегов пока нет
+          {{ $t('tags.noTags') }}
         </template>
       </p>
     </template>
@@ -210,7 +208,7 @@ const confirmDelete = async () => {
           class="justify-start"
           @click="onCreateClick"
         >
-          <span class="truncate">{{ newName ? `Создать тег «${newName}»` : 'Создать тег' }}</span>
+          <span class="truncate">{{ newName ? $t('tags.create', { name: newName }) : $t('tags.createPlain') }}</span>
         </UButton>
       </div>
     </template>
@@ -224,8 +222,8 @@ const confirmDelete = async () => {
 
   <UModal
     v-model:open="deleteOpen"
-    :title="deleting ? `Удалить тег «${deleting}»?` : ''"
-    :description="deletingKeys ? `Тег снимется с ${deletingKeys} ${keysWord(deletingKeys)}.` : 'У тега нет ключей.'"
+    :title="deleting ? $t('tags.deleteTitle', { tag: deleting }) : ''"
+    :description="deletingKeys ? $t('tags.deleteKeys', deletingKeys) : $t('tags.deleteNoKeys')"
   >
     <template #footer>
       <div class="flex w-full justify-end gap-2">
@@ -234,7 +232,7 @@ const confirmDelete = async () => {
           variant="ghost"
           @click="deleting = null"
         >
-          Отмена
+          {{ $t('common.cancel') }}
         </UButton>
         <UButton
           color="error"
@@ -242,7 +240,7 @@ const confirmDelete = async () => {
           :loading="removing"
           @click="confirmDelete"
         >
-          Удалить
+          {{ $t('tags.delete') }}
         </UButton>
       </div>
     </template>

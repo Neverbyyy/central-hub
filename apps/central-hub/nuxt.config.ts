@@ -9,6 +9,11 @@ export default defineNuxtConfig({
     '@vueuse/nuxt'
   ],
 
+  // useI18n — без импорта в каждом компоненте, как остальные composables (язык интерфейса — app/plugins/i18n.ts)
+  imports: {
+    presets: [{ from: 'vue-i18n', imports: ['useI18n'] }]
+  },
+
   devtools: {
     enabled: true
   },
@@ -16,9 +21,9 @@ export default defineNuxtConfig({
   // Общее для всех страниц — и для страницы ошибки (app/error.vue), которая заменяет app.vue целиком.
   // Внутренний сервис: поисковикам не показываем (плюс X-Robots-Tag и robots.txt)
   app: {
-    // Заголовок по умолчанию — в app.vue: app.head действует только при серверном рендере, а заголовок меняется на клиенте
+    // Заголовок и язык страницы — в app.vue и error.vue: app.head действует только при серверном рендере, а они меняются
+    // на клиенте (заголовок — у страниц, язык — в «Настройках»)
     head: {
-      htmlAttrs: { lang: 'ru' },
       meta: [
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
         { name: 'robots', content: 'noindex, nofollow' }
@@ -88,6 +93,14 @@ export default defineNuxtConfig({
   // cookie — по пути @supabase/ssr: модуль Supabase просит «@nuxtjs/supabase > cookie», а с MCP SDK
   // в проекте две версии cookie, и общая копия (0.7 от express) — не та, что импортирует @supabase/ssr (1.x)
   vite: {
+    // Флаги vue-i18n (как в packages/nuxt): без них он проверяет их на лету и старый API остаётся в сборке.
+    // Компилятор сообщений нужен: словари — обычный JSON, собираются при первом показе
+    define: {
+      __VUE_I18N_LEGACY_API__: false,
+      __VUE_I18N_FULL_INSTALL__: true,
+      __INTLIFY_PROD_DEVTOOLS__: false,
+      __INTLIFY_DROP_MESSAGE_COMPILER__: false
+    },
     optimizeDeps: {
       include: ['jszip', '@nuxtjs/supabase > @supabase/ssr > cookie']
     }

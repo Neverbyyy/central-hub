@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { ruT } from './i18n'
 import { editDistance, findSimilarCodes, indexKeyTree, keySuggestions, type RegistryCode } from '../../apps/central-hub/app/utils/keySuggestions'
 
 const registry: RegistryCode[] = [
@@ -18,7 +19,7 @@ const tree = indexKeyTree([
 ])
 
 const targetNames = (key: string) => (key.startsWith('app.') ? 'InApp' : key.startsWith('web.') ? 'Pages Hub' : 'InApp и Pages Hub')
-const suggest = (value: string) => keySuggestions(value, { registry, tree, targetNames })
+const suggest = (value: string) => keySuggestions(value, { registry, tree, targetNames, t: ruT })
 const segments = (value: string) => suggest(value).map(s => s.segment)
 
 describe('подсказки к ключу', () => {

@@ -1,0 +1,43 @@
+{
+  "title": "History",
+  "empty": "Nothing yet",
+  "cleared": "Cleared",
+  "hideTexts": "Hide texts",
+  "hideDetails": "Hide details",
+  "noName": "no name",
+  "loading": "Loading…",
+  "all": "Full history ({total})",
+  "more": "Show {count} more",
+  "texts": "Texts ({count})",
+  "details": "Details ({count})",
+  "deprecated": "Marked as deprecated",
+  "restored": "Restored from deprecated",
+  "fields": {
+    "created": "Created",
+    "translation": "Text",
+    "status": "Status",
+    "description": "Description",
+    "max_length": "Limit",
+    "tags": "Tags",
+    "figma_url": "Figma"
+  },
+  "sources": {
+    "ui": "interface",
+    "mcp": "AI via MCP",
+    "import": "import",
+    "sql": "database",
+    "test": "autotest"
+  },
+  "status": {
+    "approved": "approved",
+    "draft": "draft",
+    "ai": "by AI"
+  },
+  "summary": {
+    "created": "Created",
+    "approved": "Approved: {langs}",
+    "importTexts": "Import: texts in {count} language | Import: texts in {count} languages",
+    "texts": "Texts: {langs}",
+    "changes": "{count} change: {fields} | {count} changes: {fields}"
+  }
+}

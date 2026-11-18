@@ -1,0 +1,18 @@
+{
+  "placeholder": "Kalit, matn yoki buyruq…",
+  "groups": {
+    "keys": "Kalitlar",
+    "actions": "Amallar",
+    "pages": "Bo‘limlar"
+  },
+  "newKey": "Yangi kalit",
+  "queue": "Tarjima navbati: {lang}",
+  "showPending": "Ko‘rsatish: tasdiqlanmaganlar",
+  "showAi": "Ko‘rsatish: SI tomonidan",
+  "showStale": "Ko‘rsatish: eskirgan tarjimalar",
+  "showRecent": "Ko‘rsatish: shu hafta o‘zgarganlar",
+  "themeLight": "Mavzu: yorug‘",
+  "themeDark": "Mavzu: qorong‘i",
+  "mcp": "Neyrotarmoqlar uchun MCP",
+  "mcpHint": "token va yo‘riqnoma"
+}

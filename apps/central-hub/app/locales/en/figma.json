@@ -1,0 +1,20 @@
+{
+  "exported": "Exported for Figma: {keys}",
+  "failed": "Export failed",
+  "title": "Texts in Figma",
+  "description": "The plugin takes texts straight from the service and updates the variables in the design — on click or live.",
+  "pluginName": "Amaya Hub — Localization",
+  "pluginHint": "Sections and languages are chosen in the plugin. Texts are edited here in the service.",
+  "downloadPlugin": "Download plugin",
+  "step1": "Unpack the archive.",
+  "step2": "In the Figma desktop app: Plugins → Development → Import plugin from manifest → {file}.",
+  "step3": "Run the plugin and paste the token:",
+  "zipHint": "Without the plugin — an archive for the built-in import: one file per language. Drag all the files into the Variables window: each becomes a mode, names with / become a group tree.",
+  "sections": "Sections",
+  "loadingSections": "Loading sections…",
+  "collapse": "Collapse {section}",
+  "expand": "Expand {section}",
+  "languages": "Languages — modes",
+  "modes": "{count} mode | {count} modes",
+  "downloadZip": "Download ZIP"
+}

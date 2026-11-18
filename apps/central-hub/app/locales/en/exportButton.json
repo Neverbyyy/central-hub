@@ -1,0 +1,5 @@
+{
+  "label": "Export to code",
+  "openCount": "open PRs: {count}",
+  "waiting": "Open PR — waiting for merge | Open PRs — waiting for merge"
+}

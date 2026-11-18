@@ -1,0 +1,12 @@
+{
+  "limitError": "1 dan 10 000 gacha butun son",
+  "saved": "Kalit xususiyatlari saqlandi",
+  "formLabel": "Kalit xususiyatlari",
+  "description": "Tavsif",
+  "descriptionPlaceholder": "Satr qayerda ko‘rsatiladi va qanday cheklovlari bor",
+  "tags": "Teglar",
+  "maxLength": "Uzunlik limiti",
+  "noLimit": "limitsiz",
+  "figma": "Figma havolasi",
+  "hotkeys": "Ctrl+Enter — saqlash · Esc — bekor qilish"
+}

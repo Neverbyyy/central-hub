@@ -1,0 +1,24 @@
+{
+  "loadFailed": "Navbat yuklanmadi",
+  "conflictBy": "Bu satrni {actor} allaqachon tarjima qilgan",
+  "conflict": "Bu satr allaqachon tarjima qilingan",
+  "conflictText": "Hozir: «{current}». Variantingizni saqlash uchun yana Enter bosing.",
+  "back": "Jadvalga",
+  "remaining": "{count} ta qoldi",
+  "doneSession": " · shu sessiyada tarjima qilindi: {count}",
+  "languagesFailed": "Tillar yuklanmadi: {error}",
+  "onlySkipped": "Faqat o‘tkazib yuborilgan satrlar qoldi",
+  "allDone": "Hammasi {lang} tiliga tarjima qilingan",
+  "backToSkipped": "O‘tkazib yuborilganlarga qaytish",
+  "reasonStale": "Inglizcha o‘zgargan",
+  "reasonMissing": "Tarjima yo‘q",
+  "upToDate": "Tarjima dolzarb",
+  "skip": "O‘tkazib yuborish",
+  "hotkeys": {
+    "saveNext": "saqlash va keyingisi",
+    "newline": "yangi qator",
+    "skip": "o‘tkazib yuborish",
+    "back": "jadvalga",
+    "draftNote": "Saqlangan matn — qoralama, uni kalit panelida tasdiqlash mumkin"
+  }
+}

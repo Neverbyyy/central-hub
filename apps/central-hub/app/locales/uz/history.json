@@ -1,0 +1,43 @@
+{
+  "title": "Tarix",
+  "empty": "Hozircha bo‘sh",
+  "cleared": "Tozalandi",
+  "hideTexts": "Matnlarni yashirish",
+  "hideDetails": "Tafsilotlarni yashirish",
+  "noName": "nomsiz",
+  "loading": "Yuklanmoqda…",
+  "all": "Butun tarix ({total})",
+  "more": "Yana {count} tasini ko‘rsatish",
+  "texts": "Matnlar ({count})",
+  "details": "Tafsilotlar ({count})",
+  "deprecated": "Eskirgan deb belgilandi",
+  "restored": "Eskirganlardan qaytarildi",
+  "fields": {
+    "created": "Yaratildi",
+    "translation": "Matn",
+    "status": "Maqom",
+    "description": "Tavsif",
+    "max_length": "Limit",
+    "tags": "Teglar",
+    "figma_url": "Figma"
+  },
+  "sources": {
+    "ui": "interfeys",
+    "mcp": "MCP orqali SI",
+    "import": "import",
+    "sql": "baza",
+    "test": "avtotest"
+  },
+  "status": {
+    "approved": "tasdiqlangan",
+    "draft": "qoralama",
+    "ai": "SI tomonidan"
+  },
+  "summary": {
+    "created": "Yaratildi",
+    "approved": "Tasdiqlandi: {langs}",
+    "importTexts": "Import: {count} tildagi matnlar",
+    "texts": "Matnlar: {langs}",
+    "changes": "{count} ta o‘zgarish: {fields}"
+  }
+}

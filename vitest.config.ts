@@ -7,7 +7,9 @@ export default defineConfig({
         test: {
           name: 'unit',
           // tests/unit — код без базы: выгрузка в GitHub на поддельном API, утилиты интерфейса (история, подсказки)
-          include: ['packages/*/test/**/*.test.ts', 'tests/unit/**/*.test.ts']
+          include: ['packages/*/test/**/*.test.ts', 'tests/unit/**/*.test.ts'],
+          // Автоимпорты Nuxt для утилит интерфейса: язык и перевод (настоящий словарь ru)
+          setupFiles: ['tests/unit/setup.ts']
         }
       },
       {

@@ -1,9 +1,24 @@
-// Форматтеры создаются один раз: грид зовёт их на каждую строку, а toLocaleString строит новый каждый вызов
-const WITH_YEAR = new Intl.DateTimeFormat('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })
-const NO_YEAR = new Intl.DateTimeFormat('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+// Форматтеры создаются один раз на язык: грид зовёт их на каждую строку, а toLocaleString строит новый каждый вызов
+const formatters = new Map<string, Intl.DateTimeFormat>()
 
-/** «30.10.26, 11:48»; с year: false — «30.10, 11:48». Нет даты — «—». */
+const formatter = (locale: HubLocale, year: boolean) => {
+  const key = `${locale}:${year}`
+  let format = formatters.get(key)
+  if (!format) {
+    format = new Intl.DateTimeFormat(intlLocale(locale), {
+      day: '2-digit',
+      month: '2-digit',
+      ...(year ? { year: '2-digit' } : {}),
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+    formatters.set(key, format)
+  }
+  return format
+}
+
+/** «30.10.26, 11:48» (по-английски — «10/30/26, 11:48 AM»); с year: false — без года. Нет даты — «—». Язык — интерфейса. */
 export function formatDateTime(value?: string | null, { year = true }: { year?: boolean } = {}): string {
   if (!value) return '—'
-  return (year ? WITH_YEAR : NO_YEAR).format(new Date(value))
+  return formatter(currentHubLocale(), year).format(new Date(value))
 }

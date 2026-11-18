@@ -1,0 +1,42 @@
+{
+  "title": "Yangi kalit",
+  "description": "Nom «Kalitlarni qanday nomlash» sxemasi bo‘yicha, tavsif majburiy. Avval o‘xshash satrlarni ko‘ring.",
+  "key": "Kalit",
+  "keyHelp": "Yozishni boshlang — maslahatlar keyingi qismni ko‘rsatadi. Umumiydan xususiyga: app.cars2.paywall.title",
+  "exportTo": "Kodga eksport: {targets}",
+  "notExported": "Kodga eksport qilinmaydi: bunday kalitlar hech bir loyihaga kirmaydi",
+  "suggestions": "Kalit bo‘yicha maslahatlar",
+  "suggestionsHint": "{up} {down} tanlash · {enter} yoki {tab} qo‘yish · {esc} yashirish",
+  "taken": {
+    "same": "«{key}» kaliti allaqachon bor",
+    "sameDeprecated": "«{key}» kaliti allaqachon bor, u eskirgan deb belgilangan — yangisi o‘rniga uni qaytaring",
+    "parent": "«{key}» — bo‘lim emas, allaqachon satr: uning ichida kalit yaratib bo‘lmaydi. Agar bu bo‘lim bo‘lsa, satrni eskirgan deb belgilang — nom bo‘shaydi",
+    "inside": "«{key}» kaliti allaqachon bor: «{value}» — satr emas, bo‘lim"
+  },
+  "openTaken": "«{key}» ni ochish",
+  "missingCode": "«{code}» kodi ma’lumotnomada yo‘q.",
+  "didYouMean": "Balki bunisini nazarda tutgandirsiz:",
+  "orAddAs": "Yoki ma’lumotnomaga {what} sifatida qo‘shish:",
+  "addAs": "Ma’lumotnomaga {what} sifatida qo‘shish:",
+  "codeTitle": "Nomi, masalan Cars 2",
+  "add": "Qo‘shish",
+  "codeAdded": "Ma’lumotnomaga qo‘shildi: {code}",
+  "addFailed": "Qo‘shilmadi",
+  "similar": "O‘xshash satrlar",
+  "similarFailed": "O‘xshash satrlar yuklanmadi",
+  "noSimilar": "O‘xshashlari yo‘q",
+  "similarLater": "Kalitni yoza boshlaganingizda paydo bo‘ladi",
+  "copyKey": "{key} ni nusxalash",
+  "keyCopied": "Kalit nusxalandi",
+  "need": {
+    "key": "kalit",
+    "finishKey": "kalitni oxiriga yetkazish",
+    "fixKey": "kalitni tuzatish",
+    "otherName": "boshqa kalit nomi",
+    "description": "kamida {min} belgilik tavsif"
+  },
+  "needed": "Yaratish uchun kerak: {list}",
+  "hotkeys": "{ctrl} + {enter} yaratish · {esc} yopish",
+  "submit": "Kalit yaratish",
+  "created": "Kalit yaratildi"
+}

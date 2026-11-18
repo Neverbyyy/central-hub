@@ -1,0 +1,5 @@
+{
+  "source": "Source text, {lang}",
+  "translation": "Translation to {lang}",
+  "placeholder": "Text in {lang}"
+}

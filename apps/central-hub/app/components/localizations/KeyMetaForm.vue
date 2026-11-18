@@ -32,12 +32,12 @@ const serverError = ref('')
 
 // У строк InApp и Pages Hub описания с импорта нет — его можно оставить пустым
 const isLegacy = computed(() => props.technicalKey.startsWith('legacy.'))
-const descriptionMessage = computed(() => (isLegacy.value ? null : descriptionError(form.description)))
-const figmaMessage = computed(() => figmaUrlError(form.figmaUrl))
+const descriptionMessage = computed(() => (isLegacy.value ? null : ruleText(descriptionError(form.description))))
+const figmaMessage = computed(() => ruleText(figmaUrlError(form.figmaUrl)))
 const limit = computed(() => (String(form.maxLength).trim() ? Number(form.maxLength) : null))
 const maxLengthMessage = computed(() => {
   const value = limit.value
-  return value !== null && (!Number.isInteger(value) || value < 1 || value > MAX_LENGTH_LIMIT) ? 'Целое число от 1 до 10 000' : null
+  return value !== null && (!Number.isInteger(value) || value < 1 || value > MAX_LENGTH_LIMIT) ? hubT('keyMeta.limitError') : null
 })
 const canSave = computed(() => !descriptionMessage.value && !figmaMessage.value && !maxLengthMessage.value && !saving.value)
 
@@ -53,7 +53,7 @@ const save = async () => {
       method: 'POST',
       body: { key: props.technicalKey, description: form.description, tags: form.tags, maxLength: limit.value, figmaUrl: form.figmaUrl }
     })
-    toast.add({ title: 'Свойства ключа сохранены', color: 'success', duration: 1500 })
+    toast.add({ title: hubT('keyMeta.saved'), color: 'success', duration: 1500 })
     emit('saved', { description: form.description.trim() || null, tags: [...form.tags], maxLength: limit.value, figmaUrl: form.figmaUrl.trim() || null })
   } catch (error) {
     if (!(await authRedirect(error))) serverError.value = errorMessage(error)
@@ -78,12 +78,12 @@ const onKeydown = (event: KeyboardEvent) => {
 <template>
   <form
     class="space-y-3"
-    aria-label="Свойства ключа"
+    :aria-label="$t('keyMeta.formLabel')"
     @submit.prevent="save"
     @keydown="onKeydown"
   >
     <UFormField
-      label="Описание"
+      :label="$t('keyMeta.description')"
       size="xs"
       :required="!isLegacy"
       :error="descriptionMessage ?? undefined"
@@ -95,12 +95,12 @@ const onKeydown = (event: KeyboardEvent) => {
         autofocus
         size="sm"
         class="w-full"
-        placeholder="Где показывается строка и какие у неё ограничения"
+        :placeholder="$t('keyMeta.descriptionPlaceholder')"
       />
     </UFormField>
 
     <UFormField
-      label="Теги"
+      :label="$t('keyMeta.tags')"
       size="xs"
     >
       <LocalizationsTagSelect
@@ -111,7 +111,7 @@ const onKeydown = (event: KeyboardEvent) => {
 
     <div class="grid grid-cols-[110px_1fr] gap-2">
       <UFormField
-        label="Лимит длины"
+        :label="$t('keyMeta.maxLength')"
         size="xs"
         :error="maxLengthMessage ?? undefined"
       >
@@ -121,11 +121,11 @@ const onKeydown = (event: KeyboardEvent) => {
           min="1"
           size="sm"
           class="w-full"
-          placeholder="без лимита"
+          :placeholder="$t('keyMeta.noLimit')"
         />
       </UFormField>
       <UFormField
-        label="Ссылка на Figma"
+        :label="$t('keyMeta.figma')"
         size="xs"
         :error="figmaMessage ?? undefined"
       >
@@ -154,7 +154,7 @@ const onKeydown = (event: KeyboardEvent) => {
         :loading="saving"
         :disabled="!canSave"
       >
-        Сохранить
+        {{ $t('common.save') }}
       </UButton>
       <UButton
         size="xs"
@@ -162,9 +162,9 @@ const onKeydown = (event: KeyboardEvent) => {
         variant="ghost"
         @click="emit('cancel')"
       >
-        Отмена
+        {{ $t('common.cancel') }}
       </UButton>
-      <span class="ml-auto text-[10px] text-muted">Ctrl+Enter — сохранить · Esc — отмена</span>
+      <span class="ml-auto text-[10px] text-muted">{{ $t('keyMeta.hotkeys') }}</span>
     </div>
   </form>
 </template>

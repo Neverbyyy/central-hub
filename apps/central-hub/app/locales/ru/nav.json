@@ -1,0 +1,14 @@
+{
+  "home": "Главная",
+  "localizations": "Локализации",
+  "queue": "Очередь перевода",
+  "abTests": "AB-Тесты",
+  "abTestsSoon": "скоро",
+  "abTestsLater": "A/B-тесты появятся позже",
+  "mcp": "MCP",
+  "settings": "Настройки",
+  "logout": "Выйти",
+  "menu": "Меню",
+  "userTitle": "Правки подписаны именем «{name}» · {account}",
+  "passwordLogin": "вход по общему паролю"
+}

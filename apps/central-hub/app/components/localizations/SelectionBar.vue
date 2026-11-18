@@ -19,7 +19,7 @@ defineEmits<{ approve: [], deprecate: [], restore: [], clear: [] }>()
     <div class="pointer-events-auto flex items-center gap-2 whitespace-nowrap rounded-xl border border-default bg-default py-1.5 pl-3 pr-1.5 shadow-lg sm:pl-4">
       <!-- На телефоне подписи короче, иначе плашка шире экрана -->
       <span class="mr-1 text-sm text-toned">
-        <span class="max-sm:hidden">Выбрано: </span>{{ keysCount(count) }}
+        <span class="max-sm:hidden">{{ $t('selection.selected') }}</span>{{ $t('common.keys', count) }}
       </span>
       <UButton
         v-if="deprecatedView"
@@ -29,7 +29,7 @@ defineEmits<{ approve: [], deprecate: [], restore: [], clear: [] }>()
         :loading="deprecating"
         @click="$emit('restore')"
       >
-        Вернуть
+        {{ $t('selection.restore') }}
       </UButton>
       <template v-else>
         <!-- Число — только если утверждать нужно не все выделенные: «Выбрано: 5 · Утвердить (2)» -->
@@ -42,7 +42,7 @@ defineEmits<{ approve: [], deprecate: [], restore: [], clear: [] }>()
           :disabled="deprecating"
           @click="$emit('approve')"
         >
-          Утвердить<template v-if="toApprove !== count">
+          {{ $t('selection.approve') }}<template v-if="toApprove !== count">
             ({{ toApprove }})
           </template>
         </UButton>
@@ -52,17 +52,17 @@ defineEmits<{ approve: [], deprecate: [], restore: [], clear: [] }>()
           variant="soft"
           :loading="deprecating"
           :disabled="approving"
-          title="Пометить устаревшими"
+          :title="$t('selection.deprecate')"
           @click="$emit('deprecate')"
         >
-          <span class="max-sm:sr-only">Пометить устаревшими</span>
+          <span class="max-sm:sr-only">{{ $t('selection.deprecate') }}</span>
         </UButton>
       </template>
       <UButton
         icon="i-lucide-x"
         color="neutral"
         variant="ghost"
-        aria-label="Снять выделение"
+        :aria-label="$t('selection.clear')"
         @click="$emit('clear')"
       />
     </div>

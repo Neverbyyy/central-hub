@@ -220,7 +220,7 @@ export function useLocalizations() {
   }
 
   watch(languagesError, (error) => {
-    if (error) toast.add({ title: 'Не загрузились языки', description: error.message, color: 'error' })
+    if (error) toast.add({ title: hubT('grid.languagesFailed'), description: error.message, color: 'error' })
   })
 
   const loadRegistry = async () => {
@@ -410,12 +410,12 @@ export function useLocalizations() {
       if (conflict) {
         setCell(target, lang, conflict.current)
         toast.add({
-          title: conflict.actor ? `Ячейку уже изменил(а) ${conflict.actor}` : 'Ячейку уже изменили',
-          description: `${lang.toUpperCase()} сейчас: «${conflict.current ?? '—'}». Ваш вариант: «${value || '—'}».`,
+          title: conflict.actor ? hubT('grid.conflictBy', { actor: conflict.actor }) : hubT('grid.conflict'),
+          description: hubT('grid.conflictText', { lang: lang.toUpperCase(), current: conflict.current ?? '—', mine: value || '—' }),
           color: 'warning',
           duration: 15000,
           actions: [{
-            label: 'Оставить мой',
+            label: hubT('grid.keepMine'),
             color: 'neutral',
             variant: 'outline',
             onClick: () => {
@@ -428,7 +428,7 @@ export function useLocalizations() {
 
       // Откатываем, только если за это время ячейку не поменяли ещё раз
       if ((target.translations?.[lang] ?? '') === value) setCell(target, lang, prev)
-      await notifyError('Не сохранилось', error)
+      await notifyError(hubT('grid.notSaved'), error)
       return false
     }
   }
@@ -465,10 +465,10 @@ export function useLocalizations() {
   const restoreKeys = async (keys: string[]) => {
     try {
       const { count } = await $fetch('/api/keys/restore', { method: 'POST', body: { keys } })
-      toast.add({ title: `Возвращено: ${keysCount(count)}`, color: 'success' })
+      toast.add({ title: hubT('grid.restored', { keys: hubT('common.keys', { count }) }), color: 'success' })
       await reload()
     } catch (error) {
-      await notifyError('Не удалось вернуть', error)
+      await notifyError(hubT('grid.restoreFailed'), error)
     }
   }
 
@@ -477,7 +477,7 @@ export function useLocalizations() {
     try {
       count = (await $fetch('/api/keys/deprecate', { method: 'POST', body: { keys } })).count
     } catch (error) {
-      await notifyError('Не удалось пометить устаревшими', error)
+      await notifyError(hubT('grid.deprecateFailed'), error)
       return false
     }
 
@@ -485,10 +485,10 @@ export function useLocalizations() {
     rows.value = rows.value.filter(r => !removed.has(r.technical_key))
     if (total.value !== null) total.value -= count
     toast.add({
-      title: `${count} ${plural(count, ['ключ помечен', 'ключа помечены', 'ключей помечены'])} устаревшими`,
-      description: 'Они пропали из таблицы и выгрузок, история сохранена',
+      title: hubT('grid.deprecated', { count }),
+      description: hubT('grid.deprecatedText'),
       color: 'success',
-      actions: [{ label: 'Вернуть', color: 'neutral', variant: 'outline', onClick: () => restoreKeys(keys) }]
+      actions: [{ label: hubT('selection.restore'), color: 'neutral', variant: 'outline', onClick: () => restoreKeys(keys) }]
     })
     return true
   }
